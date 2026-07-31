@@ -70,8 +70,21 @@ export function AuthProvider({ children }) {
     setTenant(null);
   };
 
+  // Rebusca o tenant no backend. Usado depois de verificar o e-mail ou
+  // completar o perfil, para a navegação refletir o novo profile_status
+  // sem obrigar o usuário a recarregar a página.
+  const refreshTenant = async () => {
+    try {
+      const data = await authApi.me();
+      setTenant(data.tenant);
+      return data.tenant;
+    } catch {
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, tenant, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, tenant, loading, login, register, logout, refreshTenant }}>
       {children}
     </AuthContext.Provider>
   );

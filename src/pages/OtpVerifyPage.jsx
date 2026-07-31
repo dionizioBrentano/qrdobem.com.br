@@ -4,10 +4,13 @@ import { authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function OtpVerifyPage() {
-  const { user } = useAuth();
+  const { user, refreshTenant } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState('send'); // 'send' | 'verify'
-  const [email, setEmail] = useState('');
+  // Já sabemos o e-mail de quem está logado — não faz sentido pedir de novo.
+  const [email, setEmail] = useState(
+    () => user?.email || localStorage.getItem('firebase_email') || ''
+  );
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +38,10 @@ export default function OtpVerifyPage() {
     try {
       await authApi.verifyOtp(user?.uid || '', code);
       setMessage('E-mail verificado com sucesso!');
-      setTimeout(() => navigate('/dashboard'), 1500);
+      // Atualiza o tenant para o profile_status novo aparecer na navegação,
+      // e volta para o perfil, onde estão os próximos campos pendentes.
+      await refreshTenant();
+      setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
       setError(err.message);
     } finally {

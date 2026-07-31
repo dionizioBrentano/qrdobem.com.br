@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
-import { entitiesApi } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { entitiesApi, profileApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
+import QrCodeModal from '../components/QrCodeModal';
+
+const FIELD_LABELS = {
+  email_verified: 'verificar o e-mail',
+  cpf: 'informar o CPF',
+  phone: 'informar o telefone',
+  address: 'completar o endereço',
+};
+
+const describe = (missing = []) =>
+  missing.map((m) => FIELD_LABELS[m] || m).join(', ');
 
 export default function DashboardPage() {
-  const { tenant } = useAuth();
   const [data, setData] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
 
   const loadEntities = async (orgId) => {
@@ -25,13 +37,25 @@ export default function DashboardPage() {
     }
   };
 
+  // O perfil diz o que falta para cada gate. Se falhar, o dashboard continua
+  // funcionando — só perde os avisos específicos.
+  const loadProfile = async () => {
+    try {
+      setProfile(await profileApi.get());
+    } catch {
+      setProfile(null);
+    }
+  };
+
   useEffect(() => {
     loadEntities();
+    loadProfile();
   }, []);
 
   const handleEntityCreated = () => {
     setShowForm(false);
     loadEntities(activeOrgId);
+    loadProfile();
   };
 
   if (loading) {
@@ -46,25 +70,46 @@ export default function DashboardPage() {
     return <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>;
   }
 
+  // Na dúvida (perfil não carregou), libera o botão e deixa o backend decidir.
+  const canCreate = profile ? profile.can_create_entity : true;
+  const missingForEntity = profile?.missing_for_entity || [];
+
   return (
     <div className="space-y-6">
-      {/* Header com métricas */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          {data?.profile_status === 'incomplete' && (
-            <p className="text-amber-600 text-sm mt-1">
-              Perfil incompleto — complete seus dados para gerar QR codes.
-            </p>
-          )}
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <div className="text-right">
+          <button
+            onClick={() => setShowForm(true)}
+            disabled={!canCreate}
+            title={canCreate ? '' : 'Complete o perfil para liberar'}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            + Novo QR Code
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition"
-        >
-          + Novo QR Code
-        </button>
       </div>
+
+      {/* Aviso específico do que falta, em vez do genérico "perfil incompleto" */}
+      {profile && !canCreate && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm flex items-start justify-between gap-4">
+          <p>
+            Para criar QR Codes falta: <strong>{describe(missingForEntity)}</strong>.
+          </p>
+          <Link
+            to="/profile"
+            className="underline font-medium whitespace-nowrap hover:text-amber-900"
+          >
+            Completar perfil
+          </Link>
+        </div>
+      )}
+
+      {profile?.can_create_entity && !profile?.can_purchase && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
+          Para comprar créditos falta: <strong>{describe(profile.missing_for_purchase)}</strong>.
+        </div>
+      )}
 
       {/* Seletor de organização */}
       {data?.organizations?.length > 1 && (
@@ -88,7 +133,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border p-5">
           <p className="text-sm text-gray-500">QR Codes ativos</p>
           <p className="text-3xl font-bold text-gray-900">
-            {data?.entities?.filter((e) => e.is_active).length ?? 0}
+            {data?.entities?.filter((e) => e.status === 'active').length ?? 0}
           </p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-5">
@@ -106,7 +151,7 @@ export default function DashboardPage() {
               <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Criado em</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Link</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">QR Code</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -117,35 +162,50 @@ export default function DashboardPage() {
                 </td>
               </tr>
             )}
-            {data?.entities?.map((entity) => (
-              <tr key={entity.unique_code} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">{entity.name}</td>
-                <td className="px-4 py-3 capitalize">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                    entity.type === 'person' ? 'bg-blue-100 text-blue-700' :
-                    entity.type === 'pet' ? 'bg-amber-100 text-amber-700' :
-                    'bg-purple-100 text-purple-700'
-                  }`}>
-                    {entity.type === 'person' ? 'Pessoa' : entity.type === 'pet' ? 'Pet' : 'Objeto'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-500">{entity.created_at}</td>
-                <td className="px-4 py-3">
-                  <span className={`inline-block w-2 h-2 rounded-full mr-1 ${entity.is_active ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                  {entity.is_active ? 'Ativo' : 'Inativo'}
-                </td>
-                <td className="px-4 py-3">
-                  <a
-                    href={entity.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-emerald-600 hover:underline text-xs"
-                  >
-                    Abrir
-                  </a>
-                </td>
-              </tr>
-            ))}
+            {data?.entities?.map((entity) => {
+              const isActive = entity.status ? entity.status === 'active' : entity.is_active;
+
+              return (
+                <tr key={entity.unique_code} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900">{entity.name}</td>
+                  <td className="px-4 py-3 capitalize">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                      entity.type === 'person' ? 'bg-blue-100 text-blue-700' :
+                      entity.type === 'pet' ? 'bg-amber-100 text-amber-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {entity.type === 'person' ? 'Pessoa' : entity.type === 'pet' ? 'Pet' : 'Objeto'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">{entity.created_at}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
+                      isActive ? 'bg-emerald-500' :
+                      entity.status === 'suspended' ? 'bg-red-400' : 'bg-gray-300'
+                    }`} />
+                    {isActive ? 'Ativo' : entity.status === 'suspended' ? 'Suspenso' : 'Pendente'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setQrEntity(entity)}
+                        className="text-emerald-600 hover:underline text-xs font-medium"
+                      >
+                        Ver QR
+                      </button>
+                      <a
+                        href={entity.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-emerald-600 text-xs"
+                      >
+                        Abrir link
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -156,6 +216,10 @@ export default function DashboardPage() {
           onClose={() => setShowForm(false)}
           onCreated={handleEntityCreated}
         />
+      )}
+
+      {qrEntity && (
+        <QrCodeModal entity={qrEntity} onClose={() => setQrEntity(null)} />
       )}
     </div>
   );

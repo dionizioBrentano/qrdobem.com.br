@@ -26,6 +26,9 @@ export default function Layout() {
             <Link to="/messages" className="hover:text-emerald-200 transition">
               Mensagens
             </Link>
+            <Link to="/profile" className="hover:text-emerald-200 transition">
+              Perfil
+            </Link>
             {isSuperAdmin && (
               <Link to="/admin" className="hover:text-emerald-200 transition">
                 Admin

@@ -56,17 +56,35 @@ export const entitiesApi = {
     }),
 
   show: (uniqueCode) => request(`/entities/${uniqueCode}`),
+
+  // A API gera o QR (é whitelabel). Precisa passar pelo request() por causa
+  // do Bearer token — usar a URL direto num <img src> daria 401.
+  qrCode: (uniqueCode) => request(`/entities/${uniqueCode}/qrcode`),
+};
+
+// --- Perfil (coleta progressiva) ---
+export const profileApi = {
+  get: () => request('/profile'),
+
+  update: (data) =>
+    request('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  addDocument: (data) =>
+    request('/profile/documents', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // --- Admin ---
 export const adminApi = {
   getTenants: () => request('/admin/tenants'),
 
-  addQuota: (tenantId, amount) =>
-    request(`/admin/tenants/${tenantId}/add-quota`, {
-      method: 'POST',
-      body: JSON.stringify({ amount }),
-    }),
+  // addQuota removido: a rota nunca existiu no backend. Créditos são
+  // concedidos por lote via createBatch.
 
   createBatch: (data) =>
     request('/admin/batches', {

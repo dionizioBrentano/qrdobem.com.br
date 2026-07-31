@@ -310,30 +310,38 @@ O frontend NUNCA confia nos seus próprios dados. Sempre envia para o backend va
 - [ ] Adicionar `loginWithGoogle()` no `AuthContext.jsx`
 - [ ] Testar login com Google no site
 
-### Fase 2 — ProfilePage
-- [ ] Criar `src/pages/ProfilePage.jsx`
-- [ ] Adicionar `profileApi` em `api.js`
-- [ ] Adicionar rota `/profile` em `App.jsx`
-- [ ] Adicionar link "Perfil" no `Layout.jsx`
-- [ ] Implementar formulário de CPF com validação
-- [ ] Implementar busca de CEP via ViaCEP
-- [ ] Implementar indicadores visuais de Gate 1 e Gate 2
+### Fase 2 — ProfilePage — CONCLUÍDA (31/07/2026)
+- [x] Criar `src/pages/ProfilePage.jsx`
+- [x] Adicionar `profileApi` em `api.js`
+- [x] Adicionar rota `/profile` em `App.jsx`
+- [x] Adicionar link "Perfil" no `Layout.jsx`
+- [x] Implementar formulário de CPF com validação
+- [x] Implementar busca de CEP via ViaCEP
+- [x] Implementar indicadores visuais de Gate 1 e Gate 2
 
-### Fase 3 — Gates no Dashboard
-- [ ] Buscar dados de profile ao carregar dashboard
-- [ ] Bloquear botão "Novo QR Code" se Gate 2 não atingido
-- [ ] Mostrar mensagens específicas do que falta
+### Fase 3 — Gates no Dashboard — CONCLUÍDA (31/07/2026)
+- [x] Buscar dados de profile ao carregar dashboard
+- [x] Bloquear botão "Novo QR Code" se Gate 2 não atingido
+- [x] Mostrar mensagens específicas do que falta
 
-### Fase 4 — Termos de Responsabilidade
-- [ ] Criar componente `TermAcceptance.jsx`
-- [ ] Integrar no `EntityFormModal.jsx`
-- [ ] Mostrar termo correto por tipo de entidade
-- [ ] Enviar `term_accepted` e `term_type` no payload
+### Fase 4 — Termos de Responsabilidade — CONCLUÍDA (31/07/2026)
+- [x] Criar componente `TermAcceptance.jsx`
+- [x] Integrar no `EntityFormModal.jsx`
+- [x] Mostrar termo correto por tipo de entidade
+- [x] Enviar `accept_term` no payload (o backend deriva o `term_type` do tipo)
+- [ ] Revisão jurídica dos textos dos termos (v1.0 são rascunhos)
 
-### Fase 5 — Ajustes
-- [ ] Atualizar `OtpVerifyPage.jsx` (pré-preencher email, redirect para /profile)
-- [ ] Verificar AdminPage quando backend for corrigido
-- [ ] Build final e deploy
+### Fase 5 — Ajustes — CONCLUÍDA (31/07/2026)
+- [x] Atualizar `OtpVerifyPage.jsx` (pré-preencher email, redirect para /profile)
+- [x] AdminPage verificado: não chamava `addQuota`, nada a corrigir
+- [x] `adminApi.addQuota` removido do `api.js` (rota não existe mais na API)
+- [x] Exibir QR Code real (`QrCodeModal.jsx`) com download em SVG
+- [x] Build final gerado em `dist/`
+
+### Fase 6 — Pendente
+- [ ] Login com Google (Fase 1 original, ainda não feita)
+- [ ] Editar / suspender / excluir QR Code (a API ainda não tem esses endpoints)
+- [ ] Checkout com Mercado Pago
 
 ---
 
