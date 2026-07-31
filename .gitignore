@@ -1,0 +1,16 @@
+node_modules
+.DS_Store
+Thumbs.db
+*.log
+.vite
+.idea
+.vscode
+
+# O .env do frontend É versionado de propósito: ele só contém a config
+# pública do Firebase e a URL da API — os mesmos valores que já vão
+# compilados dentro do dist/. Nada aqui é segredo.
+# Se um dia entrar algo sensível, mova para .env.local e descomente:
+# .env.local
+
+# Lixo do CPanel / FTP
+.ftpquota

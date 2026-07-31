@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/qrdobem.com.br
+    # O dist/ é versionado justamente para isto: hospedagem compartilhada
+    # não roda "npm run build". O cPanel só copia o que já está pronto.
+    - /bin/cp -R dist/. $DEPLOYPATH/
+    - /bin/cp .htaccess $DEPLOYPATH/
+
+# Fluxo de trabalho:
+#   1. npm run build       (na sua máquina)
+#   2. git add dist && git commit && git push
+#   3. cPanel → Git Version Control → Deploy HEAD Commit
+#
+# O .htaccess precisa redirecionar tudo para index.html (SPA), senão
+# rotas como /q/{codigo} dão 404 ao recarregar a página.
