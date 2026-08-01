@@ -9,11 +9,16 @@ import { entitiesApi } from '../services/api';
  * buscamos por fetch e usamos o data URI que volta.
  */
 export default function QrCodeModal({ entity, onClose }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const hasInitialQr = Boolean(entity.qr_code_base64);
+  const [data, setData] = useState(
+    hasInitialQr ? { qr_code_base64: entity.qr_code_base64, url: entity.url } : null
+  );
+  const [loading, setLoading] = useState(!hasInitialQr);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (hasInitialQr) return;
+
     let active = true;
 
     (async () => {
@@ -30,7 +35,10 @@ export default function QrCodeModal({ entity, onClose }) {
     return () => {
       active = false;
     };
-  }, [entity.unique_code]);
+  }, [entity.unique_code, hasInitialQr]);
+
+  // Considera como indisponível se carregou e não tem erro mas também não tem o base64 (null) ou erro 503
+  const isUnavailable = !loading && !error && data && !data.qr_code_base64;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -50,7 +58,17 @@ export default function QrCodeModal({ entity, onClose }) {
           )}
 
           {error && (
-            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm text-left">{error}</div>
+            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm text-left">
+              {error.includes('503') || error.includes('QRCODE_UNAVAILABLE') 
+                ? 'QR indisponível no momento' 
+                : error}
+            </div>
+          )}
+
+          {isUnavailable && (
+            <div className="bg-amber-50 text-amber-700 px-4 py-3 rounded-lg text-sm text-left">
+              QR indisponível no momento
+            </div>
           )}
 
           {data?.qr_code_base64 && (
@@ -70,12 +88,12 @@ export default function QrCodeModal({ entity, onClose }) {
               <div>
                 <p className="text-xs text-gray-500 mb-1">Link público</p>
                 <a
-                  href={data.url}
+                  href={data.url || entity.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-600 hover:underline text-xs break-all"
                 >
-                  {data.url}
+                  {data.url || entity.url}
                 </a>
               </div>
               <p className="text-xs text-gray-400">

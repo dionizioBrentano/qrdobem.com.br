@@ -66,7 +66,7 @@ export default function TermAcceptance({ type, accepted, onChange }) {
           className="mt-0.5 h-4 w-4 accent-emerald-600"
         />
         <span className="text-sm text-gray-700">
-          Li e aceito o termo de responsabilidade.
+          Li e aceito o termo de responsabilidade para este tipo de registro.
         </span>
       </label>
     </div>

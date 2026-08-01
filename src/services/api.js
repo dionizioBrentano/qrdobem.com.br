@@ -83,8 +83,6 @@ export const profileApi = {
 export const adminApi = {
   getTenants: () => request('/admin/tenants'),
 
-  // addQuota removido: a rota nunca existiu no backend. Créditos são
-  // concedidos por lote via createBatch.
 
   createBatch: (data) =>
     request('/admin/batches', {

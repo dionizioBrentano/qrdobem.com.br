@@ -51,8 +51,19 @@ export default function EntityFormModal({ organizationId, onClose, onCreated }) 
       });
       setResult(res);
     } catch (err) {
-      setError(err.data?.error || err.message);
-      setErrorCode(err.data?.code || '');
+      const code = err.data?.code;
+      const status = err.status;
+      let msg = err.data?.error || err.message;
+      
+      if (code === 'PROFILE_INCOMPLETE') msg = 'Cadastro do responsável financeiro pendente ou perfil incompleto.';
+      else if (code === 'ADDRESS_REQUIRED') msg = 'O endereço é obrigatório para criar um QR Code.';
+      else if (code === 'TERM_REQUIRED') msg = 'Você precisa aceitar o termo de responsabilidade.';
+      else if (status === 402) msg = 'Saldo insuficiente ou organização sem créditos.';
+      else if (status === 422) msg = 'Os dados informados são inválidos. Verifique os campos.';
+      else if (status === 401) msg = 'Sua sessão expirou. Faça login novamente.';
+
+      setError(msg);
+      setErrorCode(code || '');
     } finally {
       setLoading(false);
     }

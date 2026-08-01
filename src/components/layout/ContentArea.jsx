@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const categoryContent = {
   pets: {
@@ -26,7 +28,9 @@ const categoryContent = {
       { title: "Versátil", text: "Pode ser usado em tags de coleira ou chips subcutâneos." },
       { title: "Privacidade Blindada", text: "Você fala com o benfeitor sem expor nenhum dado pessoal." }
     ],
-    conclusion: "Tranquilidade de verdade é saber que, em uma emergência, seu pet tem voz e a sua família continua segura."
+    conclusion: "Tranquilidade de verdade é saber que, em uma emergência, seu pet tem voz e a sua família continua segura.",
+    trailType: 'pet',
+    cta: 'Criar meu QR de Pet'
   },
   pessoas: {
     label: "Pessoas",
@@ -48,29 +52,20 @@ const categoryContent = {
       }
     ],
     features: [],
-    conclusion: ""
+    conclusion: "",
+    trailType: 'person',
+    cta: 'Criar meu QR de Pessoa'
   },
   aventura: {
     label: "Aventura",
     title: "Proteção Ativa: Resgate e Segurança para quem vive em movimento",
-    intro: "Para quem enfrenta os riscos das ruas, das trilhas ou do transporte público, a ajuda não pode depender da sorte. O aplicativo qrdobem transforma o seu celular em um anjo da guarda digital, capaz de identificar acidentes, monitorar trajetos perigosos e avisar sua família automaticamente quando algo sai do planejado.",
+    intro: "Em breve: alertas de trajeto e queda. Hoje você pode criar um QR de identidade de emergência.",
     highlight: "",
-    paragraphs: [
-      {
-        subtitle: "🏍️ Para Motociclistas Profissionais",
-        text: "Quem usa a moto como ferramenta de trabalho sabe que o trânsito é imprevisível. Em caso de queda ou colisão, cada segundo conta. Com o aplicativo qrdobem ativo, o acelerômetro do seu dispositivo identifica o impacto da queda. Imediatamente, o app pergunta na tela: \"Você está bem? Precisa de ajuda?\".\n\nSe você confirmar que precisa de auxílio, ou se não houver resposta devido à gravidade do acidente, o sistema entra em Modo de Emergência automaticamente. Seus contatos de confiança são acionados em tempo real com a sua localização exata, garantindo que o resgate e a sua família cheguem até você o mais rápido possível."
-      },
-      {
-        subtitle: "🧗 Para Praticantes de Esportes Radicais e Aventureiros",
-        text: "Trilheiros, alpinistas, ciclistas e paraquedistas se colocam em risco por paixão, mas a segurança nunca deve ser deixada para trás. Em locais isolados, uma torção ou queda pode se tornar crítica. A tecnologia de detecção de impacto do qrdobem garante que, mesmo que você esteja sozinho e impossibilitado de pedir socorro, seus contatos de emergência serão alertados instantaneamente sobre o seu estado e a sua exata localização."
-      },
-      {
-        subtitle: "🚶‍♀️ Para Segurança no Trajeto Diário",
-        text: "O perigo também existe na rotina: ao esperar o ônibus em um local ermo, voltar tarde da faculdade ou passar por áreas de risco. Com o qrdobem, você não precisa mais mandar mensagens de \"cheguei bem\" a todo momento.\n\nVocê programa seu trajeto habitual, define horários de tolerância e marca \"checkpoints\" ao longo do caminho. Se houver um desvio abrupto da rota segura ou se o tempo limite estourar sem a confirmação de chegada, o aplicativo ativa o Modo de Emergência de forma silenciosa e automática, enviando alertas e sua localização atualizada para seus contatos de segurança."
-      }
-    ],
+    paragraphs: [],
     features: [],
-    conclusion: ""
+    conclusion: "",
+    trailType: 'person',
+    cta: 'Identidade de emergência (QR)'
   },
   logistica: {
     label: "Logística e Patrimônio",
@@ -109,7 +104,9 @@ const categoryContent = {
         text: "A aplicação do QR Code em vidros e peças inibe o desmanche e garante que o código não seja removido."
       }
     ],
-    conclusion: ""
+    conclusion: "",
+    trailType: 'object',
+    cta: 'Criar meu QR de Objeto'
   },
   familia: {
     label: "Para a sua família: Proteção Centralizada e Integrada",
@@ -136,7 +133,9 @@ const categoryContent = {
         text: "Combine o monitoramento passivo (QR Codes nas roupas das crianças ou coleiras dos pets) com o monitoramento ativo (alertas de queda de moto ou desvio de trajeto noturno) dentro do mesmo grupo."
       }
     ],
-    conclusion: "Não importa a idade ou o destino: a paz de espírito da sua família inteira fica literalmente na palma da sua mão, com a privacidade e o respeito que vocês merecem."
+    conclusion: "Não importa a idade ou o destino: a paz de espírito da sua família inteira fica literalmente na palma da sua mão, com a privacidade e o respeito que vocês merecem.",
+    cta: "Em breve",
+    disabled: true
   },
   grupo: {
     label: "Grupos e Causas",
@@ -159,7 +158,8 @@ const categoryContent = {
       }
     ],
     conclusion: "Você cuida deles. Deixe que a nossa tecnologia ajude a cuidar do seu projeto.",
-    cta: "Quero cadastrar minha Causa"
+    cta: "Em breve",
+    disabled: true
   },
   empresa: {
     label: "Empresas e Profissionais",
@@ -190,7 +190,9 @@ const categoryContent = {
         text: "Associe nossos códigos a sistemas de notificações, calendários, alarmes e automações nativas do dispositivo do seu usuário."
       }
     ],
-    conclusion: "Transforme uma simples etiqueta em uma experiência tecnológica inesquecível para o seu cliente."
+    conclusion: "Transforme uma simples etiqueta em uma experiência tecnológica inesquecível para o seu cliente.",
+    cta: "Em breve",
+    disabled: true
   },
   doacoes: {
     label: "Doações",
@@ -265,6 +267,8 @@ const categoryContent = {
 
 export default function ContentArea({ activeCategory }) {
   const [language, setLanguage] = useState('pt');
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Reseta o idioma sempre que o usuário muda de aba
   useEffect(() => {
@@ -278,6 +282,19 @@ export default function ContentArea({ activeCategory }) {
   }
   
   const content = categoryContent[contentKey];
+
+  const handleCtaClick = (e, trailType, disabled) => {
+    e.preventDefault();
+    if (disabled) return;
+    if (trailType) {
+      sessionStorage.setItem('qrdobem_trail', trailType);
+      if (user) {
+        navigate(`/dashboard?trail=${trailType}`);
+      } else {
+        navigate(`/login?trail=${trailType}`);
+      }
+    }
+  };
 
   return (
     <div id="content-area" className="w-full bg-white py-16 px-6 relative z-10 transition-all duration-500">
@@ -368,7 +385,10 @@ export default function ContentArea({ activeCategory }) {
         {/* Call to Action */}
         {content.cta && (
           <div className="flex justify-center mt-6">
-            <button className="bg-brand-olive text-white px-8 py-4 rounded-full font-bold text-xl hover:bg-brand-blue hover:-translate-y-1 transition-all shadow-lg shadow-brand-olive/30">
+            <button 
+              onClick={(e) => handleCtaClick(e, content.trailType, content.disabled)}
+              className={`px-8 py-4 rounded-full font-bold text-xl shadow-lg transition-all ${content.disabled ? 'bg-gray-400 text-gray-200 cursor-not-allowed shadow-none' : 'bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30'}`}
+            >
               {content.cta}
             </button>
           </div>

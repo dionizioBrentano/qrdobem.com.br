@@ -25,7 +25,11 @@ export default function OtpVerifyPage() {
       setMessage('Código enviado para ' + email);
       setStep('verify');
     } catch (err) {
-      setError(err.message);
+      if (err.status === 429) {
+        setError('Muitas tentativas. Aguarde um momento e tente novamente.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -43,7 +47,11 @@ export default function OtpVerifyPage() {
       await refreshTenant();
       setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
-      setError(err.message);
+      if (err.status === 429) {
+        setError('Muitas tentativas. Aguarde um momento e tente novamente.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

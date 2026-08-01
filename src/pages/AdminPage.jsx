@@ -8,7 +8,7 @@ export default function AdminPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [batchForm, setBatchForm] = useState({ organization_id: '', amount_total: '', unit_price: '' });
+  const [batchForm, setBatchForm] = useState({ organization_id: '', amount: '' });
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchMsg, setBatchMsg] = useState('');
 
@@ -38,11 +38,10 @@ export default function AdminPage() {
     try {
       await adminApi.createBatch({
         organization_id: Number(batchForm.organization_id),
-        amount_total: Number(batchForm.amount_total),
-        unit_price: Number(batchForm.unit_price),
+        amount: Number(batchForm.amount),
       });
       setBatchMsg('Lote criado com sucesso!');
-      setBatchForm({ organization_id: '', amount_total: '', unit_price: '' });
+      setBatchForm({ organization_id: '', amount: '' });
       loadTenants();
     } catch (err) {
       setBatchMsg(err.data?.error || err.message);
@@ -120,19 +119,8 @@ export default function AdminPage() {
             <label className="block text-xs text-gray-500 mb-1">Quantidade</label>
             <input
               type="number"
-              value={batchForm.amount_total}
-              onChange={(e) => setBatchForm({ ...batchForm, amount_total: e.target.value })}
-              required
-              className="px-3 py-2 border border-gray-300 rounded-lg w-32 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Preço unitário (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={batchForm.unit_price}
-              onChange={(e) => setBatchForm({ ...batchForm, unit_price: e.target.value })}
+              value={batchForm.amount}
+              onChange={(e) => setBatchForm({ ...batchForm, amount: e.target.value })}
               required
               className="px-3 py-2 border border-gray-300 rounded-lg w-32 text-sm"
             />
