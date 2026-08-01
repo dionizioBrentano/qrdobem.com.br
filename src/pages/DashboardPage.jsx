@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { entitiesApi, profileApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
+import PurchaseCreditsModal from '../components/PurchaseCreditsModal';
 
 const MISSING_LINKS = {
   email_verified: { label: 'verificar o e-mail', path: '/verify' },
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
   const [activeTrail, setActiveTrail] = useState(null);
+  const [showPurchase, setShowPurchase] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function DashboardPage() {
   const missingForEntity = profile?.missing_for_entity || [];
   const noCredits = data?.quota === 0 || String(error).includes('402');
   const allowCreate = canCreate && !noCredits;
+  const creditsStatus = searchParams.get('credits');
 
   return (
     <div className="space-y-6">
@@ -106,6 +109,22 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {creditsStatus === 'success' && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-sm font-medium">
+          Pagamento aprovado! Seus créditos já foram liberados.
+        </div>
+      )}
+      {creditsStatus === 'pending' && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm font-medium">
+          Pagamento pendente. Seus créditos serão liberados assim que for confirmado.
+        </div>
+      )}
+      {creditsStatus === 'failure' && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
+          Ocorreu um erro no pagamento ou ele foi cancelado. Tente novamente.
+        </div>
+      )}
 
       {/* Banner de Trilha Ativa */}
       {activeTrail && allowCreate && (
@@ -146,8 +165,9 @@ export default function DashboardPage() {
 
       {/* Mensagem de falta de créditos */}
       {noCredits && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
-          Sem créditos no momento.
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm flex justify-between items-center">
+          <span>Sem créditos no momento.</span>
+          <button onClick={() => setShowPurchase(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded text-xs font-bold transition">Comprar Créditos</button>
         </div>
       )}
 
@@ -184,9 +204,14 @@ export default function DashboardPage() {
 
       {/* Cards de métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border p-5">
-          <p className="text-sm text-gray-500">Créditos disponíveis</p>
-          <p className="text-3xl font-bold text-emerald-600">{data?.quota ?? 0}</p>
+        <div className="bg-white rounded-xl shadow-sm border p-5 flex flex-col justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Créditos disponíveis</p>
+            <p className="text-3xl font-bold text-emerald-600">{data?.quota ?? 0}</p>
+          </div>
+          <button onClick={() => setShowPurchase(true)} className="mt-4 text-emerald-600 hover:text-emerald-700 text-sm font-medium text-left">
+            + Comprar Créditos
+          </button>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-5">
           <p className="text-sm text-gray-500">QR Codes ativos</p>
@@ -279,6 +304,10 @@ export default function DashboardPage() {
 
       {qrEntity && (
         <QrCodeModal entity={qrEntity} onClose={() => setQrEntity(null)} />
+      )}
+
+      {showPurchase && (
+        <PurchaseCreditsModal onClose={() => setShowPurchase(false)} />
       )}
     </div>
   );

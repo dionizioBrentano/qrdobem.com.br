@@ -107,3 +107,15 @@ export const messagesApi = {
       body: JSON.stringify(data),
     }),
 };
+
+// --- Credits ---
+export const creditsApi = {
+  pricing: () => request('/credits/pricing'),
+  
+  checkout: (quantity) => 
+    request('/credits/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ quantity }),
+    }),
+};
+
