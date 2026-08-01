@@ -13,9 +13,9 @@ const TYPES = [
 // mandar o usuário para /profile resolve; repetir o formulário não.
 const PROFILE_ERROR_CODES = ['PROFILE_INCOMPLETE', 'ADDRESS_REQUIRED'];
 
-export default function EntityFormModal({ organizationId, onClose, onCreated }) {
+export default function EntityFormModal({ organizationId, initialType = 'person', onClose, onCreated }) {
   const [form, setForm] = useState({
-    type: 'person',
+    type: initialType,
     name: '',
     contact_phone: '',
     contact_email: '',

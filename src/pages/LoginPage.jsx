@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -10,6 +10,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'register' || mode === 'signup') {
+      setIsRegister(true);
+    }
+
+    const trail = searchParams.get('trail');
+    if (['pet', 'person', 'object'].includes(trail)) {
+      sessionStorage.setItem('qrdobem_trail', trail);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +34,13 @@ export default function LoginPage() {
       } else {
         await login(email, password);
       }
-      navigate('/dashboard');
+      
+      const storedTrail = sessionStorage.getItem('qrdobem_trail');
+      if (storedTrail) {
+        navigate(`/dashboard?trail=${storedTrail}`);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Erro ao autenticar.');
     } finally {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { entitiesApi, profileApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
@@ -22,6 +22,18 @@ export default function DashboardPage() {
   const [showForm, setShowForm] = useState(false);
   const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
+  const [activeTrail, setActiveTrail] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const queryTrail = searchParams.get('trail');
+    const storedTrail = sessionStorage.getItem('qrdobem_trail');
+    const trail = queryTrail || storedTrail;
+    
+    if (['pet', 'person', 'object'].includes(trail)) {
+      setActiveTrail(trail);
+    }
+  }, [searchParams]);
 
   const loadEntities = async (orgId) => {
     setLoading(true);
@@ -54,6 +66,12 @@ export default function DashboardPage() {
 
   const handleEntityCreated = () => {
     setShowForm(false);
+    sessionStorage.removeItem('qrdobem_trail');
+    setActiveTrail(null);
+    if (searchParams.has('trail')) {
+      searchParams.delete('trail');
+      setSearchParams(searchParams, { replace: true });
+    }
     loadEntities(activeOrgId);
     loadProfile();
   };
@@ -89,6 +107,24 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* Banner de Trilha Ativa */}
+      {activeTrail && canCreate && (
+        <div className="bg-emerald-50 border border-emerald-200 px-4 py-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <p className="text-emerald-900 font-bold">
+              Trilha em andamento: QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
+            </p>
+            <p className="text-sm text-emerald-800">Finalize a criação do seu código.</p>
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap shrink-0"
+          >
+            Criar meu QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
+          </button>
+        </div>
+      )}
 
       {/* Aviso específico do que falta, em vez do genérico "perfil incompleto" */}
       {profile && !canCreate && (
@@ -213,6 +249,7 @@ export default function DashboardPage() {
       {showForm && (
         <EntityFormModal
           organizationId={activeOrgId}
+          initialType={activeTrail || 'person'}
           onClose={() => setShowForm(false)}
           onCreated={handleEntityCreated}
         />
