@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { entitiesApi } from '../services/api';
 
 /**
@@ -85,16 +86,22 @@ export default function QrCodeModal({ entity, onClose }) {
               >
                 Baixar SVG
               </a>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Link público</p>
+              <div className="pt-2 flex flex-col gap-2">
                 <a
                   href={data.url || entity.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-600 hover:underline text-xs break-all"
+                  className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-5 py-2 rounded-lg text-sm font-medium transition"
                 >
-                  {data.url || entity.url}
+                  Abrir página pública
                 </a>
+                <Link
+                  to="/messages"
+                  onClick={onClose}
+                  className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-5 py-2 rounded-lg text-sm font-medium transition"
+                >
+                  Ver mensagens
+                </Link>
               </div>
               <p className="text-xs text-gray-400">
                 O SVG é vetorial: pode ser ampliado para impressão sem perder nitidez.

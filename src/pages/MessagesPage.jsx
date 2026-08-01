@@ -55,8 +55,8 @@ export default function MessagesPage() {
       </div>
 
       {messages.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border p-10 text-center text-gray-400">
-          Nenhuma mensagem recebida ainda.
+        <div className="bg-white rounded-xl shadow-sm border p-10 text-center text-gray-500">
+          Quando alguém escanear seu QR e enviar recado, aparece aqui.
         </div>
       ) : (
         <div className="space-y-3">
@@ -81,8 +81,19 @@ export default function MessagesPage() {
                     )}
                   </div>
                   <p className="text-gray-700 text-sm">{msg.message}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                    <span>Entidade: {msg.entity?.encrypted_name || msg.entity_id}</span>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
+                    <div className="flex items-center">
+                      <span>QR: {msg.entity?.name || msg.entity?.encrypted_name || msg.entity_id}</span>
+                      {msg.entity?.type && (
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ml-2 ${
+                          msg.entity.type === 'person' ? 'bg-blue-100 text-blue-700' :
+                          msg.entity.type === 'pet' ? 'bg-amber-100 text-amber-700' :
+                          'bg-purple-100 text-purple-700'
+                        }`}>
+                          {msg.entity.type === 'person' ? 'Pessoa' : msg.entity.type === 'pet' ? 'Pet' : 'Objeto'}
+                        </span>
+                      )}
+                    </div>
                     {msg.latitude && msg.longitude && (
                       <a
                         href={`https://maps.google.com/?q=${msg.latitude},${msg.longitude}`}

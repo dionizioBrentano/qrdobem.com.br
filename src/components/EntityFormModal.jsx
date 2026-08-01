@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { entitiesApi } from '../services/api';
 import TermAcceptance from './TermAcceptance';
@@ -27,6 +27,10 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, type: initialType }));
+  }, [initialType]);
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -74,7 +78,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b">
           <h2 className="text-lg font-bold text-gray-900">
-            {result ? 'QR Code criado' : 'Novo QR Code'}
+            {result ? 'Registro criado' : 'Novo QR Code'}
           </h2>
           <button
             onClick={result ? onCreated : onClose}
@@ -86,6 +90,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
 
         {result ? (
           <div className="p-5 text-center space-y-4">
+            <p className="text-sm text-gray-600">Compartilhe ou imprima o QR.</p>
             {result.qr_code_base64 ? (
               <>
                 <img
@@ -108,21 +113,27 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
               </div>
             )}
 
-            <div className="pt-2">
-              <p className="text-xs text-gray-500 mb-1">Link público</p>
+            <div className="pt-2 flex flex-col gap-2">
               <a
                 href={result.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-600 hover:underline block text-sm break-all"
+                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-2 rounded-lg transition font-medium"
               >
-                {result.url}
+                Abrir página pública
               </a>
+              <Link
+                to="/messages"
+                onClick={onCreated}
+                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-2 rounded-lg transition font-medium"
+              >
+                Ver mensagens
+              </Link>
             </div>
 
             <button
               onClick={onCreated}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition font-medium"
             >
               Concluir
             </button>

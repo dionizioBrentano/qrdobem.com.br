@@ -70,7 +70,7 @@ const categoryContent = {
   logistica: {
     label: "Logística e Patrimônio",
     title: "Suas encomendas e bagagens documentadas, rastreadas e protegidas.",
-    intro: "Enviar um objeto de valor ou despachar uma bagagem sempre gera insegurança. Com o qrdobem, você transforma uma simples etiqueta em um dossiê digital completo do seu envio, protegendo seus bens sem expor seus dados pessoais no pacote.",
+    intro: "Enviar um objeto de valor ou despachar uma bagagem sempre gera insegurança. Com o qrdobem, você aplica um QR Code no seu objeto que funciona como um canal de comunicação anônimo, protegendo seus bens sem expor seus dados pessoais na etiqueta.",
     highlight: "Ao gerar um QR Code para o seu objeto, você cria um registro no nosso sistema. Caso a bagagem seja extraviada ou a encomenda se perca, quem a encontrar escaneia o código e se comunica diretamente com você por um chat seguro, sem ter acesso ao seu nome, endereço ou telefone.",
     paragraphs: [
       {
@@ -80,16 +80,12 @@ const categoryContent = {
     ],
     features: [
       {
-        title: "Descrição Detalhada",
-        text: "Registre o conteúdo exato do pacote ou mala atrelado ao QR Code antes do envio."
+        title: "Descrição e Identificação",
+        text: "Preencha as informações básicas do seu pacote ou mala atreladas ao QR Code."
       },
       {
-        title: "Anexo de Documentos",
-        text: "Suba notas fiscais, fotos do objeto ou documentos de transporte diretamente no sistema."
-      },
-      {
-        title: "Declaração de Valor",
-        text: "Forte indício de que o valor foi devidamente embalado e despachado, auxiliando em possíveis contestações."
+        title: "Contato Anônimo",
+        text: "Um chat seguro e direto entre quem encontrou o objeto e você, sem exibir seus números pessoais."
       },
       {
         title: "Avisos de Urgência (Veículos)",
@@ -111,7 +107,7 @@ const categoryContent = {
   familia: {
     label: "Para a sua família: Proteção Centralizada e Integrada",
     title: "Toda a sua família sob o mesmo guarda-chuva de cuidado.",
-    intro: "A segurança de quem você ama não precisa ser complicada ou fragmentada em vários aplicativos diferentes. Com o qrdobem, qualquer pessoa pode criar e administrar um Grupo Familiar, assumindo a gestão da segurança de toda a casa em um único lugar.",
+    intro: "A segurança de quem você ama não precisa ser complicada. Em breve, com o qrdobem, qualquer pessoa poderá criar e administrar um Grupo Familiar completo. Hoje, você já pode criar QR Codes de identidade de emergência individualmente.",
     highlight: "Ao centralizar o cuidado, o administrador do grupo tem o controle total sobre as configurações de emergência de cada membro, adaptando a plataforma para a realidade de cada um.",
     paragraphs: [
       {
@@ -140,7 +136,7 @@ const categoryContent = {
   grupo: {
     label: "Grupos e Causas",
     title: "Conectando o seu projeto a quem deseja ajudar.",
-    intro: "Sabemos que manter um abrigo, uma equipe de resgate voluntário, um centro de convivência ou qualquer projeto social exige dedicação integral e, na maioria das vezes, os recursos são escassos. A sua missão é cuidar da sociedade e salvar vidas; a nossa missão é garantir que você não faça isso sozinho.\n\nSe você gerencia uma iniciativa em prol do próximo, o qrdobem é a plataforma ideal para conectar o seu trabalho a milhares de pessoas dispostas a apoiar.",
+    intro: "Sabemos que manter um abrigo, uma equipe de resgate voluntário, um centro de convivência ou qualquer projeto social exige dedicação integral e, na maioria das vezes, os recursos são escassos. A sua missão é cuidar da sociedade e salvar vidas; a nossa missão é garantir que você não faça isso sozinho.\n\n(Lembrando que nossa funcionalidade para gestão rica e captação de doações está em desenvolvimento, mas novidades chegarão em breve!)",
     highlight: "Não importa se o seu projeto ainda é informal. Basta o CPF de um responsável para cadastrar a sua causa. Nós oferecemos a tecnologia para criar um espaço onde os doadores podem ver a seriedade do seu trabalho e contribuir financeiramente com total segurança.",
     paragraphs: [],
     features: [

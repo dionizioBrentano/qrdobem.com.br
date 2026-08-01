@@ -4,15 +4,12 @@ import { entitiesApi, profileApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
 
-const FIELD_LABELS = {
-  email_verified: 'verificar o e-mail',
-  cpf: 'informar o CPF',
-  phone: 'informar o telefone',
-  address: 'completar o endereço',
+const MISSING_LINKS = {
+  email_verified: { label: 'verificar o e-mail', path: '/verify' },
+  cpf: { label: 'informar o CPF', path: '/profile' },
+  phone: { label: 'informar o telefone', path: '/profile' },
+  address: { label: 'completar o endereço', path: '/profile' },
 };
-
-const describe = (missing = []) =>
-  missing.map((m) => FIELD_LABELS[m] || m).join(', ');
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -84,13 +81,15 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
+  if (error && !String(error).includes('402')) {
     return <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>;
   }
 
   // Na dúvida (perfil não carregou), libera o botão e deixa o backend decidir.
   const canCreate = profile ? profile.can_create_entity : true;
   const missingForEntity = profile?.missing_for_entity || [];
+  const noCredits = data?.quota === 0 || String(error).includes('402');
+  const allowCreate = canCreate && !noCredits;
 
   return (
     <div className="space-y-6">
@@ -99,8 +98,8 @@ export default function DashboardPage() {
         <div className="text-right">
           <button
             onClick={() => setShowForm(true)}
-            disabled={!canCreate}
-            title={canCreate ? '' : 'Complete o perfil para liberar'}
+            disabled={!allowCreate}
+            title={allowCreate ? '' : 'Complete o perfil ou adquira créditos'}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             + Novo QR Code
@@ -109,7 +108,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Banner de Trilha Ativa */}
-      {activeTrail && canCreate && (
+      {activeTrail && allowCreate && (
         <div className="bg-emerald-50 border border-emerald-200 px-4 py-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <p className="text-emerald-900 font-bold">
@@ -126,24 +125,47 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Aviso específico do que falta, em vez do genérico "perfil incompleto" */}
-      {profile && !canCreate && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm flex items-start justify-between gap-4">
-          <p>
-            Para criar QR Codes falta: <strong>{describe(missingForEntity)}</strong>.
-          </p>
-          <Link
-            to="/profile"
-            className="underline font-medium whitespace-nowrap hover:text-amber-900"
-          >
-            Completar perfil
-          </Link>
+      {/* Aviso específico do que falta */}
+      {profile && !canCreate && missingForEntity.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-4 rounded-lg text-sm">
+          <p className="font-semibold mb-2">Para criar seu QR você precisa:</p>
+          <ul className="list-disc ml-5 space-y-1">
+            {missingForEntity.map((m) => {
+              const info = MISSING_LINKS[m] || { label: m, path: '/profile' };
+              return (
+                <li key={m}>
+                  <Link to={info.path} className="underline hover:text-amber-900">
+                    {info.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
-      {profile?.can_create_entity && !profile?.can_purchase && (
+      {/* Mensagem de falta de créditos */}
+      {noCredits && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
-          Para comprar créditos falta: <strong>{describe(profile.missing_for_purchase)}</strong>.
+          Sem créditos no momento.
+        </div>
+      )}
+
+      {profile?.can_create_entity && !profile?.can_purchase && profile.missing_for_purchase?.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-4 rounded-lg text-sm">
+          <p className="font-semibold mb-2">Para comprar créditos falta:</p>
+          <ul className="list-disc ml-5 space-y-1">
+            {profile.missing_for_purchase.map((m) => {
+              const info = MISSING_LINKS[m] || { label: m, path: '/profile' };
+              return (
+                <li key={m}>
+                  <Link to={info.path} className="underline hover:text-amber-900">
+                    {info.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
