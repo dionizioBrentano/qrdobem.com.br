@@ -12,8 +12,8 @@ export default function AdminPage() {
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchMsg, setBatchMsg] = useState('');
 
-  if (tenant?.role !== 'superadmin') {
-    return <Navigate to="/dashboard" replace />;
+  if (!tenant || tenant.role !== 'superadmin') {
+    return <Navigate to="/painel" replace />;
   }
 
   useEffect(() => {

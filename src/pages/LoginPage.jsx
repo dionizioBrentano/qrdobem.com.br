@@ -37,9 +37,9 @@ export default function LoginPage() {
       
       const storedTrail = sessionStorage.getItem('qrdobem_trail');
       if (storedTrail) {
-        navigate(`/dashboard?trail=${storedTrail}`);
+        navigate(`/painel?trail=${storedTrail}`);
       } else {
-        navigate('/dashboard');
+        navigate('/painel');
       }
     } catch (err) {
       setError(err.message || 'Erro ao autenticar.');

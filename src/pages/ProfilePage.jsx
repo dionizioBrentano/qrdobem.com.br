@@ -411,8 +411,10 @@ export default function ProfilePage() {
           >
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>
-          <Link to="/dashboard" className="text-sm text-gray-500 hover:text-emerald-600">
-            Voltar ao dashboard
+        </div>
+        <div className="mt-8 text-center border-t pt-6">
+          <Link to="/painel" className="text-sm text-gray-500 hover:text-emerald-600">
+            Voltar ao Painel
           </Link>
         </div>
       </form>

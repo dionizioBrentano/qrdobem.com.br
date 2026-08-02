@@ -20,14 +20,14 @@ export default function Layout() {
       <nav className="w-full bg-brand-blue shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Logo Section */}
-          <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <Link to="/painel" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <ShieldCheck className="w-8 h-8 text-white" />
             <span className="text-2xl font-black text-white tracking-tight">Qrdobem</span>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6 text-sm font-bold text-white">
-            <Link to="/dashboard" className="hover:text-brand-cream transition-colors">
+            <Link to="/painel" className="hover:text-brand-cream transition-colors">
               Painel de Controle
             </Link>
             <Link to="/messages" className="hover:text-brand-cream transition-colors">
@@ -63,7 +63,7 @@ export default function Layout() {
         {isOpen && (
           <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full">
             <span className="text-brand-cream opacity-90 pb-2 border-b border-brand-cream/20 truncate">{tenant?.name}</span>
-            <Link to="/dashboard" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/painel" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
               Painel de Controle
             </Link>
             <Link to="/messages" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">

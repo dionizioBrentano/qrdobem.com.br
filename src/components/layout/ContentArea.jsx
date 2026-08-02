@@ -285,7 +285,7 @@ export default function ContentArea({ activeCategory }) {
     if (trailType) {
       sessionStorage.setItem('qrdobem_trail', trailType);
       if (user) {
-        navigate(`/dashboard?trail=${trailType}`);
+        navigate(`/painel?trail=${trailType}`);
       } else {
         navigate(`/login?trail=${trailType}`);
       }
