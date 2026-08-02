@@ -54,7 +54,7 @@ export default function QrCodeModal({ entity, onClose }) {
         <div className="p-5 text-center space-y-4">
           {loading && (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue" />
             </div>
           )}
 
@@ -82,7 +82,7 @@ export default function QrCodeModal({ entity, onClose }) {
               <a
                 href={data.qr_code_base64}
                 download={`qrdobem-${entity.unique_code}.svg`}
-                className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
+                className="inline-block bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
               >
                 Baixar SVG
               </a>
@@ -91,14 +91,14 @@ export default function QrCodeModal({ entity, onClose }) {
                   href={data.url || entity.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-5 py-2 rounded-lg text-sm font-medium transition"
+                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-5 py-2 rounded-lg text-sm font-medium transition"
                 >
                   Abrir página pública
                 </a>
                 <Link
                   to="/messages"
                   onClick={onClose}
-                  className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-5 py-2 rounded-lg text-sm font-medium transition"
+                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-5 py-2 rounded-lg text-sm font-medium transition"
                 >
                   Ver mensagens
                 </Link>

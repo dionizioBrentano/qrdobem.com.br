@@ -63,7 +63,7 @@ export default function TermAcceptance({ type, accepted, onChange }) {
           type="checkbox"
           checked={accepted}
           onChange={(e) => onChange(e.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-emerald-600"
+          className="mt-0.5 h-4 w-4 accent-brand-blue"
         />
         <span className="text-sm text-gray-700">
           Li e aceito o termo de responsabilidade para este tipo de registro.

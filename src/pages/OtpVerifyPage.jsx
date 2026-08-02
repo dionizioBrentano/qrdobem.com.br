@@ -58,9 +58,9 @@ export default function OtpVerifyPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-emerald-700 text-center mb-2">Verificação de E-mail</h1>
+        <h1 className="text-2xl font-bold text-brand-blue text-center mb-2">Verificação de E-mail</h1>
         <p className="text-gray-500 text-center text-sm mb-6">
           {step === 'send'
             ? 'Informe seu e-mail para receber o código.'
@@ -68,7 +68,7 @@ export default function OtpVerifyPage() {
         </p>
 
         {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg mb-4 text-sm">{error}</div>}
-        {message && <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg mb-4 text-sm">{message}</div>}
+        {message && <div className="bg-brand-blue/10 text-brand-blue px-4 py-2 rounded-lg mb-4 text-sm">{message}</div>}
 
         {step === 'send' ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
@@ -78,12 +78,12 @@ export default function OtpVerifyPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="seu@email.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
             >
               {loading ? 'Enviando...' : 'Enviar código'}
             </button>
@@ -97,19 +97,19 @@ export default function OtpVerifyPage() {
               required
               maxLength={6}
               placeholder="000000"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-center text-2xl tracking-widest"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none text-center text-2xl tracking-widest"
             />
             <button
               type="submit"
               disabled={loading || code.length < 6}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
             >
               {loading ? 'Verificando...' : 'Verificar'}
             </button>
             <button
               type="button"
               onClick={() => { setStep('send'); setCode(''); setError(''); setMessage(''); }}
-              className="w-full text-sm text-gray-500 hover:text-emerald-600"
+              className="w-full text-sm text-gray-500 hover:text-brand-blue"
             >
               Reenviar código
             </button>

@@ -2,42 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { profileApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-/**
- * Valida CPF pelos dígitos verificadores.
- * Validação cosmética — quem decide de verdade é o backend.
- */
-function isValidCpf(value) {
-  const cpf = (value || '').replace(/\D/g, '');
-  if (cpf.length !== 11) return false;
-  if (/^(\d)\1{10}$/.test(cpf)) return false;
-
-  for (let t = 9; t < 11; t++) {
-    let d = 0;
-    for (let c = 0; c < t; c++) d += Number(cpf[c]) * (t + 1 - c);
-    d = ((10 * d) % 11) % 10;
-    if (Number(cpf[t]) !== d) return false;
-  }
-  return true;
-}
-
-const maskCpf = (v) =>
-  (v || '')
-    .replace(/\D/g, '')
-    .slice(0, 11)
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-
-const maskCep = (v) =>
-  (v || '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
-
-const maskPhone = (v) =>
-  (v || '')
-    .replace(/\D/g, '')
-    .slice(0, 11)
-    .replace(/(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2');
+import { isValidCpf, maskCpf, maskCep, maskPhone } from '../utils/masks';
 
 const FIELD_LABELS = {
   email_verified: 'Verificar o e-mail',
@@ -48,14 +13,14 @@ const FIELD_LABELS = {
 
 function GateCard({ title, subtitle, ok, missing }) {
   return (
-    <div className={`rounded-xl border p-5 ${ok ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+    <div className={`rounded-xl border p-5 ${ok ? 'bg-brand-blue/10 border-brand-blue/30' : 'bg-amber-50 border-amber-200'}`}>
       <div className="flex items-start gap-3">
-        <span className={`text-xl leading-none ${ok ? 'text-emerald-600' : 'text-amber-500'}`}>
+        <span className={`text-xl leading-none ${ok ? 'text-brand-blue' : 'text-amber-500'}`}>
           {ok ? '✓' : '!'}
         </span>
         <div>
-          <p className={`font-semibold ${ok ? 'text-emerald-800' : 'text-amber-800'}`}>{title}</p>
-          <p className={`text-sm ${ok ? 'text-emerald-700' : 'text-amber-700'}`}>
+          <p className={`font-semibold ${ok ? 'text-brand-dark' : 'text-amber-800'}`}>{title}</p>
+          <p className={`text-sm ${ok ? 'text-brand-blue' : 'text-amber-700'}`}>
             {ok ? subtitle : 'Falta: ' + missing.map((m) => FIELD_LABELS[m] || m).join(', ')}
           </p>
         </div>
@@ -203,7 +168,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
       </div>
     );
   }
@@ -222,7 +187,7 @@ export default function ProfilePage() {
       </div>
 
       {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>}
-      {success && <div className="bg-emerald-50 text-emerald-700 px-4 py-3 rounded-lg text-sm">{success}</div>}
+      {success && <div className="bg-brand-blue/10 text-brand-blue px-4 py-3 rounded-lg text-sm">{success}</div>}
 
       {/* As duas gates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,11 +213,11 @@ export default function ProfilePage() {
             <p className="text-sm text-gray-500">{tenant.email || '—'}</p>
           </div>
           {emailVerified ? (
-            <span className="text-emerald-600 text-sm font-medium whitespace-nowrap">✓ Verificado</span>
+            <span className="text-brand-blue text-sm font-medium whitespace-nowrap">✓ Verificado</span>
           ) : (
             <button
               onClick={() => navigate('/verify')}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
+              className="bg-brand-blue hover:brightness-90 text-white px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
             >
               Verificar e-mail
             </button>
@@ -276,13 +241,13 @@ export default function ProfilePage() {
             onChange={(e) => setCpf(maskCpf(e.target.value))}
             placeholder="000.000.000-00"
             disabled={cpfSaved}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none disabled:bg-gray-50 disabled:text-gray-500"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none disabled:bg-gray-50 disabled:text-gray-500"
           />
           {!cpfSaved && (
             <button
               onClick={handleSaveCpf}
               disabled={cpfSaving || !cpf}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+              className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
             >
               {cpfSaving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -309,7 +274,7 @@ export default function ProfilePage() {
               type="text"
               value={form.name}
               onChange={(e) => update('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
           <div>
@@ -319,7 +284,7 @@ export default function ProfilePage() {
               value={form.phone}
               onChange={(e) => update('phone', maskPhone(e.target.value))}
               placeholder="(00) 00000-0000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
         </div>
@@ -336,7 +301,7 @@ export default function ProfilePage() {
               onChange={(e) => update('address_zipcode', maskCep(e.target.value))}
               onBlur={handleCepBlur}
               placeholder="00000-000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
           <div className="md:col-span-2">
@@ -345,7 +310,7 @@ export default function ProfilePage() {
               type="text"
               value={form.address_street}
               onChange={(e) => update('address_street', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
         </div>
@@ -357,7 +322,7 @@ export default function ProfilePage() {
               type="text"
               value={form.address_number}
               onChange={(e) => update('address_number', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
           <div>
@@ -366,7 +331,7 @@ export default function ProfilePage() {
               type="text"
               value={form.address_complement}
               onChange={(e) => update('address_complement', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
           <div>
@@ -375,7 +340,7 @@ export default function ProfilePage() {
               type="text"
               value={form.address_neighborhood}
               onChange={(e) => update('address_neighborhood', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
         </div>
@@ -387,7 +352,7 @@ export default function ProfilePage() {
               type="text"
               value={form.address_city}
               onChange={(e) => update('address_city', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
           <div>
@@ -398,7 +363,7 @@ export default function ProfilePage() {
               onChange={(e) => update('address_state', e.target.value.toUpperCase().slice(0, 2))}
               maxLength={2}
               placeholder="SP"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none uppercase"
             />
           </div>
         </div>
@@ -407,13 +372,13 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+            className="bg-brand-blue hover:brightness-90 text-white px-6 py-2.5 rounded-lg font-medium transition disabled:opacity-50"
           >
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>
         </div>
         <div className="mt-8 text-center border-t pt-6">
-          <Link to="/painel" className="text-sm text-gray-500 hover:text-emerald-600">
+          <Link to="/painel" className="text-sm text-gray-500 hover:text-brand-blue">
             Voltar ao Painel
           </Link>
         </div>

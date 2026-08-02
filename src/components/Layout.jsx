@@ -16,7 +16,7 @@ export default function Layout() {
   const isSuperAdmin = tenant?.role === 'superadmin';
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen bg-gray-50">
       <nav className="w-full bg-brand-blue shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Logo Section */}

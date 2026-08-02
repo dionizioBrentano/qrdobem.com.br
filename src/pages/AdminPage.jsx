@@ -53,7 +53,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-sm border p-5">
             <p className="text-sm text-gray-500">Tenants ativos</p>
-            <p className="text-3xl font-bold text-emerald-600">{data.metrics.total_tenants}</p>
+            <p className="text-3xl font-bold text-brand-blue">{data.metrics.total_tenants}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border p-5">
             <p className="text-sm text-gray-500">Total de QR Codes</p>
@@ -89,7 +89,7 @@ export default function AdminPage() {
           </div>
           <div className="bg-white rounded-xl shadow-sm border p-5">
             <p className="text-sm text-gray-500">Engajamento</p>
-            <p className="text-3xl font-bold text-emerald-600">{data.metrics.engagement}</p>
+            <p className="text-3xl font-bold text-brand-blue">{data.metrics.engagement}</p>
           </div>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function AdminPage() {
         <h2 className="text-lg font-semibold mb-4">Criar Lote de Créditos</h2>
         {batchMsg && (
           <div className={`px-4 py-2 rounded-lg mb-3 text-sm ${
-            batchMsg.includes('sucesso') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+            batchMsg.includes('sucesso') ? 'bg-brand-blue/10 text-brand-blue' : 'bg-red-50 text-red-700'
           }`}>
             {batchMsg}
           </div>
@@ -128,7 +128,7 @@ export default function AdminPage() {
           <button
             type="submit"
             disabled={batchLoading}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+            className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
           >
             {batchLoading ? 'Criando...' : 'Criar Lote'}
           </button>
@@ -158,7 +158,7 @@ export default function AdminPage() {
                 <td className="px-4 py-3">{t.used}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                    t.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    t.status === 'active' ? 'bg-brand-blue/20 text-brand-blue' : 'bg-red-100 text-red-700'
                   }`}>
                     {t.status === 'active' ? 'Ativo' : 'Bloqueado'}
                   </span>

@@ -42,6 +42,21 @@ export const authApi = {
     }),
 
   me: () => request('/auth/me'),
+
+  validateRegisterToken: (token) =>
+    request(`/auth/register-validate?token=${token}`),
+
+  requestRegisterLink: (email) =>
+    request('/auth/register-link', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  completeRegistration: (data) =>
+    request('/auth/register-complete', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // --- Entities ---
@@ -110,6 +125,8 @@ export const messagesApi = {
 
 // --- Credits ---
 export const creditsApi = {
+  mpPublicConfig: () => request('/credits/mp-public-config'),
+
   pricing: () => request('/credits/pricing'),
   
   checkout: (quantity) => 
@@ -117,5 +134,12 @@ export const creditsApi = {
       method: 'POST',
       body: JSON.stringify({ quantity }),
     }),
-};
 
+  checkoutCard: (data) =>
+    request('/credits/checkout/card', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  orderStatus: (id) => request(`/credits/orders/${id}`),
+};

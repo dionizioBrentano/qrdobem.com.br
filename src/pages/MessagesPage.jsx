@@ -31,7 +31,7 @@ export default function MessagesPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
       </div>
     );
   }
@@ -48,7 +48,7 @@ export default function MessagesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Mensagens</h1>
         {unread.length > 0 && (
-          <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
+          <span className="bg-brand-blue/20 text-brand-blue px-3 py-1 rounded-full text-sm font-medium">
             {unread.length} nova{unread.length > 1 ? 's' : ''}
           </span>
         )}
@@ -64,7 +64,7 @@ export default function MessagesPage() {
             <div
               key={msg.id}
               className={`bg-white rounded-xl shadow-sm border p-4 transition ${
-                !msg.read_at ? 'border-l-4 border-l-emerald-500' : ''
+                !msg.read_at ? 'border-l-4 border-l-brand-blue' : ''
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -75,7 +75,7 @@ export default function MessagesPage() {
                       <span className="text-xs text-gray-400">({msg.sender_contact})</span>
                     )}
                     {!msg.read_at && (
-                      <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      <span className="bg-brand-blue/100 text-white text-xs px-2 py-0.5 rounded-full">
                         Nova
                       </span>
                     )}
@@ -99,7 +99,7 @@ export default function MessagesPage() {
                         href={`https://maps.google.com/?q=${msg.latitude},${msg.longitude}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-emerald-600 hover:underline"
+                        className="text-brand-blue hover:underline"
                       >
                         Ver no mapa
                       </a>
@@ -110,7 +110,7 @@ export default function MessagesPage() {
                 {!msg.read_at && (
                   <button
                     onClick={() => handleMarkAsRead(msg.id)}
-                    className="text-sm text-emerald-600 hover:underline whitespace-nowrap"
+                    className="text-sm text-brand-blue hover:underline whitespace-nowrap"
                   >
                     Marcar como lida
                   </button>

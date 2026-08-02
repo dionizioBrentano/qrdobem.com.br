@@ -54,8 +54,8 @@ export default function PublicEntityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-emerald-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+      <div className="min-h-screen flex items-center justify-center bg-brand-blue/10">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
       </div>
     );
   }
@@ -75,11 +75,11 @@ export default function PublicEntityPage() {
   const typeLabels = { person: 'Pessoa', pet: 'Pet', object: 'Objeto' };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto space-y-4 pt-8">
         {/* Cabeçalho */}
         <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
-          <div className="inline-block bg-emerald-100 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full mb-3">
+          <div className="inline-block bg-brand-blue/20 text-brand-blue text-xs font-medium px-3 py-1 rounded-full mb-3">
             {typeLabels[entity.type] || entity.type}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{entity.name}</h1>
@@ -126,7 +126,7 @@ export default function PublicEntityPage() {
           {sent ? (
             <div className="text-center py-4">
               <div className="text-4xl mb-2">💚</div>
-              <p className="font-medium text-emerald-700">Mensagem enviada com sucesso!</p>
+              <p className="font-medium text-brand-blue">Mensagem enviada com sucesso!</p>
               <p className="text-gray-500 text-sm mt-1">O responsável será notificado.</p>
             </div>
           ) : (
@@ -137,14 +137,14 @@ export default function PublicEntityPage() {
                 value={msgForm.sender_name}
                 onChange={(e) => setMsgForm({ ...msgForm, sender_name: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
               />
               <input
                 type="text"
                 placeholder="Seu contato (telefone ou e-mail)"
                 value={msgForm.sender_contact}
                 onChange={(e) => setMsgForm({ ...msgForm, sender_contact: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
               />
               <textarea
                 placeholder="Sua mensagem *"
@@ -152,12 +152,12 @@ export default function PublicEntityPage() {
                 onChange={(e) => setMsgForm({ ...msgForm, message: e.target.value })}
                 required
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
               />
               <button
                 type="submit"
                 disabled={sending}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
               >
                 {sending ? 'Enviando...' : 'Enviar Mensagem'}
               </button>

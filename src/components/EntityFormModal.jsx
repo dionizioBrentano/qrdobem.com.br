@@ -101,7 +101,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 <a
                   href={result.qr_code_base64}
                   download={`qrdobem-${result.unique_code}.svg`}
-                  className="inline-block text-sm text-emerald-600 hover:underline"
+                  className="inline-block text-sm text-brand-blue hover:underline"
                 >
                   Baixar QR Code (SVG)
                 </a>
@@ -118,14 +118,14 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 href={result.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-2 rounded-lg transition font-medium"
+                className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-6 py-2 rounded-lg transition font-medium"
               >
                 Abrir página pública
               </a>
               <Link
                 to="/messages"
                 onClick={onCreated}
-                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-2 rounded-lg transition font-medium"
+                className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-6 py-2 rounded-lg transition font-medium"
               >
                 Ver mensagens
               </Link>
@@ -133,7 +133,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
 
             <button
               onClick={onCreated}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition font-medium"
+              className="bg-brand-blue hover:brightness-90 text-white px-6 py-2 rounded-lg transition font-medium"
             >
               Concluir
             </button>
@@ -161,8 +161,8 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                     onClick={() => changeType(t.value)}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
                       form.type === t.value
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-emerald-400'
+                        ? 'bg-brand-blue text-white border-brand-blue'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-brand-blue'
                     }`}
                   >
                     {t.label}
@@ -178,7 +178,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 value={form.name}
                 onChange={(e) => update('name', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
               />
             </div>
 
@@ -189,7 +189,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 value={form.contact_phone}
                 onChange={(e) => update('contact_phone', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
               />
             </div>
 
@@ -199,7 +199,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 type="email"
                 value={form.contact_email}
                 onChange={(e) => update('contact_email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
               />
             </div>
 
@@ -209,7 +209,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 value={form.medical_info}
                 onChange={(e) => update('medical_info', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none resize-none"
               />
             </div>
 
@@ -219,7 +219,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 value={form.additional_info}
                 onChange={(e) => update('additional_info', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none resize-none"
               />
             </div>
 
@@ -232,7 +232,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
             <button
               type="submit"
               disabled={loading || !acceptedTerm}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Registrando...' : 'Registrar QR Code'}
             </button>
