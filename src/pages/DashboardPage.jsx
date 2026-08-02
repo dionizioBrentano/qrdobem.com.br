@@ -96,14 +96,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <div className="text-right">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900">Painel de Controle</h1>
+        <div className="w-full md:w-auto text-right">
           <button
             onClick={() => setShowForm(true)}
             disabled={!allowCreate}
             title={allowCreate ? '' : 'Complete o perfil ou adquira créditos'}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             + Novo QR Code
           </button>
@@ -226,9 +226,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabela de entidades */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+      <div className="bg-white rounded-xl shadow-sm border w-full overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead className="bg-gray-50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Nome</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
@@ -291,6 +292,7 @@ export default function DashboardPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showForm && (
