@@ -87,6 +87,8 @@ export default function PurchaseCreditsModal({ onClose }) {
         token: formData.token,
         payment_method_id: formData.payment_method_id,
         payer_email: formData.payer?.email,
+        identification_type: formData.payer?.identification?.type,
+        identification_number: formData.payer?.identification?.number,
         installments: formData.installments,
         issuer_id: formData.issuer_id,
       };
