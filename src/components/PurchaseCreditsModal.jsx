@@ -14,6 +14,24 @@ export default function PurchaseCreditsModal({ onClose }) {
   const [orderId, setOrderId] = useState(null);
   const [method, setMethod] = useState('pix'); // 'pix' | 'card'
 
+  // ATENÇÃO: todos os hooks precisam ficar aqui em cima, ANTES de qualquer
+  // return condicional deste componente (há vários mais abaixo: loading,
+  // pixData, orderId). Hook depois de early return quebra a ordem dos hooks
+  // entre renders e dispara o React error #310.
+  const amount = Number(((pricing?.unit_price || 0) * quantity).toFixed(2));
+
+  // useMemo evita recriar estes objetos a cada render. Sem isso o SDK do
+  // Mercado Pago reinicializa o Brick repetidamente, criando instâncias
+  // concorrentes — e o token gerado por uma instância órfã não é reconhecido.
+  const initialization = useMemo(() => ({ amount }), [amount]);
+
+  const customization = useMemo(() => ({
+    paymentMethods: {
+      creditCard: 'all',
+      debitCard: 'all',
+    },
+  }), []);
+
   useEffect(() => {
     Promise.all([creditsApi.pricing(), creditsApi.mpPublicConfig()])
       .then(([pricingData, configData]) => {
@@ -218,22 +236,6 @@ export default function PurchaseCreditsModal({ onClose }) {
     style: 'currency',
     currency: 'BRL',
   });
-
-  const amount = Number((pricing?.unit_price * quantity).toFixed(2));
-
-  // useMemo evita recriar estes objetos a cada render. Sem isso o SDK do
-  // Mercado Pago reinicializa o Brick repetidamente (dava para ver várias
-  // chamadas "initialization?public_key=..." no Network), criando instâncias
-  // concorrentes — e o token gerado por uma instância órfã não é reconhecido
-  // pela API, resultando em "Cannot infer Payment Method".
-  const initialization = useMemo(() => ({ amount }), [amount]);
-
-  const customization = useMemo(() => ({
-    paymentMethods: {
-      creditCard: 'all',
-      debitCard: 'all',
-    },
-  }), []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
