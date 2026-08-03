@@ -5,6 +5,7 @@ async function request(endpoint, options = {}) {
 
   const headers = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
