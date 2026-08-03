@@ -78,7 +78,7 @@ export default function PurchaseCreditsModal({ onClose }) {
     }
   };
 
-  const onSubmitCard = async (formData) => {
+  const onSubmitCard = async ({ formData }) => {
     setIsSubmitting(true);
     setError('');
     try {
