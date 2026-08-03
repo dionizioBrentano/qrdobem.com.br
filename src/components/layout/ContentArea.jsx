@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Loader2, Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { waitlistApi, contactApi } from '../../services/api';
 
 const categoryContent = {
   pets: {
@@ -105,160 +106,81 @@ const categoryContent = {
     cta: 'Criar meu QR de Objeto'
   },
   familia: {
-    label: "Para a sua família: Proteção Centralizada e Integrada",
-    title: "Toda a sua família sob o mesmo guarda-chuva de cuidado.",
-    intro: "A segurança de quem você ama não precisa ser complicada. Em breve, com o qrdobem, qualquer pessoa poderá criar e administrar um Grupo Familiar completo. Hoje, você já pode criar QR Codes de identidade de emergência individualmente.",
-    highlight: "Ao centralizar o cuidado, o administrador do grupo tem o controle total sobre as configurações de emergência de cada membro, adaptando a plataforma para a realidade de cada um.",
-    paragraphs: [
-      {
-        subtitle: "Tudo em um só aplicativo:",
-        text: ""
-      }
-    ],
-    features: [
-      {
-        title: "Gestão Unificada",
-        text: "Concentre a proteção do seu pet, das crianças, dos idosos e dos jovens aventureiros em um único painel de controle."
-      },
-      {
-        title: "Gerenciamento de Contatos",
-        text: "Defina de forma rápida e fácil quem será acionado em cada situação. O vizinho pode ser o contato de emergência se o cachorro fugir, enquanto você e seu cônjuge recebem os alertas de trajeto dos filhos."
-      },
-      {
-        title: "Proteção Multicaminhos",
-        text: "Combine o monitoramento passivo (QR Codes nas roupas das crianças ou coleiras dos pets) com o monitoramento ativo (alertas de queda de moto ou desvio de trajeto noturno) dentro do mesmo grupo."
-      }
-    ],
-    conclusion: "Não importa a idade ou o destino: a paz de espírito da sua família inteira fica literalmente na palma da sua mão, com a privacidade e o respeito que vocês merecem.",
-    cta: "Em breve",
-    disabled: true
+    label: "Para a sua família",
+    title: "Proteção da família.",
+    intro: "A proteção da família garante que você tenha vários QR Codes (para pessoas e pets) na mesma conta. Uma gestão familiar avançada e unificada estará em breve no nosso roadmap.",
+    highlight: "",
+    paragraphs: [],
+    features: [],
+    conclusion: "",
+    cta: "Começar proteção da família",
+    disabled: false,
+    trailType: 'family'
   },
   grupo: {
     label: "Grupos e Causas",
-    title: "Conectando o seu projeto a quem deseja ajudar.",
-    intro: "Sabemos que manter um abrigo, uma equipe de resgate voluntário, um centro de convivência ou qualquer projeto social exige dedicação integral e, na maioria das vezes, os recursos são escassos. A sua missão é cuidar da sociedade e salvar vidas; a nossa missão é garantir que você não faça isso sozinho.\n\n(Lembrando que nossa funcionalidade para gestão rica e captação de doações está em desenvolvimento, mas novidades chegarão em breve!)",
-    highlight: "Não importa se o seu projeto ainda é informal. Basta o CPF de um responsável para cadastrar a sua causa. Nós oferecemos a tecnologia para criar um espaço onde os doadores podem ver a seriedade do seu trabalho e contribuir financeiramente com total segurança.",
+    title: "Em desenvolvimento...",
+    intro: "Sabemos que manter um abrigo, uma equipe de resgate ou um projeto social exige dedicação. A nossa funcionalidade dedicada para gestão de causas e grupos está atualmente em desenvolvimento.",
+    highlight: "Inscreva-se na nossa lista de espera para ser avisado sobre o lançamento.",
     paragraphs: [],
-    features: [
-      {
-        title: "Visibilidade para sua Causa",
-        text: "Cadastre-se e passe a integrar nossa rede de doações. Quem busca apoiar a sua frente de atuação poderá encontrar e apadrinhar o seu projeto facilmente."
-      },
-      {
-        title: "Captação Contínua",
-        text: "Crie campanhas para necessidades específicas (medicamentos, reformas, consertos ou compra de uniformes e equipamentos) e receba apoio direto."
-      },
-      {
-        title: "Credibilidade e Confiança",
-        text: "Utilize nosso painel de transparência para mostrar aos doadores exatamente como os recursos arrecadados geram impacto real na ponta."
-      }
-    ],
-    conclusion: "Você cuida deles. Deixe que a nossa tecnologia ajude a cuidar do seu projeto.",
-    cta: "Em breve",
-    disabled: true
+    features: [],
+    conclusion: "",
+    cta: "Avise-me por e-mail",
+    disabled: false,
+    action: 'waitlist',
+    interest: 'grupo'
   },
   empresa: {
     label: "Empresas e Profissionais",
-    title: "Sua marca conectada, infinitas possibilidades.",
-    intro: "Além de utilizar todas as nossas ferramentas de proteção e rastreamento, empresas e profissionais independentes podem ir muito além. Com o qrdobem, a nossa tecnologia de QR Codes inteligentes pode ser totalmente customizada e moldada para resolver os desafios específicos do seu nicho de mercado.",
-    highlight: "O limite é a sua imaginação: nossos QR Codes podem se transformar em qualquer solução que o seu público precise, sempre com a sua marca em destaque (White-label).",
-    paragraphs: [
-      {
-        subtitle: "Casos de Uso Inovadores",
-        text: "Imagine uma farmácia que distribui nossos QR Codes aos seus clientes. O cliente escaneia a caixa do remédio, que é associada à sua conta. O nosso sistema cria automaticamente um calendário de dosagem no celular do paciente para alertá-lo nos horários corretos. Tudo isso rodando com a robustez do qrdobem, mas com a interface e a marca exclusiva da farmácia."
-      },
-      {
-        subtitle: "Para Profissionais Independentes",
-        text: "Nossa plataforma também é o motor ideal para corretores de seguros, corretores de imóveis, agentes de planos de saúde e consultores que desejam criar produtos tecnológicos para suas carteiras de clientes. Você desenha o produto, e nós entregamos a tecnologia de ponta para viabilizá-lo."
-      }
-    ],
-    features: [
-      {
-        title: "Soluções Prontas",
-        text: "Utilize nossa infraestrutura de resgate de pessoas, pets e rastreamento logístico imediatamente para os seus colaboradores ou clientes."
-      },
-      {
-        title: "Customização White-label",
-        text: "Desenvolvemos lógicas específicas para o seu negócio. O cliente enxerga e interage com a sua marca, enquanto nós garantimos a tecnologia de fundo."
-      },
-      {
-        title: "Integração Inteligente",
-        text: "Associe nossos códigos a sistemas de notificações, calendários, alarmes e automações nativas do dispositivo do seu usuário."
-      }
-    ],
-    conclusion: "Transforme uma simples etiqueta em uma experiência tecnológica inesquecível para o seu cliente.",
-    cta: "Em breve",
-    disabled: true
+    title: "Parceria comercial em breve",
+    intro: "Empresas podem utilizar as nossas trilhas atuais de pessoas, pets e objetos livremente. Em breve, lançaremos parcerias comerciais mais aprofundadas e funcionalidades dedicadas.",
+    highlight: "Quer saber mais sobre como utilizar o QR do Bem na sua empresa ou ser avisado sobre o lançamento para empresas?",
+    paragraphs: [],
+    features: [],
+    conclusion: "",
+    cta: "Avise-me por e-mail",
+    disabled: false,
+    action: 'waitlist',
+    interest: 'empresa'
   },
   doacoes: {
     label: "Doações",
-    title: "Doe e ajude uma causa",
-    intro: "Sua solidariedade encontra quem mais precisa. Escolha uma causa e transforme vidas com transparência e segurança.\n\nO qrdobem abriga dezenas de grupos, centros de assistência e projetos focados em cuidar de quem precisa. Se você quer fazer a diferença, mas não tem um projeto específico em mente, nós facilitamos o caminho.\n\nAbaixo, você pode escolher a causa que mais toca o seu coração. O valor doado será destinado aos grupos cadastrados em nossa plataforma que atuam diretamente nessa frente. E o mais importante: através do nosso painel de transparência, você acompanha exatamente o impacto da sua doação.",
-    highlight: "",
+    title: "Apoie causas reais em breve",
+    intro: "A funcionalidade de doações diretas na plataforma está em desenvolvimento. Nosso objetivo é conectar a sua solidariedade a quem mais precisa com transparência e segurança.",
+    highlight: "Se você quer ser avisado assim que o painel de doações estiver disponível, inscreva-se abaixo.",
     paragraphs: [],
-    features: [
-      {
-        title: "🐾 Causa Animal",
-        text: "Apoie abrigos independentes, protetores e iniciativas que resgatam, tratam e buscam lares seguros para animais em situação de abandono e risco."
-      },
-      {
-        title: "👴 Idosos",
-        text: "Direcione sua doação para lares de repouso, grupos de convivência e projetos que garantem dignidade, cuidado e qualidade de vida para a terceira idade."
-      },
-      {
-        title: "🧒 Crianças PCD",
-        text: "Ajude centros de cuidado e grupos de apoio que fornecem terapias, equipamentos e assistência especializada para crianças atípicas e com deficiência."
-      },
-      {
-        title: "🧑‍🦽 Adultos PCD",
-        text: "Contribua com iniciativas focadas na autonomia, reabilitação, inclusão social e fornecimento de equipamentos de mobilidade para adultos com deficiência."
-      },
-      {
-        title: "🏥 Centros de Cuidados",
-        text: "Fortaleça redes de apoio informal e centros assistenciais que atuam na linha de frente do cuidado diário de pessoas em situação de vulnerabilidade em suas comunidades."
-      },
-      {
-        title: "🤝 Iniciativas Independentes",
-        text: "Grupos e pessoas que com seu trabalho voluntário ajudam a sociedade e precisam de seu apoio."
-      }
-    ],
-    conclusion: ""
+    features: [],
+    conclusion: "",
+    cta: "Avise-me por e-mail",
+    disabled: false,
+    action: 'waitlist',
+    interest: 'doacoes'
   },
   doacoes_en: {
     label: "Donations",
-    title: "Donate and support a cause",
-    intro: "Your solidarity reaches those who need it most. Choose a cause and transform lives with transparency and security.\n\nThe qrdobem platform hosts dozens of groups, assistance centers, and projects focused on caring for those in need. If you want to make a difference but don't have a specific project in mind, we pave the way for you.\n\nBelow, you can choose the cause that touches your heart the most. The donated amount will be directed to registered groups on our platform that act directly on that front. Most importantly: through our transparency dashboard, you can track exactly the impact of your donation.",
-    highlight: "",
+    title: "Donate to real causes soon",
+    intro: "Direct donations feature is under development. We want to connect your solidarity with transparency.",
+    highlight: "Subscribe to our waitlist below.",
     paragraphs: [],
-    features: [
-      {
-        title: "🐾 Animal Cause",
-        text: "Support independent shelters, protectors, and initiatives that rescue, treat, and find safe homes for abandoned and at-risk animals."
-      },
-      {
-        title: "👴 Elderly Care",
-        text: "Direct your donation to nursing homes, social groups, and projects that guarantee dignity, care, and quality of life for the elderly."
-      },
-      {
-        title: "🧒 Children with Disabilities",
-        text: "Help care centers and support groups that provide therapies, equipment, and specialized assistance for atypical children and those with disabilities."
-      },
-      {
-        title: "🧑‍🦽 Adults with Disabilities",
-        text: "Contribute to initiatives focused on autonomy, rehabilitation, social inclusion, and the provision of mobility equipment for adults with disabilities."
-      },
-      {
-        title: "🏥 Care Centers",
-        text: "Strengthen informal support networks and assistance centers working on the frontlines of daily care for vulnerable people in their communities."
-      },
-      {
-        title: "🤝 Independent Initiatives",
-        text: "Groups and individuals who, through volunteer work, help society and need your support."
-      }
-    ],
-    conclusion: ""
+    features: [],
+    conclusion: "",
+    cta: "Notify me",
+    disabled: false,
+    action: 'waitlist',
+    interest: 'doacoes'
   },
-  contato: { label: "Contato", title: "Conteúdo em desenvolvimento...", intro: "", highlight: "", paragraphs: [], features: [], conclusion: "" }
+  contato: { 
+    label: "Contato", 
+    title: "Fale com a nossa equipe", 
+    intro: "Ficaremos felizes em ouvir você. Envie sua mensagem, dúvida ou sugestão e retornaremos o mais breve possível.", 
+    highlight: "", 
+    paragraphs: [], 
+    features: [], 
+    conclusion: "",
+    cta: "Enviar mensagem",
+    disabled: false,
+    action: 'contact'
+  }
 };
 
 export default function ContentArea({ activeCategory }) {
@@ -266,9 +188,17 @@ export default function ContentArea({ activeCategory }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Reseta o idioma sempre que o usuário muda de aba
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const [formData, setFormData] = useState({ email: '', name: '', message: '' });
+  const [status, setStatus] = useState('');
+
   useEffect(() => {
     setLanguage('pt');
+    setShowWaitlist(false);
+    setShowContact(false);
+    setStatus('');
+    setFormData({ email: '', name: '', message: '' });
   }, [activeCategory]);
 
   const baseCategory = activeCategory || 'pessoas';
@@ -279,9 +209,21 @@ export default function ContentArea({ activeCategory }) {
   
   const content = categoryContent[contentKey];
 
-  const handleCtaClick = (e, trailType, disabled) => {
+  const handleCtaClick = (e, trailType, disabled, action) => {
     e.preventDefault();
     if (disabled) return;
+    
+    if (action === 'waitlist') {
+      setShowWaitlist(true);
+      setShowContact(false);
+      return;
+    }
+    if (action === 'contact') {
+      setShowContact(true);
+      setShowWaitlist(false);
+      return;
+    }
+
     if (trailType) {
       sessionStorage.setItem('qrdobem_trail', trailType);
       if (user) {
@@ -289,6 +231,35 @@ export default function ContentArea({ activeCategory }) {
       } else {
         navigate(`/login?trail=${trailType}`);
       }
+    }
+  };
+
+  const submitWaitlist = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    try {
+      await waitlistApi.join(formData.email, content.interest || 'geral');
+      setStatus('success');
+      setFormData({ ...formData, email: '' });
+    } catch (err) {
+      setStatus('error');
+    }
+  };
+
+  const submitContact = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    try {
+      await contactApi.send({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        source: content.interest || 'contato'
+      });
+      setStatus('success');
+      setFormData({ email: '', name: '', message: '' });
+    } catch (err) {
+      setStatus('error');
     }
   };
 
@@ -379,15 +350,51 @@ export default function ContentArea({ activeCategory }) {
         )}
 
         {/* Call to Action */}
-        {content.cta && (
+        {content.cta && !showWaitlist && !showContact && (
           <div className="flex justify-center mt-6">
             <button 
-              onClick={(e) => handleCtaClick(e, content.trailType, content.disabled)}
+              onClick={(e) => handleCtaClick(e, content.trailType, content.disabled, content.action)}
               className={`px-8 py-4 rounded-full font-bold text-xl shadow-lg transition-all ${content.disabled ? 'bg-gray-400 text-gray-200 cursor-not-allowed shadow-none' : 'bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30'}`}
             >
               {content.cta}
             </button>
           </div>
+        )}
+
+        {showWaitlist && (
+          <form onSubmit={submitWaitlist} className="mt-8 max-w-md mx-auto bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h4 className="text-xl font-bold text-brand-dark mb-4 text-center">Inscreva-se na lista de espera</h4>
+            {status === 'success' ? (
+              <div className="text-brand-olive font-medium text-center py-4 bg-green-50 rounded-xl">Inscrição realizada com sucesso! Avisaremos você.</div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <input required type="email" placeholder="Seu e-mail" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <button disabled={status === 'loading'} type="submit" className="bg-brand-blue text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50 transition-colors">
+                  {status === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Avisem-me'}
+                </button>
+                {status === 'error' && <p className="text-red-500 text-sm text-center font-medium">Ocorreu um erro. Tente novamente.</p>}
+              </div>
+            )}
+          </form>
+        )}
+
+        {showContact && (
+          <form onSubmit={submitContact} className="mt-8 max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h4 className="text-xl font-bold text-brand-dark mb-4 text-center">Envie uma mensagem</h4>
+            {status === 'success' ? (
+              <div className="text-brand-olive font-medium text-center py-4 bg-green-50 rounded-xl">Sua mensagem foi enviada com sucesso! Logo retornaremos.</div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <input required type="text" placeholder="Seu nome" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                <input required type="email" placeholder="Seu e-mail" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <textarea required placeholder="Como podemos ajudar?" rows={4} className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue resize-none" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} />
+                <button disabled={status === 'loading'} type="submit" className="bg-brand-blue text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50 transition-colors">
+                  {status === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-4 h-4"/> Enviar Mensagem</>}
+                </button>
+                {status === 'error' && <p className="text-red-500 text-sm text-center font-medium">Ocorreu um erro. Tente novamente.</p>}
+              </div>
+            )}
+          </form>
         )}
 
       </div>

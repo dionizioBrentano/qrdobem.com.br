@@ -143,3 +143,21 @@ export const creditsApi = {
 
   orderStatus: (id) => request(`/credits/orders/${id}`),
 };
+
+// --- Waitlist ---
+export const waitlistApi = {
+  join: (email, interest) =>
+    request('/waitlist', {
+      method: 'POST',
+      body: JSON.stringify({ email, interest }),
+    }),
+};
+
+// --- Contact ---
+export const contactApi = {
+  send: (data) =>
+    request('/contact', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};

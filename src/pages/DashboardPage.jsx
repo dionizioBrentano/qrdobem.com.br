@@ -23,7 +23,7 @@ export default function DashboardPage() {
     const storedTrail = sessionStorage.getItem('qrdobem_trail');
     const trail = queryTrail || storedTrail;
     
-    if (['pet', 'person', 'object'].includes(trail)) {
+    if (['pet', 'person', 'object', 'family'].includes(trail)) {
       setActiveTrail(trail);
     }
   }, [searchParams]);
@@ -140,18 +140,45 @@ export default function DashboardPage() {
         {/* Banner de Trilha Ativa */}
         {activeTrail && allowCreate && (
           <div className="bg-brand-blue/10 border border-brand-blue/30 px-4 py-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-            <div>
-              <p className="text-brand-dark font-bold">
-                Trilha em andamento: QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
-              </p>
-              <p className="text-sm text-brand-dark">Finalize a criação do seu código.</p>
-            </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap shrink-0"
-            >
-              Criar meu QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
-            </button>
+            {activeTrail === 'family' ? (
+              <>
+                <div>
+                  <p className="text-brand-dark font-bold">
+                    Trilha Família
+                  </p>
+                  <p className="text-sm text-brand-dark">Cadastre um QR por pessoa ou pet. A gestão em grupo virá depois.</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => { setActiveTrail('person'); setShowForm(true); }}
+                    className="bg-brand-blue hover:brightness-90 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap"
+                  >
+                    QR de Pessoa
+                  </button>
+                  <button
+                    onClick={() => { setActiveTrail('pet'); setShowForm(true); }}
+                    className="bg-brand-olive hover:brightness-90 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap"
+                  >
+                    QR de Pet
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-brand-dark font-bold">
+                    Trilha em andamento: QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
+                  </p>
+                  <p className="text-sm text-brand-dark">Finalize a criação do seu código.</p>
+                </div>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap shrink-0"
+                >
+                  Criar meu QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -273,7 +300,7 @@ export default function DashboardPage() {
       {showForm && (
         <EntityFormModal
           organizationId={activeOrgId}
-          initialType={activeTrail || 'person'}
+          initialType={activeTrail === 'family' ? 'person' : (activeTrail || 'person')}
           onClose={() => setShowForm(false)}
           onCreated={handleEntityCreated}
         />
