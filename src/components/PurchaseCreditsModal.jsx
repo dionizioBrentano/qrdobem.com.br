@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { creditsApi } from '../services/api';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
@@ -82,15 +82,16 @@ export default function PurchaseCreditsModal({ onClose }) {
     setIsSubmitting(true);
     setError('');
     try {
+      // A doc oficial do Payment Brick manda enviar o formData INTEIRO para o
+      // backend. Só acrescentamos a quantidade — o valor a cobrar continua sendo
+      // calculado no servidor, nunca a partir do que o cliente manda.
       const payload = {
+        ...formData,
         quantity,
-        token: formData.token,
-        payment_method_id: formData.payment_method_id,
+        // Campos achatados: mantidos por compatibilidade com a validação da API.
         payer_email: formData.payer?.email,
         identification_type: formData.payer?.identification?.type,
         identification_number: formData.payer?.identification?.number,
-        installments: formData.installments,
-        issuer_id: formData.issuer_id,
       };
       const res = await creditsApi.checkoutCard(payload);
       
@@ -218,16 +219,21 @@ export default function PurchaseCreditsModal({ onClose }) {
     currency: 'BRL',
   });
 
-  const initialization = {
-    amount: Number((pricing?.unit_price * quantity).toFixed(2)),
-  };
+  const amount = Number((pricing?.unit_price * quantity).toFixed(2));
 
-  const customization = {
+  // useMemo evita recriar estes objetos a cada render. Sem isso o SDK do
+  // Mercado Pago reinicializa o Brick repetidamente (dava para ver várias
+  // chamadas "initialization?public_key=..." no Network), criando instâncias
+  // concorrentes — e o token gerado por uma instância órfã não é reconhecido
+  // pela API, resultando em "Cannot infer Payment Method".
+  const initialization = useMemo(() => ({ amount }), [amount]);
+
+  const customization = useMemo(() => ({
     paymentMethods: {
       creditCard: 'all',
       debitCard: 'all',
     },
-  };
+  }), []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -292,7 +298,12 @@ export default function PurchaseCreditsModal({ onClose }) {
             </button>
           ) : (
             <div className="mt-4">
+              {/* key={amount} força o React a destruir e recriar o Brick quando
+                  o valor muda, em vez de deixar instâncias antigas vivas.
+                  A doc do Mercado Pago exige que cada instância seja destruída
+                  antes de gerar uma nova. */}
               <Payment
+                key={amount}
                 initialization={initialization}
                 customization={customization}
                 onSubmit={onSubmitCard}
