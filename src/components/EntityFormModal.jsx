@@ -13,15 +13,100 @@ const TYPES = [
 // mandar o usuário para /profile resolve; repetir o formulário não.
 const PROFILE_ERROR_CODES = ['PROFILE_INCOMPLETE', 'ADDRESS_REQUIRED'];
 
+// Espelham os limites já validados em EntityController::store.
+const MAX_CUSTOM_ATTRS = 20;
+const CUSTOM_ATTR_KEY_MAX = 100;
+const CUSTOM_ATTR_VALUE_MAX = 500;
+
+// Lista fechada, espelha EntityHealthField::FIELD_KEYS no backend.
+// `restricted` marca os que nunca podem virar públicos.
+const HEALTH_FIELDS = [
+  { key: 'blood_type', label: 'Tipo sanguíneo', placeholder: 'O+, AB-...' },
+  { key: 'allergies', label: 'Alergias' },
+  { key: 'chronic_conditions', label: 'Condições crônicas', placeholder: 'Diabetes, epilepsia...' },
+  { key: 'continuous_medications', label: 'Medicamentos de uso contínuo', restricted: true },
+  { key: 'relevant_surgeries', label: 'Cirurgias ou procedimentos relevantes' },
+  { key: 'substance_use_risk', label: 'Uso de substâncias de risco', restricted: true },
+  { key: 'caregiver_name', label: 'Nome do cuidador / contato de emergência' },
+  { key: 'caregiver_contact', label: 'Contato do cuidador', emergencyOnly: true },
+];
+
+// Listas fechadas da trilha Pet, espelham as constantes de EntityPetField.
+const SPECIES = [
+  { value: 'dog', label: 'Cão' },
+  { value: 'cat', label: 'Gato' },
+  { value: 'horse', label: 'Cavalo' },
+  { value: 'bird', label: 'Ave' },
+  { value: 'rabbit', label: 'Coelho' },
+  { value: 'reptile', label: 'Réptil' },
+  { value: 'other', label: 'Outro' },
+];
+
+const SIZES = [
+  { value: 'small', label: 'Pequeno' },
+  { value: 'medium', label: 'Médio' },
+  { value: 'large', label: 'Grande' },
+];
+
+const NEUTERED_STATES = [
+  { value: 'yes', label: 'Sim' },
+  { value: 'no', label: 'Não' },
+  { value: 'unknown', label: 'Não sei' },
+];
+
+// Lista fechada dos 5 avisos de manuseio da trilha Objeto.
+const HANDLING_FLAGS = [
+  { key: 'handling_fragile', label: 'Frágil' },
+  { key: 'handling_light_sensitive', label: 'Sensível à luz/calor' },
+  { key: 'handling_keep_refrigerated', label: 'Manter refrigerado' },
+  { key: 'handling_do_not_invert', label: 'Não virar/inverter' },
+  { key: 'handling_sentimental_value', label: 'Valor sentimental alto' },
+];
+
+const PUBLIC_LABEL_MAX = 200;
+
+const EMPTY_PET_FIELDS = {
+  species: 'dog',
+  species_other_description: '',
+  size: '',
+  size_is_public: true,
+  color: '',
+  color_is_public: true,
+  is_neutered: '',
+  is_neutered_is_public: true,
+  physical_description: '',
+  physical_description_is_public: true,
+  clinical_notes: '',
+  clinical_notes_is_public: true,
+  reference_contact: '',
+  reference_contact_is_public: false,
+};
+
+const EMPTY_OBJECT_FIELDS = {
+  description: '',
+  description_is_public: false,
+  public_label: '',
+  handling_fragile: false,
+  handling_light_sensitive: false,
+  handling_keep_refrigerated: false,
+  handling_do_not_invert: false,
+  handling_sentimental_value: false,
+  handling_notes_extra: '',
+};
+
 export default function EntityFormModal({ organizationId, initialType = 'person', onClose, onCreated }) {
   const [form, setForm] = useState({
     type: initialType,
     name: '',
     contact_phone: '',
     contact_email: '',
-    medical_info: '',
     additional_info: '',
   });
+  const [customAttrs, setCustomAttrs] = useState([]);
+  const [healthFields, setHealthFields] = useState({});
+  const [petFields, setPetFields] = useState(EMPTY_PET_FIELDS);
+  const [vaccinations, setVaccinations] = useState([]);
+  const [objectFields, setObjectFields] = useState(EMPTY_OBJECT_FIELDS);
   const [acceptedTerm, setAcceptedTerm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +118,41 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
   }, [initialType]);
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const addCustomAttr = () =>
+    setCustomAttrs((prev) =>
+      prev.length >= MAX_CUSTOM_ATTRS ? prev : [...prev, { key: '', value: '' }]
+    );
+
+  const updateCustomAttr = (index, field, value) =>
+    setCustomAttrs((prev) =>
+      prev.map((attr, i) => (i === index ? { ...attr, [field]: value } : attr))
+    );
+
+  const removeCustomAttr = (index) =>
+    setCustomAttrs((prev) => prev.filter((_, i) => i !== index));
+
+  const updatePetField = (field, value) => setPetFields((prev) => ({ ...prev, [field]: value }));
+
+  const updateObjectField = (field, value) =>
+    setObjectFields((prev) => ({ ...prev, [field]: value }));
+
+  const addVaccination = () =>
+    setVaccinations((prev) => [...prev, { vaccine_name: '', applied_at: '' }]);
+
+  const updateVaccination = (index, field, value) =>
+    setVaccinations((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
+    );
+
+  const removeVaccination = (index) =>
+    setVaccinations((prev) => prev.filter((_, i) => i !== index));
+
+  const updateHealthField = (key, patch) =>
+    setHealthFields((prev) => ({
+      ...prev,
+      [key]: { value: '', is_public: false, ...prev[key], ...patch },
+    }));
 
   // Trocar o tipo troca o termo — o aceite anterior não vale para o novo texto.
   const changeType = (value) => {
@@ -48,10 +168,43 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
     setError('');
     setErrorCode('');
     try {
+      // Pares incompletos não vão para a API — o backend espera chave e valor.
+      const attributes = customAttrs.reduce((acc, { key, value }) => {
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+        if (trimmedKey && trimmedValue) acc[trimmedKey] = trimmedValue;
+        return acc;
+      }, {});
+
+      const health = HEALTH_FIELDS.reduce((acc, { key, restricted }) => {
+        const entry = healthFields[key];
+        if (entry?.value?.trim()) {
+          acc.push({
+            field_key: key,
+            field_value: entry.value.trim(),
+            is_public: restricted ? false : Boolean(entry.is_public),
+          });
+        }
+        return acc;
+      }, []);
+
       const res = await entitiesApi.create({
         ...form,
         organization_id: organizationId,
         accept_term: true,
+        ...(Object.keys(attributes).length > 0 && { custom_attributes: attributes }),
+        ...(health.length > 0 && { health_fields: health }),
+        ...(form.type === 'pet' && {
+          pet_fields: {
+            ...petFields,
+            species_other_description:
+              petFields.species === 'other' ? petFields.species_other_description : null,
+            size: petFields.size || null,
+            is_neutered: petFields.is_neutered || null,
+          },
+          vaccinations: vaccinations.filter((v) => v.vaccine_name.trim() && v.applied_at),
+        }),
+        ...(form.type === 'object' && { object_fields: objectFields }),
       });
       setResult(res);
     } catch (err) {
@@ -62,6 +215,9 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
       if (code === 'PROFILE_INCOMPLETE') msg = 'Cadastro do responsável financeiro pendente ou perfil incompleto.';
       else if (code === 'ADDRESS_REQUIRED') msg = 'O endereço é obrigatório para criar um QR Code.';
       else if (code === 'TERM_REQUIRED') msg = 'Você precisa aceitar o termo de responsabilidade.';
+      // No texto público impresso não existe "enviar mesmo assim": o cadastro
+      // fica bloqueado até o texto ser corrigido.
+      else if (code === 'CONTACT_DETECTED') msg = 'O texto público não pode conter telefone ou e-mail. Corrija o campo e tente de novo — o cadastro não foi concluído.';
       else if (status === 402) msg = 'Saldo insuficiente ou organização sem créditos.';
       else if (status === 422) msg = 'Os dados informados são inválidos. Verifique os campos.';
       else if (status === 401) msg = 'Sua sessão expirou. Faça login novamente.';
@@ -203,15 +359,335 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
               />
             </div>
 
+            {form.type === 'pet' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sobre o pet</label>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Espécie *</label>
+                    <select
+                      value={petFields.species}
+                      onChange={(e) => updatePetField('species', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    >
+                      {SPECIES.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">Sempre visível na página pública.</p>
+                  </div>
+
+                  {petFields.species === 'other' && (
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Qual espécie? *</label>
+                      <input
+                        type="text"
+                        value={petFields.species_other_description}
+                        onChange={(e) => updatePetField('species_other_description', e.target.value)}
+                        required
+                        maxLength={255}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Porte</label>
+                    <select
+                      value={petFields.size}
+                      onChange={(e) => updatePetField('size', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    >
+                      <option value="">Não informar</option>
+                      {SIZES.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.size_is_public}
+                        onChange={(e) => updatePetField('size_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Cor</label>
+                    <input
+                      type="text"
+                      value={petFields.color}
+                      onChange={(e) => updatePetField('color', e.target.value)}
+                      placeholder="Caramelo, preto e branco, malhado..."
+                      maxLength={255}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.color_is_public}
+                        onChange={(e) => updatePetField('color_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Castrado</label>
+                    <select
+                      value={petFields.is_neutered}
+                      onChange={(e) => updatePetField('is_neutered', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    >
+                      <option value="">Não informar</option>
+                      {NEUTERED_STATES.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.is_neutered_is_public}
+                        onChange={(e) => updatePetField('is_neutered_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Características e particularidades</label>
+                    <textarea
+                      value={petFields.physical_description}
+                      onChange={(e) => updatePetField('physical_description', e.target.value)}
+                      rows={2}
+                      placeholder="Marcas, pelagem, cicatrizes, comportamento notável"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
+                    />
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.physical_description_is_public}
+                        onChange={(e) => updatePetField('physical_description_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Cuidados</label>
+                    <textarea
+                      value={petFields.clinical_notes}
+                      onChange={(e) => updatePetField('clinical_notes', e.target.value)}
+                      rows={2}
+                      placeholder="Condições clínicas relevantes"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
+                    />
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.clinical_notes_is_public}
+                        onChange={(e) => updatePetField('clinical_notes_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Clínica ou petshop de referência</label>
+                    <input
+                      type="text"
+                      value={petFields.reference_contact}
+                      onChange={(e) => updatePetField('reference_contact', e.target.value)}
+                      maxLength={255}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={petFields.reference_contact_is_public}
+                        onChange={(e) => updatePetField('reference_contact_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Vacinas</label>
+                    {vaccinations.length > 0 && (
+                      <div className="space-y-2 mb-2">
+                        {vaccinations.map((v, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Nome da vacina"
+                              value={v.vaccine_name}
+                              onChange={(e) => updateVaccination(index, 'vaccine_name', e.target.value)}
+                              maxLength={255}
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                            />
+                            <input
+                              type="date"
+                              value={v.applied_at}
+                              onChange={(e) => updateVaccination(index, 'applied_at', e.target.value)}
+                              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeVaccination(index)}
+                              aria-label="Remover vacina"
+                              className="px-3 text-gray-400 hover:text-red-600 text-xl leading-none shrink-0"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={addVaccination}
+                      className="text-sm text-brand-blue hover:underline font-medium"
+                    >
+                      + Adicionar vacina
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {form.type === 'object' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sobre o objeto</label>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Descrição do objeto</label>
+                    <textarea
+                      value={objectFields.description}
+                      onChange={(e) => updateObjectField('description', e.target.value)}
+                      rows={2}
+                      placeholder="O que o objeto é, de fato"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
+                    />
+                    <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={objectFields.description_is_public}
+                        onChange={(e) => updateObjectField('description_is_public', e.target.checked)}
+                        className="h-4 w-4 accent-brand-blue"
+                      />
+                      <span className="text-xs text-gray-500">Tornar público</span>
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Fica privado por padrão. Revelar o conteúdo publicamente pode ser um risco.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">
+                      Texto público (aparece impresso junto ao QR)
+                    </label>
+                    <textarea
+                      value={objectFields.public_label}
+                      onChange={(e) => updateObjectField('public_label', e.target.value)}
+                      rows={2}
+                      maxLength={PUBLIC_LABEL_MAX}
+                      placeholder="Se encontrou esta mochila, por favor escaneie o QR para contato."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      {objectFields.public_label.length}/{PUBLIC_LABEL_MAX} &bull; não pode conter telefone nem e-mail.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Avisos de manuseio</label>
+                    <div className="space-y-1">
+                      {HANDLING_FLAGS.map(({ key, label }) => (
+                        <label key={key} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={objectFields[key]}
+                            onChange={(e) => updateObjectField(key, e.target.checked)}
+                            className="h-4 w-4 accent-brand-blue"
+                          />
+                          <span className="text-sm text-gray-700">{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Outras instruções de manuseio</label>
+                    <textarea
+                      value={objectFields.handling_notes_extra}
+                      onChange={(e) => updateObjectField('handling_notes_extra', e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {form.type === 'person' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Informações médicas</label>
-              <textarea
-                value={form.medical_info}
-                onChange={(e) => update('medical_info', e.target.value)}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none resize-none"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Informações de saúde</label>
+              <p className="text-xs text-gray-400 mb-3">
+                Preencha só o que fizer sentido. Cada campo é privado até você marcar como público.
+              </p>
+
+              <div className="space-y-3">
+                {HEALTH_FIELDS.map(({ key, label, placeholder, restricted, emergencyOnly }) => (
+                  <div key={key}>
+                    <label className="block text-sm text-gray-700 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={healthFields[key]?.value || ''}
+                      onChange={(e) => updateHealthField(key, { value: e.target.value })}
+                      placeholder={placeholder}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                    {restricted ? (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Este dado só será mostrado a quem declarar uma emergência.
+                      </p>
+                    ) : emergencyOnly ? (
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(healthFields[key]?.is_public)}
+                          onChange={(e) => updateHealthField(key, { is_public: e.target.checked })}
+                          className="h-4 w-4 accent-brand-blue"
+                        />
+                        <span className="text-xs text-gray-500">
+                          Liberar em emergência declarada (nunca aparece na página pública)
+                        </span>
+                      </label>
+                    ) : (
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(healthFields[key]?.is_public)}
+                          onChange={(e) => updateHealthField(key, { is_public: e.target.checked })}
+                          className="h-4 w-4 accent-brand-blue"
+                        />
+                        <span className="text-xs text-gray-500">Tornar público</span>
+                      </label>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Informações adicionais</label>
@@ -221,6 +697,62 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none resize-none"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Campos personalizados
+              </label>
+              <p className="text-xs text-gray-400 mb-2">
+                Informações extras que aparecem na página pública do QR.
+              </p>
+
+              {customAttrs.length > 0 && (
+                <div className="space-y-2 mb-2">
+                  {customAttrs.map((attr, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Nome do campo"
+                        value={attr.key}
+                        onChange={(e) => updateCustomAttr(index, 'key', e.target.value)}
+                        maxLength={CUSTOM_ATTR_KEY_MAX}
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Valor"
+                        value={attr.value}
+                        onChange={(e) => updateCustomAttr(index, 'value', e.target.value)}
+                        maxLength={CUSTOM_ATTR_VALUE_MAX}
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeCustomAttr(index)}
+                        aria-label="Remover campo"
+                        className="px-3 text-gray-400 hover:text-red-600 text-xl leading-none shrink-0"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={addCustomAttr}
+                disabled={customAttrs.length >= MAX_CUSTOM_ATTRS}
+                className="text-sm text-brand-blue hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+              >
+                + Adicionar campo
+              </button>
+              {customAttrs.length >= MAX_CUSTOM_ATTRS && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Limite de {MAX_CUSTOM_ATTRS} campos personalizados atingido.
+                </p>
+              )}
             </div>
 
             <TermAcceptance

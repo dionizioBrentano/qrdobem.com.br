@@ -252,7 +252,14 @@ export default function DashboardPage() {
 
                 return (
                   <tr key={entity.unique_code} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{entity.name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {entity.name}
+                      {entity.has_active_emergency && (
+                        <span className="inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                          EMERGÊNCIA
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 capitalize">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                         entity.type === 'person' ? 'bg-blue-100 text-blue-700' :
@@ -307,7 +314,14 @@ export default function DashboardPage() {
       )}
 
       {qrEntity && (
-        <QrCodeModal entity={qrEntity} onClose={() => setQrEntity(null)} />
+        <QrCodeModal
+          entity={qrEntity}
+          onClose={() => setQrEntity(null)}
+          onUpdated={() => {
+            setQrEntity(null);
+            loadEntities(activeOrgId);
+          }}
+        />
       )}
 
       {showPurchase && (

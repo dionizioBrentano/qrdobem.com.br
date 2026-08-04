@@ -9,13 +9,19 @@ import { entitiesApi } from '../services/api';
  * apontar um <img src> direto para o endpoint: ele exige o Bearer token, então
  * buscamos por fetch e usamos o data URI que volta.
  */
-export default function QrCodeModal({ entity, onClose }) {
+export default function QrCodeModal({ entity, onClose, onUpdated }) {
   const hasInitialQr = Boolean(entity.qr_code_base64);
   const [data, setData] = useState(
     hasInitialQr ? { qr_code_base64: entity.qr_code_base64, url: entity.url } : null
   );
   const [loading, setLoading] = useState(!hasInitialQr);
   const [error, setError] = useState('');
+
+  // Vacinação é o único campo editável depois da criação (trilha Pet).
+  const [showVaccineForm, setShowVaccineForm] = useState(false);
+  const [vaccine, setVaccine] = useState({ vaccine_name: '', applied_at: '' });
+  const [savingVaccine, setSavingVaccine] = useState(false);
+  const [vaccineError, setVaccineError] = useState('');
 
   useEffect(() => {
     if (hasInitialQr) return;
@@ -40,6 +46,22 @@ export default function QrCodeModal({ entity, onClose }) {
 
   // Considera como indisponível se carregou e não tem erro mas também não tem o base64 (null) ou erro 503
   const isUnavailable = !loading && !error && data && !data.qr_code_base64;
+
+  const handleAddVaccination = async (e) => {
+    e.preventDefault();
+    setSavingVaccine(true);
+    setVaccineError('');
+    try {
+      await entitiesApi.addVaccination(entity.unique_code, vaccine);
+      setVaccine({ vaccine_name: '', applied_at: '' });
+      setShowVaccineForm(false);
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      setVaccineError(err.data?.error || err.message);
+    } finally {
+      setSavingVaccine(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -107,6 +129,67 @@ export default function QrCodeModal({ entity, onClose }) {
                 O SVG é vetorial: pode ser ampliado para impressão sem perder nitidez.
               </p>
             </>
+          )}
+
+          {entity.type === 'pet' && (
+            <div className="pt-4 border-t text-left">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Vacinas</h3>
+
+              {entity.pet_info?.vaccinations?.length > 0 && (
+                <ul className="space-y-1 text-sm mb-2">
+                  {entity.pet_info.vaccinations.map((v) => (
+                    <li key={v.id} className="flex justify-between gap-4">
+                      <span className="text-gray-500">{v.vaccine_name}</span>
+                      <span className="text-gray-900">
+                        {new Date(v.applied_at + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {vaccineError && (
+                <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm mb-2">
+                  {vaccineError}
+                </div>
+              )}
+
+              {showVaccineForm ? (
+                <form onSubmit={handleAddVaccination} className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Nome da vacina"
+                    value={vaccine.vaccine_name}
+                    onChange={(e) => setVaccine({ ...vaccine, vaccine_name: e.target.value })}
+                    required
+                    maxLength={255}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                  />
+                  <input
+                    type="date"
+                    value={vaccine.applied_at}
+                    onChange={(e) => setVaccine({ ...vaccine, applied_at: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={savingVaccine}
+                    className="w-full bg-brand-blue hover:brightness-90 text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                  >
+                    {savingVaccine ? 'Salvando...' : 'Salvar vacina'}
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowVaccineForm(true)}
+                  className="text-sm text-brand-blue hover:underline font-medium"
+                >
+                  + Adicionar vacina
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

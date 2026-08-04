@@ -15,6 +15,7 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
   const needsEmail = missingSet.has('email_verified');
   const needsCpf = missingSet.has('cpf');
   const needsPhone = missingSet.has('phone');
+  const needsNickname = missingSet.has('nickname');
   const needsAddress = missingSet.has('address');
 
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,7 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
 
   const [form, setForm] = useState({
     phone: maskPhone(tenant.phone || ''),
+    nickname: tenant.nickname || '',
     address_zipcode: maskCep(tenant.address_zipcode || ''),
     address_street: tenant.address_street || '',
     address_number: tenant.address_number || '',
@@ -96,7 +98,7 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
       }
 
       // 2. Salvar outros dados se precisar
-      if (needsPhone || needsAddress) {
+      if (needsPhone || needsNickname || needsAddress) {
         const payload = { ...form };
         payload.phone = payload.phone.replace(/\D/g, '');
         payload.address_zipcode = payload.address_zipcode.replace(/\D/g, '');
@@ -179,6 +181,24 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
           </div>
         )}
 
+        {needsNickname && (
+          <div>
+            <label className="block text-sm font-medium text-amber-900 mb-1">Apelido</label>
+            <input
+              type="text"
+              value={form.nickname}
+              onChange={(e) => update('nickname', e.target.value)}
+              placeholder="Como quer ser chamado"
+              maxLength={255}
+              required
+              className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none bg-white"
+            />
+            <p className="text-xs text-amber-700 mt-1">
+              Como você quer ser chamado quando ajudar alguém pelo QR do Bem — não precisa ser seu nome completo.
+            </p>
+          </div>
+        )}
+
         {needsAddress && (
           <div className="space-y-4 bg-white p-4 rounded-lg border border-amber-100">
             <p className="font-medium text-gray-900 text-sm">Endereço Completo</p>
@@ -255,7 +275,7 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
           </div>
         )}
 
-        {(needsCpf || needsPhone || needsAddress) && (
+        {(needsCpf || needsPhone || needsNickname || needsAddress) && (
           <button
             type="submit"
             disabled={saving}

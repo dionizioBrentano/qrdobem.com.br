@@ -8,6 +8,7 @@ const FIELD_LABELS = {
   email_verified: 'Verificar o e-mail',
   cpf: 'Informar o CPF',
   phone: 'Informar o telefone',
+  nickname: 'Definir um apelido',
   address: 'Completar o endereço',
 };
 
@@ -41,6 +42,7 @@ export default function ProfilePage() {
 
   const [form, setForm] = useState({
     name: '',
+    nickname: '',
     phone: '',
     address_zipcode: '',
     address_street: '',
@@ -64,6 +66,7 @@ export default function ProfilePage() {
       const t = res.tenant || {};
       setForm({
         name: t.name || '',
+        nickname: t.nickname || '',
         phone: maskPhone(t.phone || ''),
         address_zipcode: maskCep(t.address_zipcode || ''),
         address_street: t.address_street || '',
@@ -287,6 +290,20 @@ export default function ProfilePage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Apelido</label>
+          <input
+            type="text"
+            value={form.nickname}
+            onChange={(e) => update('nickname', e.target.value)}
+            maxLength={255}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Como você quer ser chamado quando ajudar alguém pelo QR do Bem — não precisa ser seu nome completo.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

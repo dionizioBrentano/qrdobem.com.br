@@ -20,6 +20,8 @@ const TERMS = {
       'Declaro que as informações são verdadeiras e que me comprometo a mantê-las atualizadas.',
       'Estou ciente de que os dados marcados como públicos ficarão visíveis para qualquer pessoa que ler o QR Code, e que informações sensíveis de saúde só devem ser incluídas se eu julgar necessário para socorro.',
       'Autorizo o QR do Bem a armazenar e exibir esses dados exclusivamente para a finalidade de localização, identificação e contato em situações de emergência.',
+      /* TEXTO PENDENTE DE REVISÃO JURÍDICA/PRODUTO */
+      'Estou ciente de que qualquer pessoa que ler este QR Code pode declarar uma situação de emergência, informando o próprio CPF. Ao fazê-lo, todas as informações de saúde deste cadastro — inclusive as marcadas como restritas, como medicamentos de uso contínuo e uso de substâncias — passam a ficar visíveis, e o responsável é notificado imediatamente por e-mail.',
     ],
   },
   pet: {

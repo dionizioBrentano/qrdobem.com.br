@@ -76,6 +76,18 @@ export const entitiesApi = {
   // A API gera o QR (é whitelabel). Precisa passar pelo request() por causa
   // do Bearer token — usar a URL direto num <img src> daria 401.
   qrCode: (uniqueCode) => request(`/entities/${uniqueCode}/qrcode`),
+
+  addVaccination: (uniqueCode, data) =>
+    request(`/entities/${uniqueCode}/vaccinations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  declareEmergency: (uniqueCode, declarantCpf) =>
+    request(`/entities/${uniqueCode}/declare-emergency`, {
+      method: 'POST',
+      body: JSON.stringify({ declarant_cpf: declarantCpf }),
+    }),
 };
 
 // --- Perfil (coleta progressiva) ---
@@ -122,6 +134,39 @@ export const messagesApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+};
+
+// --- Conversas (chat mediado) ---
+export const conversationsApi = {
+  create: (uniqueCode, data) =>
+    request(`/entities/${uniqueCode}/conversations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  reply: (uniqueCode, conversationId, data) =>
+    request(`/entities/${uniqueCode}/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  recover: (uniqueCode, recoveryCode) =>
+    request(`/entities/${uniqueCode}/conversations/recover`, {
+      method: 'POST',
+      body: JSON.stringify({ recovery_code: recoveryCode }),
+    }),
+
+  get: (uniqueCode, conversationId) =>
+    request(`/entities/${uniqueCode}/conversations/${conversationId}`),
+
+  tenantReply: (conversationId, data) =>
+    request(`/conversations/${conversationId}/reply`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  resolve: (conversationId) =>
+    request(`/conversations/${conversationId}/resolve`, { method: 'POST' }),
 };
 
 // --- Credits ---

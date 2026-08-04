@@ -6,6 +6,11 @@ import { authApi } from '../services/api';
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  // Presente quando o cadastro nasceu de uma conversa no QR de outra pessoa.
+  // O link de cadastro chega por e-mail sem query string, então o valor também
+  // é lido da sessão, onde a página pública o guardou.
+  const conversationId =
+    searchParams.get('conversation_id') || sessionStorage.getItem('qrdobem_origin_conversation');
   const navigate = useNavigate();
   const { register } = useAuth(); // Supõe-se que exista register() que use createUserWithEmailAndPassword e faça o login em seguida
 
@@ -53,7 +58,12 @@ export default function RegisterPage() {
       // Neste momento o AuthContext deve nos autenticar com Firebase e setar o token
 
       // 2. Chama a API para confirmar o cadastro e preencher email_verified_at
-      await authApi.completeRegistration({ token });
+      await authApi.completeRegistration({
+        token,
+        ...(conversationId && { origin_conversation_id: Number(conversationId) }),
+      });
+
+      sessionStorage.removeItem('qrdobem_origin_conversation');
 
       // 3. Redireciona
       navigate('/painel');
