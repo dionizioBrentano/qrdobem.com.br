@@ -18,7 +18,6 @@ import CausesListPage from './pages/CausesListPage';
 import DonatePage from './pages/DonatePage';
 import DisbursementsPage from './pages/DisbursementsPage';
 import BeneficiaryPage from './pages/BeneficiaryPage';
-import HeatmapPage from './pages/HeatmapPage';
 import MessagesPage from './pages/MessagesPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
@@ -43,9 +42,16 @@ export default function App() {
           {/* URL única do beneficiário — Fase 4, T4-R05/R06/R07.
               Pública por definição: o beneficiário não tem conta. */}
           <Route path="/b/:uniqueCode" element={<BeneficiaryPage />} />
-          {/* Mapa de calor — Fase 6, T2-R07. Público: é material de
-              campanha, feito para quem ainda não é usuário. */}
-          <Route path="/mapa" element={<HeatmapPage />} />
+          {/*
+            Mapa de calor (Fase 6, T2-R07) — DESATIVADO em 06/08/2026 por
+            decisão do proprietário.
+
+            A rota foi removida; a página segue em src/pages/HeatmapPage.jsx
+            e o backend continua agregando as leituras em `heatmap_cells`.
+            Para reativar, basta importar a página e devolver esta linha:
+
+              <Route path="/mapa" element={<HeatmapPage />} />
+          */}
 
           {/* Rotas protegidas */}
           <Route

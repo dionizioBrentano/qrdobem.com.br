@@ -188,9 +188,6 @@ export default function Layout() {
             <Link to="/saude" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
               Saúde
             </Link>
-            <Link to="/mapa" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
-              Mapa de calor
-            </Link>
             <Link to="/causa" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
               Causa
             </Link>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Map, HeartHandshake } from 'lucide-react';
+import { Menu, X, HeartHandshake } from 'lucide-react';
 
 /**
  * MainMenu — menu do site público.
@@ -81,10 +81,8 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
                 Causas
               </Link>
             )}
-            <Link to="/mapa" className="hover:text-brand-cream transition-colors flex items-center gap-1">
-              <Map className="w-4 h-4" />
-              Mapa
-            </Link>
+            {/* Link do Mapa de calor removido em 06/08/2026 por decisão do
+                proprietário. A rota está desativada em App.jsx. */}
             <Link
               to="/login"
               className="bg-brand-cream text-brand-blue px-4 py-1.5 rounded-lg hover:opacity-90 transition"
@@ -125,10 +123,6 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
                 Causas para apoiar
               </Link>
             )}
-            <Link to="/mapa" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors flex items-center gap-2">
-              <Map className="w-4 h-4" />
-              Mapa de calor
-            </Link>
             <Link
               to="/login"
               onClick={() => setIsOpen(false)}
