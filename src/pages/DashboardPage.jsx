@@ -5,6 +5,8 @@ import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
 import PurchaseCreditsModal from '../components/PurchaseCreditsModal';
 import CompleteRegistrationBlock from '../components/CompleteRegistrationBlock';
+import SpaceSelector from '../components/SpaceSelector';
+import PanicButton from '../components/PanicButton';
 
 // CTA de conversão por trilha de origem. A trilha chega via ?trail= ou
 // sessionStorage (ver LoginPage/RegisterPage) e define o texto do botão principal.
@@ -40,6 +42,9 @@ export default function DashboardPage() {
   const [showForm, setShowForm] = useState(false);
   const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
+  // Espaço de trilha ativo (F1). Fica null enquanto a API antiga não
+  // devolver `active_space_id` — o painel funciona igual nesse caso.
+  const [activeSpaceId, setActiveSpaceId] = useState(null);
   const [activeTrail, setActiveTrail] = useState(null);
   const [showPurchase, setShowPurchase] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,13 +59,16 @@ export default function DashboardPage() {
     }
   }, [searchParams]);
 
-  const loadEntities = async (orgId) => {
+  const loadEntities = async (orgId, spaceId) => {
     setLoading(true);
     setError('');
     try {
-      const res = await entitiesApi.list(orgId);
+      const res = await entitiesApi.list(orgId, spaceId);
       setData(res);
       setActiveOrgId(res.active_org_id);
+      // `?? null` e não `|| null`: id 0 não existe, mas manter a semântica
+      // evita surpresa se a API mudar.
+      setActiveSpaceId(res.active_space_id ?? null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -292,6 +300,23 @@ export default function DashboardPage() {
             <button onClick={() => setShowPurchase(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded text-xs font-bold transition">Comprar Créditos</button>
           </div>
         )}
+
+        {/* Botão de Pânico (T1-R07) — versão rústica: alarme no próprio app.
+            Só aparece com espaço ativo, porque o alerta vai para os membros
+            daquele espaço. */}
+        {activeSpaceId && (
+          <div className="mb-6">
+            <PanicButton spaceId={activeSpaceId} />
+          </div>
+        )}
+
+        {/* Seletor de espaço de trilha (F1, entrega 0.6).
+            Só aparece quando há mais de um espaço. */}
+        <SpaceSelector
+          spaces={data?.spaces}
+          activeSpaceId={activeSpaceId}
+          onSelect={(spaceId) => loadEntities(null, spaceId)}
+        />
 
         {/* Seletor de organização */}
         {data?.organizations?.length > 1 && (

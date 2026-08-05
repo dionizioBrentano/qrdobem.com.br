@@ -3,12 +3,24 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('firebase_token');
 
+  // Upload de mídia (T2-R05) manda FormData. Nesse caso o Content-Type
+  // NÃO pode ser definido por nós: o browser precisa gerar o cabeçalho
+  // multipart com o boundary, e um valor fixo aqui quebraria o parse no
+  // servidor.
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     'Accept': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
+
+  // Remove chaves anuladas pelo chamador (ex.: Content-Type: undefined),
+  // que virariam o texto "undefined" no cabeçalho.
+  Object.keys(headers).forEach((key) => {
+    if (headers[key] === undefined) delete headers[key];
+  });
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
@@ -62,8 +74,16 @@ export const authApi = {
 
 // --- Entities ---
 export const entitiesApi = {
-  list: (organizationId) =>
-    request(`/entities${organizationId ? `?organization_id=${organizationId}` : ''}`),
+  // `spaceId` é o contexto novo (F1). Opcional: sem ele, o backend resolve
+  // o espaço a partir da organização, e quem não mandar nenhum dos dois
+  // continua recebendo o comportamento antigo.
+  list: (organizationId, spaceId) => {
+    const params = new URLSearchParams();
+    if (organizationId) params.set('organization_id', organizationId);
+    if (spaceId) params.set('space_id', spaceId);
+    const qs = params.toString();
+    return request(`/entities${qs ? `?${qs}` : ''}`);
+  },
 
   create: (data) =>
     request('/entities', {
@@ -105,6 +125,313 @@ export const profileApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+};
+
+// --- Identidade da pessoa: contas múltiplas e vínculos (F10 / TX-R02..R04) ---
+//
+// Nenhuma destas chamadas envia CPF. O backend responde sempre a partir da
+// conta autenticada — CPF não é credencial de leitura de vínculo.
+export const meApi = {
+  // Contas da mesma pessoa (mesmo CPF), incluindo a atual.
+  accounts: () => request('/me/accounts'),
+
+  // Vínculos consolidados: espaços, papéis e por qual conta.
+  links: () => request('/me/links'),
+
+  // Valida a troca de conta. Hoje devolve method: 'reauth' — o backend não
+  // emite token do Firebase, então a troca é assistida, não silenciosa.
+  switchAccount: (targetTenantId) =>
+    request('/me/switch-account', {
+      method: 'POST',
+      body: JSON.stringify({ target_tenant_id: targetTenantId }),
+    }),
+};
+
+// --- Botão de Pânico (T1-R07) ---
+export const panicApi = {
+  // Acionamento pelo app instalado. `data` aceita latitude, longitude,
+  // location_accuracy, note e entity_id — todos opcionais.
+  trigger: (spaceId, data = {}) =>
+    request(`/spaces/${spaceId}/panic`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Acionamento público por leitura do QR. Sem autenticação: quem
+  // encontrou a pessoa na rua não tem conta.
+  triggerPublic: (uniqueCode, data = {}) =>
+    request(`/entities/${uniqueCode}/panic`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  history: (spaceId) => request(`/spaces/${spaceId}/panic`),
+
+  resolve: (eventId, falseAlarm = false) =>
+    request(`/panic/${eventId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ false_alarm: falseAlarm }),
+    }),
+};
+
+// --- Árvore genealógica (T1-R02) ---
+export const familyApi = {
+  tree: (spaceId) => request(`/spaces/${spaceId}/family`),
+
+  addRelation: (spaceId, data) =>
+    request(`/spaces/${spaceId}/family`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  removeRelation: (spaceId, relationshipId) =>
+    request(`/spaces/${spaceId}/family/${relationshipId}`, { method: 'DELETE' }),
+};
+
+// --- 2FA (T1-R05) ---
+export const twoFactorApi = {
+  status: () => request('/2fa/status'),
+  setup: () => request('/2fa/setup', { method: 'POST' }),
+  confirm: (code) =>
+    request('/2fa/confirm', { method: 'POST', body: JSON.stringify({ code }) }),
+  verify: (code) =>
+    request('/2fa/verify', { method: 'POST', body: JSON.stringify({ code }) }),
+  disable: (code) =>
+    request('/2fa/disable', { method: 'POST', body: JSON.stringify({ code }) }),
+};
+
+// --- Espaços de trilha (F1) e guarda-chuva (T2-R01, T2-R02) ---
+export const spacesApi = {
+  list: () => request('/spaces'),
+
+  // `type`: family | cause | company | donation.
+  // Causa de pessoa física não manda organization_id — e isso é o ponto:
+  // o sistema não exige CNPJ (T2-R01).
+  create: (data) =>
+    request('/spaces', { method: 'POST', body: JSON.stringify(data) }),
+
+  show: (spaceId) => request(`/spaces/${spaceId}`),
+
+  update: (spaceId, data) =>
+    request(`/spaces/${spaceId}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Chamado pelo dono do GUARDA-CHUVA, nunca pelo grupo apoiado.
+  attachChild: (spaceId, childSpaceId) =>
+    request(`/spaces/${spaceId}/children`, {
+      method: 'POST',
+      body: JSON.stringify({ child_space_id: childSpaceId }),
+    }),
+};
+
+// --- Vitrine das causas (T2-R04, T2-R05) ---
+export const causesApi = {
+  // Público — não exige login.
+  list: (filters = {}) => {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([, v]) => v)
+    );
+    const qs = params.toString();
+    return request(`/causes${qs ? `?${qs}` : ''}`);
+  },
+
+  show: (slug) => request(`/causes/${slug}`),
+
+  update: (spaceId, data) =>
+    request(`/spaces/${spaceId}/cause`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  publish: (spaceId, publish = true) =>
+    request(`/spaces/${spaceId}/cause/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ publish }),
+    }),
+};
+
+// --- Mídia com moderação (T2-R05) ---
+export const mediaApi = {
+  // Upload usa FormData: o Content-Type precisa vir do browser com o
+  // boundary do multipart, por isso o header é removido aqui.
+  upload: (spaceId, file, caption = '') => {
+    const form = new FormData();
+    form.append('file', file);
+    if (caption) form.append('caption', caption);
+
+    return request(`/spaces/${spaceId}/media`, {
+      method: 'POST',
+      body: form,
+      headers: { 'Content-Type': undefined },
+    });
+  },
+
+  list: (spaceId) => request(`/spaces/${spaceId}/media`),
+
+  moderate: (mediaId, approve, reason = null) =>
+    request(`/media/${mediaId}/moderate`, {
+      method: 'POST',
+      body: JSON.stringify({ approve, reason }),
+    }),
+
+  remove: (mediaId) => request(`/media/${mediaId}`, { method: 'DELETE' }),
+};
+
+// --- QR Codes em lote (T2-R03) ---
+export const qrBatchesApi = {
+  create: (spaceId, quantity, label = null) =>
+    request(`/spaces/${spaceId}/qr-batches`, {
+      method: 'POST',
+      body: JSON.stringify({ quantity, label }),
+    }),
+
+  list: (spaceId) => request(`/spaces/${spaceId}/qr-batches`),
+
+  show: (batchId) => request(`/qr-batches/${batchId}`),
+};
+
+// --- Doações (T4-R01 a T4-R04) ---
+export const donationsApi = {
+  create: (data) =>
+    request('/donations', { method: 'POST', body: JSON.stringify(data) }),
+
+  mine: () => request('/donations/mine'),
+
+  subscribe: (data) =>
+    request('/donations/subscribe', { method: 'POST', body: JSON.stringify(data) }),
+
+  cancelSubscription: (subscriptionId) =>
+    request(`/donations/${subscriptionId}/cancel-subscription`, { method: 'POST' }),
+
+  // Público: últimas doações de uma causa.
+  publicList: (slug) => request(`/causes/${slug}/donations`),
+};
+
+// --- Beneficiários e repasses (T4-R05, T4-R06, T4-R08, T4-R09) ---
+export const beneficiariesApi = {
+  create: (spaceId, data) =>
+    request(`/spaces/${spaceId}/beneficiaries`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  list: (spaceId) => request(`/spaces/${spaceId}/beneficiaries`),
+
+  update: (id, data) =>
+    request(`/beneficiaries/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // A senha é definida pela gestão e entregue de viva voz ao beneficiário:
+  // ele frequentemente não tem e-mail para um fluxo de "esqueci a senha".
+  setProofPassword: (id, password) =>
+    request(`/beneficiaries/${id}/proof-password`, {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
+  // --- URL única do beneficiário (públicas) ---
+  publicShow: (uniqueCode) => request(`/b/${uniqueCode}`),
+
+  createNeed: (uniqueCode, data) =>
+    request(`/b/${uniqueCode}/needs`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // A CONTRAPROVA (T4-R06). `factor`: password | tutor | facial.
+  confirmReceipt: (uniqueCode, disbursementId, factor, password = null) =>
+    request(`/b/${uniqueCode}/disbursements/${disbursementId}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ factor, password }),
+    }),
+
+  // Prova social (T4-R07). Só aceita depois da confirmação.
+  sendProof: (uniqueCode, disbursementId, file, caption = '') => {
+    const form = new FormData();
+    form.append('file', file);
+    if (caption) form.append('caption', caption);
+
+    return request(`/b/${uniqueCode}/disbursements/${disbursementId}/proof`, {
+      method: 'POST',
+      body: form,
+      headers: { 'Content-Type': undefined },
+    });
+  },
+};
+
+export const disbursementsApi = {
+  create: (spaceId, data) =>
+    request(`/spaces/${spaceId}/disbursements`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  list: (spaceId) => request(`/spaces/${spaceId}/disbursements`),
+
+  // status: approved | sent | disputed. A máquina de estados é validada
+  // no backend — o frontend usa `next_states` para montar os botões.
+  transition: (id, status) =>
+    request(`/disbursements/${id}/transition`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
+    }),
+
+  authorizeReimbursement: (id, data) =>
+    request(`/disbursements/${id}/reimbursement`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// --- Módulo Premium de Saúde (T1-R08 a T1-R11) ---
+export const healthApi = {
+  show: (uniqueCode) => request(`/entities/${uniqueCode}/health`),
+
+  addDiaryEntry: (uniqueCode, data) =>
+    request(`/entities/${uniqueCode}/health/diary`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  createPrescription: (uniqueCode, data) =>
+    request(`/entities/${uniqueCode}/prescriptions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updatePrescription: (id, data) =>
+    request(`/prescriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Código de barras → produto. Devolve `needs_confirmation`: quando true,
+  // a tela precisa perguntar "é este o produto que você comprou?".
+  lookupMedication: (ean) =>
+    request('/medications/lookup', { method: 'POST', body: JSON.stringify({ ean }) }),
+
+  // O voto que constrói a base. Três confirmações independentes tornam o
+  // registro confiável; uma correção o leva a `conflict`.
+  confirmMedication: (medicationId, isCorrect, correction = null) =>
+    request(`/medications/${medicationId}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ is_correct: isCorrect, correction }),
+    }),
+};
+
+// --- Apadrinhamento (T2-R06) ---
+export const sponsorshipsApi = {
+  sponsor: (uniqueCode, monthlyAmount) =>
+    request(`/b/${uniqueCode}/sponsor`, {
+      method: 'POST',
+      body: JSON.stringify({ monthly_amount: monthlyAmount }),
+    }),
+
+  mine: () => request('/sponsorships/mine'),
+
+  end: (id) => request(`/sponsorships/${id}/end`, { method: 'POST' }),
+};
+
+// --- Mapa de calor (T2-R07) — público ---
+export const heatmapApi = {
+  cells: (filters = {}) => {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([, v]) => v)
+    );
+    const qs = params.toString();
+    return request(`/heatmap${qs ? `?${qs}` : ''}`);
+  },
+
+  summary: () => request('/heatmap/summary'),
 };
 
 // --- Admin ---

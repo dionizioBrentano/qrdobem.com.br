@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { entitiesApi, conversationsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf } from '../utils/masks';
+import PublicPanicButton from '../components/PublicPanicButton';
 
 // Intervalo do polling da thread, em milissegundos.
 const POLL_INTERVAL = 12000;
@@ -268,6 +269,46 @@ export default function PublicEntityPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto space-y-4 pt-8">
+        {/* White-label / patrocínio (Fase 5, T3-R02/T3-R03).
+            Fica no topo, acima do conteúdo, e some quando não há marca —
+            sem espaço vazio na interface. */}
+        {entity.branding && (
+          <div className="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-center gap-3">
+            {entity.branding.logo_url && (
+              <img
+                src={entity.branding.logo_url}
+                alt={entity.branding.name}
+                className="h-10 object-contain"
+              />
+            )}
+            <div className="text-center">
+              {entity.branding.sponsor_label && (
+                <p className="text-[11px] text-gray-400 uppercase tracking-wide">
+                  {entity.branding.sponsor_label}
+                </p>
+              )}
+              {entity.branding.sponsor_url ? (
+                <a
+                  href={entity.branding.sponsor_url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-sm font-bold underline"
+                  style={entity.branding.primary_color ? { color: entity.branding.primary_color } : undefined}
+                >
+                  {entity.branding.name}
+                </a>
+              ) : (
+                <p
+                  className="text-sm font-bold text-gray-700"
+                  style={entity.branding.primary_color ? { color: entity.branding.primary_color } : undefined}
+                >
+                  {entity.branding.name}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Cabeçalho */}
         <div className="bg-white rounded-2xl shadow-xl p-6 text-center">
           <div className="inline-block bg-brand-blue/20 text-brand-blue text-xs font-medium px-3 py-1 rounded-full mb-3">
@@ -276,6 +317,11 @@ export default function PublicEntityPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{entity.name}</h1>
           <p className="text-gray-500 text-sm">{entity.organization}</p>
         </div>
+
+        {/* Botão de Pânico público (T1-R07): quem encontrou a pessoa avisa
+            a família na hora. Só para pessoa — objeto perdido não é
+            emergência, e o alarme perderia o sentido se aparecesse sempre. */}
+        {entity.type === 'person' && <PublicPanicButton uniqueCode={uniqueCode} />}
 
         {/* Objeto: texto público em destaque + avisos de manuseio */}
         {entity.type === 'object' && entity.object_info && (

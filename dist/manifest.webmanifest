@@ -1,0 +1,46 @@
+{
+  "name": "QR do Bem",
+  "short_name": "QRdoBem",
+  "description": "QR Codes de identificação e emergência para pessoas, pets e objetos.",
+  "start_url": "/painel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a5f",
+  "lang": "pt-BR",
+  "categories": ["health", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Botão de Pânico",
+      "short_name": "Pânico",
+      "description": "Aciona o alerta de emergência para a família",
+      "url": "/painel?panic=1"
+    },
+    {
+      "name": "Minhas contas",
+      "short_name": "Contas",
+      "url": "/contas"
+    }
+  ]
+}
