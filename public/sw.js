@@ -27,7 +27,7 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/icon-155.png',
+  '/icon-192.png',
   '/logo-mini.svg',
 ];
 

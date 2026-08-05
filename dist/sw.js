@@ -23,7 +23,13 @@ const CACHE_NAME = 'qrdobem-v1';
 
 // Só o essencial para a casca abrir offline. Os assets com hash entram no
 // cache conforme forem usados.
-const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest'];
+const PRECACHE_URLS = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon-192.png',
+  '/logo-mini.svg',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
