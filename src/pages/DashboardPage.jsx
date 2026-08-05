@@ -6,6 +6,32 @@ import QrCodeModal from '../components/QrCodeModal';
 import PurchaseCreditsModal from '../components/PurchaseCreditsModal';
 import CompleteRegistrationBlock from '../components/CompleteRegistrationBlock';
 
+// CTA de conversão por trilha de origem. A trilha chega via ?trail= ou
+// sessionStorage (ver LoginPage/RegisterPage) e define o texto do botão principal.
+const TRAIL_CTA = {
+  person: {
+    title: 'Proteja quem você ama',
+    subtitle: 'Crie um QR Code de identificação e emergência em poucos minutos.',
+    button: 'Proteja quem você ama',
+    color: 'bg-brand-blue',
+  },
+  pet: {
+    title: 'Proteja seu Pet',
+    subtitle: 'Quem encontrar seu pet fala com você na hora, pelo QR Code da coleira.',
+    button: 'Proteja seu Pet',
+    color: 'bg-brand-olive',
+  },
+  object: {
+    title: 'Rastreie um objeto',
+    subtitle: 'Cole o QR Code no que é seu e receba o contato de quem encontrar.',
+    button: 'Rastreie um objeto',
+    color: 'bg-brand-blue',
+  },
+};
+
+const CTA_BASE_CLASS =
+  'text-white text-base font-bold px-6 py-3 rounded-lg shadow-sm transition hover:brightness-90 whitespace-nowrap';
+
 export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -91,18 +117,140 @@ export default function DashboardPage() {
   
   const creditsStatus = searchParams.get('credits');
 
+  // O bloco de conversão fica fora da camada bloqueada: ele existe justamente
+  // para converter quem ainda não tem nada no painel.
+  const hasEntities = (data?.entities?.length ?? 0) > 0;
+  const showConversionCta = Boolean(activeTrail) || !hasEntities;
+  const trailCta = TRAIL_CTA[activeTrail] || null;
+
+  // O CTA mantém sempre o mesmo texto de apelo, mas leva ao próximo obstáculo
+  // real do usuário: pendências de cadastro -> créditos -> criação do QR.
+  // A trilha continua no sessionStorage, então ao resolver cada etapa o
+  // próprio CTA avança sozinho para a seguinte.
+  const ctaStage = isDashboardBlocked ? 'profile' : (!canCreate || noCredits) ? 'credits' : 'create';
+
+  const ctaHint = {
+    profile: 'Falta pouco: complete seus dados no bloco abaixo para liberar a criação.',
+    credits: 'Você precisa de 1 crédito para criar este QR Code.',
+    create: null,
+  }[ctaStage];
+
+  const handleTrailCta = (type = null) => {
+    if (ctaStage === 'profile') {
+      document
+        .getElementById('completar-cadastro')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (ctaStage === 'credits') {
+      setShowPurchase(true);
+      return;
+    }
+    if (type) setActiveTrail(type);
+    setShowForm(true);
+  };
+
+  // Sem trilha não há tipo de entidade conhecido: o caminho é crédito primeiro.
+  const handleGenericCta = () => {
+    if (ctaStage === 'profile') {
+      document
+        .getElementById('completar-cadastro')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setShowPurchase(true);
+  };
+
   return (
     <div className="space-y-6 relative">
-      
-      {/* Bloco de cadastro pendente */}
+
+      {/* Bloco de CTA de conversão */}
+      <div className="space-y-3">
+        {showConversionCta && (
+        <div className="bg-white border border-brand-blue/30 rounded-xl shadow-sm p-5 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <p className="text-lg font-bold text-brand-dark">
+                {activeTrail === 'family'
+                  ? 'Proteja sua família'
+                  : trailCta?.title || 'Comece seu primeiro QR Code'}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {activeTrail === 'family'
+                  ? 'Cadastre um QR por pessoa ou pet. A gestão em grupo virá depois.'
+                  : trailCta?.subtitle ||
+                    'Adquira um crédito e cadastre o QR Code de uma pessoa, pet ou objeto.'}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              {activeTrail === 'family' ? (
+                <>
+                  <button
+                    onClick={() => handleTrailCta('person')}
+                    className={`${CTA_BASE_CLASS} bg-brand-blue`}
+                  >
+                    QR de Pessoa
+                  </button>
+                  <button
+                    onClick={() => handleTrailCta('pet')}
+                    className={`${CTA_BASE_CLASS} bg-brand-olive`}
+                  >
+                    QR de Pet
+                  </button>
+                </>
+              ) : trailCta ? (
+                <button
+                  onClick={() => handleTrailCta()}
+                  className={`${CTA_BASE_CLASS} ${trailCta.color}`}
+                >
+                  {trailCta.button}
+                </button>
+              ) : (
+                <button
+                  onClick={handleGenericCta}
+                  className={`${CTA_BASE_CLASS} bg-brand-blue`}
+                >
+                  Comprar QR Code
+                </button>
+              )}
+
+              {/* TODO: QR órfão/pré-pago — spec futura (EntityStatus = aguardando_resgate).
+                  Quando a detecção existir, este botão substitui o CTA acima. */}
+              {false && (
+                <button className={`${CTA_BASE_CLASS} bg-brand-olive`}>
+                  Aproveite seu QR Code
+                </button>
+              )}
+            </div>
+          </div>
+
+          {ctaHint && (
+            <p className="text-xs text-gray-500 mt-3">{ctaHint}</p>
+          )}
+        </div>
+        )}
+
+        {/* Sempre visível, independente de trilha ou de já ter QR Codes */}
+        <Link
+          to="/ajuda"
+          className="inline-block text-sm text-brand-blue hover:underline font-medium"
+        >
+          Como cadastrar e gerenciar os dados do seu QR Code
+        </Link>
+      </div>
+
+      {/* Bloco de cadastro pendente — alvo do CTA quando há pendências */}
       {isDashboardBlocked && (
-        <CompleteRegistrationBlock 
-          profile={profile} 
-          onComplete={() => {
-            loadProfile();
-            loadEntities(activeOrgId);
-          }} 
-        />
+        <div id="completar-cadastro" className="scroll-mt-24">
+          <CompleteRegistrationBlock
+            profile={profile}
+            onComplete={() => {
+              loadProfile();
+              loadEntities(activeOrgId);
+            }}
+          />
+        </div>
       )}
 
       {/* Camada de bloqueio visual para o restante do dashboard */}
@@ -134,51 +282,6 @@ export default function DashboardPage() {
         {creditsStatus === 'failure' && (
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium mb-6">
             Ocorreu um erro no pagamento ou ele foi cancelado. Tente novamente.
-          </div>
-        )}
-
-        {/* Banner de Trilha Ativa */}
-        {activeTrail && allowCreate && (
-          <div className="bg-brand-blue/10 border border-brand-blue/30 px-4 py-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-            {activeTrail === 'family' ? (
-              <>
-                <div>
-                  <p className="text-brand-dark font-bold">
-                    Trilha Família
-                  </p>
-                  <p className="text-sm text-brand-dark">Cadastre um QR por pessoa ou pet. A gestão em grupo virá depois.</p>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => { setActiveTrail('person'); setShowForm(true); }}
-                    className="bg-brand-blue hover:brightness-90 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap"
-                  >
-                    QR de Pessoa
-                  </button>
-                  <button
-                    onClick={() => { setActiveTrail('pet'); setShowForm(true); }}
-                    className="bg-brand-olive hover:brightness-90 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap"
-                  >
-                    QR de Pet
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="text-brand-dark font-bold">
-                    Trilha em andamento: QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
-                  </p>
-                  <p className="text-sm text-brand-dark">Finalize a criação do seu código.</p>
-                </div>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap shrink-0"
-                >
-                  Criar meu QR de {activeTrail === 'person' ? 'Pessoa' : activeTrail === 'pet' ? 'Pet' : 'Objeto'}
-                </button>
-              </>
-            )}
           </div>
         )}
 

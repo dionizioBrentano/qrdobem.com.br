@@ -60,7 +60,11 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await authApi.requestRegisterLink(email);
+      // A trilha viaja com o token porque o sessionStorage não sobrevive
+      // ao intervalo entre pedir o link e abrir o e-mail.
+      const storedTrail = sessionStorage.getItem('qrdobem_trail');
+      const trail = ['pet', 'person', 'object'].includes(storedTrail) ? storedTrail : null;
+      await authApi.requestRegisterLink(email, trail);
       setSuccessMsg('Enviamos um link para seu e-mail!');
       setShowRegisterPrompt(false);
       setIsRegisterMode(false);

@@ -47,10 +47,10 @@ export const authApi = {
   validateRegisterToken: (token) =>
     request(`/auth/register-validate?token=${token}`),
 
-  requestRegisterLink: (email) =>
+  requestRegisterLink: (email, trail = null) =>
     request('/auth/register-link', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, trail }),
     }),
 
   completeRegistration: (data) =>

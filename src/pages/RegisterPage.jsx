@@ -30,6 +30,10 @@ export default function RegisterPage() {
     authApi.validateRegisterToken(token)
       .then((data) => {
         setEmail(data.email);
+        // Trilha escolhida na Home antes do envio do link, devolvida pelo token.
+        if (['pet', 'person', 'object'].includes(data.trail)) {
+          sessionStorage.setItem('qrdobem_trail', data.trail);
+        }
         setLoading(false);
       })
       .catch(() => {

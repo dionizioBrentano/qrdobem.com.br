@@ -9,6 +9,7 @@ import OtpVerifyPage from './pages/OtpVerifyPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import MessagesPage from './pages/MessagesPage';
+import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/painel" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/ajuda" element={<HelpPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
 
