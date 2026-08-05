@@ -14,6 +14,7 @@ import TwoFactorPage from './pages/TwoFactorPage';
 import HealthPage from './pages/HealthPage';
 import CauseAdminPage from './pages/CauseAdminPage';
 import CausePublicPage from './pages/CausePublicPage';
+import CausesListPage from './pages/CausesListPage';
 import DonatePage from './pages/DonatePage';
 import DisbursementsPage from './pages/DisbursementsPage';
 import BeneficiaryPage from './pages/BeneficiaryPage';
@@ -34,7 +35,10 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify" element={<OtpVerifyPage />} />
           <Route path="/q/:uniqueCode" element={<PublicEntityPage />} />
-          {/* Vitrine pública da causa — Fase 3, T2-R04 */}
+          {/* Vitrine pública da causa — Fase 3, T2-R04.
+              A listagem redireciona para a home quando não há nenhuma causa
+              publicada (decisão do proprietário, 06/08/2026). */}
+          <Route path="/causas" element={<CausesListPage />} />
           <Route path="/causa/:slug" element={<CausePublicPage />} />
           {/* URL única do beneficiário — Fase 4, T4-R05/R06/R07.
               Pública por definição: o beneficiário não tem conta. */}

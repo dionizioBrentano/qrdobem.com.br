@@ -1,5 +1,4 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -10,7 +9,14 @@ export default function Footer() {
         {/* Column 1: Logo & Info */}
         <div className="flex flex-col gap-4 border-l-4 border-brand-blue pl-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-8 h-8 text-brand-blue" />
+            <img
+              src="/logo-mini.svg"
+              alt="QR do Bem"
+              className="w-9 h-9 object-contain"
+              width="36"
+              height="36"
+              loading="lazy"
+            />
             <span className="text-2xl font-black tracking-tight">Qrdobem</span>
           </div>
           <p className="text-white/60 text-sm mt-2">

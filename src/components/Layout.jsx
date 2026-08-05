@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { ShieldCheck, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -71,9 +71,16 @@ export default function Layout() {
     <div className="min-h-screen bg-gray-50">
       <nav className="w-full bg-brand-blue shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          {/* Logo */}
+          {/* Logotipo — mesmo arquivo do site público, para a marca não
+              mudar de cara quando o usuário entra no painel. */}
           <Link to="/painel" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <ShieldCheck className="w-8 h-8 text-white" />
+            <img
+              src="/logo-mini.svg"
+              alt="QR do Bem"
+              className="w-9 h-9 object-contain"
+              width="36"
+              height="36"
+            />
             <span className="text-2xl font-black text-white tracking-tight">Qrdobem</span>
           </Link>
 

@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Loader2, Send, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { waitlistApi, contactApi } from '../../services/api';
+
+/**
+ * ContentArea — seções de conteúdo da home, uma por trilha.
+ *
+ * REESCRITA DE 06/08/2026 — o motivo importa
+ * As seções de Família, Grupos e Causas, Empresas e Doações diziam "em
+ * desenvolvimento" e ofereciam lista de espera. Isso deixou de ser verdade
+ * quando as Fases 1 a 6 foram implementadas: pedir e-mail para avisar do
+ * lançamento de algo que já existe é perder o visitante no momento em que
+ * ele estava mais disposto a agir.
+ *
+ * ESTRUTURA DE CONVERSÃO DE CADA SEÇÃO
+ *   1. situação concreta que a pessoa reconhece
+ *   2. como funciona, em uma frase
+ *   3. prova — o que o sistema faz de fato, não promessa
+ *   4. CTA principal, com verbo de ação
+ *   5. CTA secundário para quem ainda não quer se cadastrar
+ *
+ * O passo 5 existe porque nem todo visitante está pronto para criar conta.
+ * Sem uma saída intermediária (ver causas, ver o mapa), ele simplesmente
+ * fecha a página.
+ */
 
 const categoryContent = {
   pets: {
@@ -27,12 +49,16 @@ const categoryContent = {
     features: [
       { title: "Rápido e Direto", text: "Comunicação em tempo real entre você e quem achou seu pet." },
       { title: "Versátil", text: "Pode ser usado em tags de coleira ou chips subcutâneos." },
-      { title: "Privacidade Blindada", text: "Você fala com o benfeitor sem expor nenhum dado pessoal." }
+      { title: "Privacidade Blindada", text: "Você fala com o benfeitor sem expor nenhum dado pessoal." },
+      { title: "Carteira de vacinas", text: "Histórico de vacinação sempre à mão, e visível a quem encontrar — se você quiser." },
+      { title: "Ficha do animal", text: "Espécie, porte, cor e cuidados clínicos, com você escolhendo o que é público." }
     ],
     conclusion: "Tranquilidade de verdade é saber que, em uma emergência, seu pet tem voz e a sua família continua segura.",
     trailType: 'pet',
-    cta: 'Criar meu QR de Pet'
+    cta: 'Criar meu QR de Pet',
+    ctaSubtext: 'Leva menos de 5 minutos. Você começa com créditos gratuitos.'
   },
+
   pessoas: {
     label: "Pessoas",
     title: "Proteção e Privacidade para quem você ama",
@@ -52,22 +78,29 @@ const categoryContent = {
         text: "A autonomia é um pilar fundamental, mas a segurança não pode ser deixada de lado. O qrdobem atua como uma \"identidade de emergência\" que pode ser fixada em cadeiras de rodas, andadores ou acessórios. Isso permite que, em qualquer necessidade de auxílio, terceiros saibam imediatamente como acionar a família ou cuidadores responsáveis, mantendo a privacidade total dos dados do usuário."
       }
     ],
-    features: [],
+    features: [
+      { title: "Página de emergência", text: "Alergias a alimentos, remédios, produtos e animais visíveis a quem socorre." },
+      { title: "Contato sem exposição", text: "Quem encontra fala com você pelo sistema, sem ver seu telefone." },
+      { title: "Sempre com a pessoa", text: "Pulseira, etiqueta na roupa, chaveiro, bengala ou cadeira de rodas." }
+    ],
     conclusion: "",
     trailType: 'person',
-    cta: 'Criar meu QR de Pessoa'
+    cta: 'Criar meu QR de Pessoa',
+    ctaSubtext: 'Leva menos de 5 minutos. Você começa com créditos gratuitos.'
   },
+
   aventura: {
     label: "Aventura",
     title: "Proteção Ativa: Resgate e Segurança para quem vive em movimento",
-    intro: "Em breve: alertas de trajeto e queda. Hoje você pode criar um QR de identidade de emergência.",
+    intro: "Em breve: alertas de trajeto e queda. Hoje você já pode criar um QR de identidade de emergência para levar na trilha, na estrada ou no mar.",
     highlight: "",
     paragraphs: [],
     features: [],
     conclusion: "",
     trailType: 'person',
-    cta: 'Identidade de emergência (QR)'
+    cta: 'Criar identidade de emergência'
   },
+
   logistica: {
     label: "Logística e Patrimônio",
     title: "Suas encomendas e bagagens documentadas, rastreadas e protegidas.",
@@ -80,102 +113,183 @@ const categoryContent = {
       }
     ],
     features: [
-      {
-        title: "Descrição e Identificação",
-        text: "Preencha as informações básicas do seu pacote ou mala atreladas ao QR Code."
-      },
-      {
-        title: "Contato Anônimo",
-        text: "Um chat seguro e direto entre quem encontrou o objeto e você, sem exibir seus números pessoais."
-      },
-      {
-        title: "Avisos de Urgência (Veículos)",
-        text: "Alguém pode avisar que você esqueceu a luz acesa, o vidro aberto ou que o carro precisa ser realocado."
-      },
-      {
-        title: "Recuperação Segura",
-        text: "Em caso de roubo, quem encontrar o veículo notifica o sistema para você acionar a seguradora anonimamente."
-      },
-      {
-        title: "Gravação Permanente",
-        text: "A aplicação do QR Code em vidros e peças inibe o desmanche e garante que o código não seja removido."
-      }
+      { title: "Descrição e Identificação", text: "Preencha as informações básicas do seu pacote ou mala atreladas ao QR Code." },
+      { title: "Contato Anônimo", text: "Um chat seguro e direto entre quem encontrou o objeto e você, sem exibir seus números pessoais." },
+      { title: "Avisos de Urgência (Veículos)", text: "Alguém pode avisar que você esqueceu a luz acesa, o vidro aberto ou que o carro precisa ser realocado." },
+      { title: "Recuperação Segura", text: "Em caso de roubo, quem encontrar o veículo notifica o sistema para você acionar a seguradora anonimamente." },
+      { title: "Cuidados no manuseio", text: "Frágil, não inverter, manter refrigerado, valor sentimental — quem manuseia vê o aviso." },
+      { title: "Gravação Permanente", text: "A aplicação do QR Code em vidros e peças inibe o desmanche e garante que o código não seja removido." }
     ],
     conclusion: "",
     trailType: 'object',
     cta: 'Criar meu QR de Objeto'
   },
+
+  // --- TRILHA 1 ---
   familia: {
     label: "Para a sua família",
-    title: "Proteção da família.",
-    intro: "A proteção da família garante que você tenha vários QR Codes (para pessoas e pets) na mesma conta. Uma gestão familiar avançada e unificada estará em breve no nosso roadmap.",
+    title: "Uma conta. A família inteira protegida.",
+    intro: "Pai, mãe, filhos, avós, netos, noras e genros — e os pets. Sem limite de perfis. Você monta a sua família no sistema e decide quem pode cuidar de quem.",
+    highlight: "O Botão de Pânico avisa a família inteira de uma vez. Instale o QR do Bem como aplicativo e ele vira alarme: sirene, vibração e alerta enviado a todos os membros, com a sua localização.",
+    paragraphs: [
+      {
+        subtitle: "Você não gerencia sozinho",
+        text: "Quem cria o grupo familiar é o administrador, e pode delegar. Sua irmã cuida dos pets, seu filho mais velho atualiza a ficha dos avós, e cada um só mexe no que você autorizou. Toda delegação fica registrada: quem concedeu o quê, e quando."
+      },
+      {
+        subtitle: "Emergência é questão de segundos",
+        text: "A leitura do QR abre uma página com o que socorre: alergias a alimentos, medicamentos, produtos e animais, condições de saúde e os contatos certos. Quem chegou primeiro sabe o que fazer — sem que o seu telefone apareça para um estranho."
+      },
+      {
+        subtitle: "Medicação sem depender da memória",
+        text: "Escaneie o código de barras da caixa do remédio. O sistema identifica o produto, sugere os horários e exporta tudo direto para a agenda do celular — Android ou iPhone. E mantém o diário de saúde de cada pessoa e de cada pet."
+      }
+    ],
+    features: [
+      { title: "Perfis ilimitados", text: "Pessoas e pets, sem teto. Você paga pelos QR Codes que usar, não por quem cadastrar." },
+      { title: "Botão de Pânico", text: "Alarme no celular e alerta simultâneo para toda a família, com localização." },
+      { title: "Árvore da família", text: "Pais, filhos, cônjuges, netos, noras e genros — inclusive segundos casamentos." },
+      { title: "Verificação em duas etapas", text: "Opcional, com Google Authenticator, Authy ou Microsoft Authenticator." },
+      { title: "Diário de saúde", text: "Consultas, exames, sintomas, pressão, glicemia, vacinas — de gente e de bicho." },
+      { title: "Agenda de remédios", text: "Código de barras, horários sugeridos e exportação para a agenda nativa." }
+    ],
+    conclusion: "Proteger a família não deveria depender de lembrar de tudo, o tempo todo.",
+    trailType: 'family',
+    cta: 'Criar a proteção da minha família',
+    ctaSubtext: 'Cadastro gratuito. Você começa com créditos para os primeiros QR Codes.'
+  },
+
+  // --- TRILHA 2 ---
+  grupo: {
+    label: "Grupos e Causas",
+    title: "Sua causa não precisa de CNPJ para receber apoio.",
+    intro: "Anjos do Asfalto, protetores independentes, grupos de resgate, mães que cuidam de crianças no bairro. Se você lidera uma iniciativa com o seu próprio CPF, o QR do Bem é para você.",
+    highlight: "Arrecadar é metade. A outra metade é provar o que foi feito — e é isso que faz alguém doar de novo. Sua página pública mostra, lado a lado, quanto entrou e o que aconteceu com o dinheiro.",
+    paragraphs: [
+      {
+        subtitle: "Sem CNPJ, sem burocracia",
+        text: "Você cadastra a causa com o seu CPF e começa. Se precisar de recibo dedutível para os doadores, pode se vincular a uma OSCIP parceira como projeto guarda-chuva — o recibo sai em nome dela, com validade fiscal de verdade."
+      },
+      {
+        subtitle: "QR Codes em lote, prontos para imprimir",
+        text: "Precisa de 200 etiquetas para uma campanha? Gera o lote de uma vez e imprime uma folha A4 com 24 etiquetas por página, já com as guias de corte. Sem cadastrar uma por uma."
+      },
+      {
+        subtitle: "Prestação de contas com foto",
+        text: "Publique o que foi feito: a ração comprada, o resgate concluído, a reforma entregue. Toda imagem passa por revisão antes de aparecer — o que protege quem aparece na foto e a credibilidade da sua causa."
+      }
+    ],
+    features: [
+      { title: "Cadastro por CPF", text: "Pessoa física liderando iniciativa autônoma. Sem exigência de CNPJ." },
+      { title: "Vitrine pública", text: "História, meta, arrecadação e prestação de contas numa página só." },
+      { title: "QR em lote", text: "Até 500 códigos de uma vez, com folha de impressão pronta." },
+      { title: "Projeto guarda-chuva", text: "Vincule-se a uma OSCIP e viabilize dedução fiscal para quem doa." },
+      { title: "Prova social moderada", text: "Fotos e vídeos dos resultados, revisados antes de publicar." },
+      { title: "Doação recorrente", text: "Quem apoia pode contribuir todo mês, automaticamente." }
+    ],
+    conclusion: "Quem doa uma vez precisa de motivo para doar de novo. O motivo é ver o resultado.",
+    trailType: 'cause',
+    cta: 'Cadastrar minha causa',
+    ctaSubtext: 'Gratuito e sem CNPJ.',
+    secondaryCta: { label: 'Ver causas já cadastradas', to: '/causas' }
+  },
+
+  // --- TRILHA 3 ---
+  empresa: {
+    label: "Empresas e Profissionais",
+    title: "A prova de que foi entregue, com quem, quando e onde.",
+    intro: "Entrega de EPI, liberação de material para terceirizado, encomenda na portaria do condomínio. Três problemas, uma solução: leitura do QR Code mais a senha de quem recebeu — e o comprovante fica registrado.",
+    highlight: "O registro é imutável e traz quem confirmou, o que foi entregue, o horário, o local e se a senha foi conferida. É o documento que a sua empresa apresenta numa auditoria ou num processo trabalhista.",
+    paragraphs: [
+      {
+        subtitle: "🦺 Certificação de entrega de EPI",
+        text: "O funcionário escaneia o QR do equipamento e digita a senha dele. Fica registrado o item, o número do CA, a quantidade e o estado de entrega — com data, hora e IP. Nada de lista de papel que some na hora que a fiscalização chega."
+      },
+      {
+        subtitle: "📦 Logística e terceirizados",
+        text: "Liberação de material com identificação de quem retirou, para qual empresa e com que destino. O terceirizado não precisa de conta no sistema: a matrícula dele e a senha bastam."
+      },
+      {
+        subtitle: "🏢 Condomínios e portaria",
+        text: "Encomenda recebida, registrada e entregue ao morador com confirmação e foto. Acaba a discussão sobre o pacote que \"chegou avariado\" ou que \"nunca foi entregue\"."
+      },
+      {
+        subtitle: "🔌 API aberta e a sua marca na tela",
+        text: "Integre com o sistema que a sua empresa já usa: API REST versionada, com chave própria e limite por parceiro. E a página que o cliente final vê pode levar a sua logomarca e as suas cores — inclusive com a sua promoção no link, quando você patrocina os códigos."
+      }
+    ],
+    features: [
+      { title: "API REST documentada", text: "Chave por parceiro, escopos e limite de requisições próprio." },
+      { title: "White-label", text: "Sua logomarca e suas cores na página que o cliente final abre." },
+      { title: "Lote patrocinado", text: "Compre códigos, patrocine a página do cliente e leve a sua promoção junto." },
+      { title: "Comprovante imutável", text: "Sem edição depois do registro. Comprovante alterável não comprova nada." },
+      { title: "Exportação para a contabilidade", text: "CSV com o consumo, pronto para o seu contador." },
+      { title: "Casos sob medida", text: "EPI, logística e portaria já vêm prontos; outros casos são configuração." }
+    ],
+    conclusion: "",
+    cta: 'Falar sobre integração',
+    action: 'contact',
+    interest: 'empresa'
+  },
+
+  // --- TRILHA 4 ---
+  doacoes: {
+    label: "Doações",
+    title: "Doe sabendo exatamente onde o seu dinheiro chegou.",
+    intro: "Escolha a causa, doe por Pix ou cartão, e acompanhe. Quem recebe confirma o recebimento no sistema — com senha própria — e pode agradecer com foto. Você vê.",
+    highlight: "Nenhum repasse é dado como concluído sem a confirmação de quem recebeu. Não é promessa de transparência: é uma trava no sistema. Sem a contraprova do beneficiário, o repasse fica pendente e aparece como pendente.",
+    paragraphs: [
+      {
+        subtitle: "Como o dinheiro anda",
+        text: "Você escolhe a causa. A doação vai para a OSCIP gestora do QR do Bem, que operacionaliza a distribuição e responde pela prestação de contas. Cada repasse tem origem, destino e comprovação registrados."
+      },
+      {
+        subtitle: "Quem recebe tem voz",
+        text: "O beneficiário tem uma página própria onde pede o que precisa — alimento, remédio, uma consulta, um conserto. E é por essa mesma página que ele confirma o recebimento e envia o agradecimento."
+      },
+      {
+        subtitle: "Quem não tem intimidade com celular também participa",
+        text: "Quem não navega sozinho acessa o sistema por um tutor identificado. A confirmação feita pelo tutor fica registrada como tal — nunca como se fosse a própria pessoa. É o que separa um registro auditável de uma assinatura em branco."
+      },
+      {
+        subtitle: "Apadrinhamento",
+        text: "Você pode apoiar uma causa em geral ou apadrinhar uma pessoa específica, com uma contribuição mensal. Nesse caso, você acompanha aquela história de perto."
+      }
+    ],
+    features: [
+      { title: "Pix, cartão e Cartão Cidadão", text: "Pagamento pelo Mercado Pago, com a segurança deles." },
+      { title: "Doação recorrente", text: "Contribua todo mês, e cancele quando quiser, em um clique." },
+      { title: "Confirmação obrigatória", text: "Quem recebe confirma com senha. Sem isso, o repasse não fecha." },
+      { title: "Agradecimento com foto", text: "Prova social enviada por quem recebeu, revisada antes de publicar." },
+      { title: "Doação anônima", text: "Se preferir, seu nome não aparece na vitrine da causa." },
+      { title: "Apadrinhamento", text: "Apoie uma pessoa específica e acompanhe a história dela." }
+    ],
+    conclusion: "Desconfiança não se resolve com discurso. Resolve-se com comprovante.",
+    cta: 'Doar agora',
+    ctaRoute: '/doacoes',
+    secondaryCta: { label: 'Conhecer as causas antes', to: '/causas' }
+  },
+
+  doacoes_en: {
+    label: "Donations",
+    title: "Donate and see exactly where your money landed.",
+    intro: "Choose a cause, donate by Pix or card, and follow through. The person who receives it confirms the delivery in the system — with their own password — and can say thanks with a photo. You see it.",
+    highlight: "No transfer is marked as completed without confirmation from the person who received it. It is not a transparency promise: it is a lock in the system.",
+    paragraphs: [],
+    features: [],
+    conclusion: "",
+    cta: 'Donate now',
+    ctaRoute: '/doacoes',
+    secondaryCta: { label: 'Browse the causes', to: '/causas' }
+  },
+
+  contato: {
+    label: "Contato",
+    title: "Fale com a nossa equipe",
+    intro: "Ficaremos felizes em ouvir você. Envie sua mensagem, dúvida ou sugestão e retornaremos o mais breve possível.",
     highlight: "",
     paragraphs: [],
     features: [],
-    conclusion: "",
-    cta: "Começar proteção da família",
-    disabled: false,
-    trailType: 'family'
-  },
-  grupo: {
-    label: "Grupos e Causas",
-    title: "Em desenvolvimento...",
-    intro: "Sabemos que manter um abrigo, uma equipe de resgate ou um projeto social exige dedicação. A nossa funcionalidade dedicada para gestão de causas e grupos está atualmente em desenvolvimento.",
-    highlight: "Inscreva-se na nossa lista de espera para ser avisado sobre o lançamento.",
-    paragraphs: [],
-    features: [],
-    conclusion: "",
-    cta: "Avise-me por e-mail",
-    disabled: false,
-    action: 'waitlist',
-    interest: 'grupo'
-  },
-  empresa: {
-    label: "Empresas e Profissionais",
-    title: "Parceria comercial em breve",
-    intro: "Empresas podem utilizar as nossas trilhas atuais de pessoas, pets e objetos livremente. Em breve, lançaremos parcerias comerciais mais aprofundadas e funcionalidades dedicadas.",
-    highlight: "Quer saber mais sobre como utilizar o QR do Bem na sua empresa ou ser avisado sobre o lançamento para empresas?",
-    paragraphs: [],
-    features: [],
-    conclusion: "",
-    cta: "Avise-me por e-mail",
-    disabled: false,
-    action: 'waitlist',
-    interest: 'empresa'
-  },
-  doacoes: {
-    label: "Doações",
-    title: "Apoie causas reais em breve",
-    intro: "A funcionalidade de doações diretas na plataforma está em desenvolvimento. Nosso objetivo é conectar a sua solidariedade a quem mais precisa com transparência e segurança.",
-    highlight: "Se você quer ser avisado assim que o painel de doações estiver disponível, inscreva-se abaixo.",
-    paragraphs: [],
-    features: [],
-    conclusion: "",
-    cta: "Avise-me por e-mail",
-    disabled: false,
-    action: 'waitlist',
-    interest: 'doacoes'
-  },
-  doacoes_en: {
-    label: "Donations",
-    title: "Donate to real causes soon",
-    intro: "Direct donations feature is under development. We want to connect your solidarity with transparency.",
-    highlight: "Subscribe to our waitlist below.",
-    paragraphs: [],
-    features: [],
-    conclusion: "",
-    cta: "Notify me",
-    disabled: false,
-    action: 'waitlist',
-    interest: 'doacoes'
-  },
-  contato: { 
-    label: "Contato", 
-    title: "Fale com a nossa equipe", 
-    intro: "Ficaremos felizes em ouvir você. Envie sua mensagem, dúvida ou sugestão e retornaremos o mais breve possível.", 
-    highlight: "", 
-    paragraphs: [], 
-    features: [], 
     conclusion: "",
     cta: "Enviar mensagem",
     disabled: false,
@@ -183,11 +297,11 @@ const categoryContent = {
   }
 };
 
-export default function ContentArea({ activeCategory }) {
+export default function ContentArea({ activeCategory, hasCauses = false }) {
   const [language, setLanguage] = useState('pt');
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [formData, setFormData] = useState({ email: '', name: '', message: '' });
@@ -206,31 +320,46 @@ export default function ContentArea({ activeCategory }) {
   if (baseCategory === 'doacoes' && language === 'en') {
     contentKey = 'doacoes_en';
   }
-  
+
   const content = categoryContent[contentKey];
 
-  const handleCtaClick = (e, trailType, disabled, action) => {
+  /**
+   * O CTA secundário que aponta para a listagem de causas só vale se
+   * houver causa publicada. Sem isso, o visitante clicaria em "ver causas"
+   * e cairia numa página vazia — que é o oposto de conversão.
+   */
+  const secondaryCta = content.secondaryCta?.to === '/causas' && !hasCauses
+    ? null
+    : content.secondaryCta;
+
+  const handleCtaClick = (e) => {
     e.preventDefault();
-    if (disabled) return;
-    
-    if (action === 'waitlist') {
+
+    if (content.disabled) return;
+
+    if (content.action === 'waitlist') {
       setShowWaitlist(true);
       setShowContact(false);
       return;
     }
-    if (action === 'contact') {
+
+    if (content.action === 'contact') {
       setShowContact(true);
       setShowWaitlist(false);
       return;
     }
 
-    if (trailType) {
-      sessionStorage.setItem('qrdobem_trail', trailType);
-      if (user) {
-        navigate(`/painel?trail=${trailType}`);
-      } else {
-        navigate(`/login?trail=${trailType}`);
-      }
+    // Rota direta (ex.: doações). Visitante sem conta vai para o login e
+    // volta ao destino depois de entrar — perder o destino no meio do
+    // caminho é a forma mais comum de abandonar a conversão.
+    if (content.ctaRoute) {
+      navigate(user ? content.ctaRoute : `/login?next=${encodeURIComponent(content.ctaRoute)}`);
+      return;
+    }
+
+    if (content.trailType) {
+      sessionStorage.setItem('qrdobem_trail', content.trailType);
+      navigate(user ? `/painel?trail=${content.trailType}` : `/login?trail=${content.trailType}`);
     }
   };
 
@@ -266,18 +395,18 @@ export default function ContentArea({ activeCategory }) {
   return (
     <div id="content-area" className="w-full bg-white py-16 px-6 relative z-10 transition-all duration-500">
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
-        
+
         {baseCategory === 'doacoes' && (
           <div className="flex justify-start md:justify-end">
              <div className="inline-flex rounded-full shadow-sm" role="group">
-               <button 
-                  onClick={() => setLanguage('pt')} 
+               <button
+                  onClick={() => setLanguage('pt')}
                   className={`px-5 py-2 text-sm font-bold rounded-l-full border border-brand-blue transition-colors ${language === 'pt' ? 'bg-brand-blue text-white' : 'bg-transparent text-brand-blue hover:bg-brand-blue/10'}`}
                 >
                  🇧🇷 Português
                </button>
-               <button 
-                  onClick={() => setLanguage('en')} 
+               <button
+                  onClick={() => setLanguage('en')}
                   className={`px-5 py-2 text-sm font-bold rounded-r-full border border-brand-blue border-l-0 transition-colors ${language === 'en' ? 'bg-brand-blue text-white' : 'bg-transparent text-brand-blue hover:bg-brand-blue/10'}`}
                 >
                  🇺🇸 English
@@ -286,7 +415,7 @@ export default function ContentArea({ activeCategory }) {
           </div>
         )}
 
-        {/* Header Section */}
+        {/* Cabeçalho */}
         <div className="text-left md:text-center max-w-4xl mx-auto">
           <span className="text-brand-blue font-bold uppercase tracking-widest text-sm mb-4 block">
             {content.label}
@@ -301,7 +430,24 @@ export default function ContentArea({ activeCategory }) {
           )}
         </div>
 
-        {/* Highlight Section */}
+        {/* CTA no topo, para quem já se convenceu pelo título e não vai
+            rolar a página inteira até o botão do rodapé. */}
+        {content.cta && !showWaitlist && !showContact && (
+          <div className="flex flex-col items-center gap-2 -mt-4">
+            <button
+              onClick={handleCtaClick}
+              className="px-8 py-4 rounded-full font-bold text-lg shadow-lg bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30 transition-all flex items-center gap-2"
+            >
+              {content.cta}
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            {content.ctaSubtext && (
+              <span className="text-sm text-brand-dark/50">{content.ctaSubtext}</span>
+            )}
+          </div>
+        )}
+
+        {/* Destaque */}
         {content.highlight && (
           <div className="bg-brand-cream/40 p-8 rounded-3xl border-l-4 border-brand-blue shadow-sm my-4">
             <div className="flex items-start gap-4">
@@ -313,7 +459,7 @@ export default function ContentArea({ activeCategory }) {
           </div>
         )}
 
-        {/* Body Paragraphs */}
+        {/* Corpo */}
         {content.paragraphs && content.paragraphs.length > 0 && (
           <div className="flex flex-col gap-8 max-w-4xl mx-auto text-lg text-brand-dark/80 leading-relaxed">
             {content.paragraphs.map((p, idx) => (
@@ -327,7 +473,7 @@ export default function ContentArea({ activeCategory }) {
           </div>
         )}
 
-        {/* Feature List (Checkmarks) */}
+        {/* Recursos */}
         {content.features && content.features.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
             {content.features.map((feature, idx) => (
@@ -340,7 +486,7 @@ export default function ContentArea({ activeCategory }) {
           </div>
         )}
 
-        {/* Conclusion */}
+        {/* Conclusão */}
         {content.conclusion && (
           <div className="text-center max-w-3xl mx-auto mt-4">
             <p className="text-2xl font-medium text-brand-blue italic leading-relaxed">
@@ -349,15 +495,33 @@ export default function ContentArea({ activeCategory }) {
           </div>
         )}
 
-        {/* Call to Action */}
+        {/* CTA final + saída intermediária para quem ainda não quer criar conta */}
         {content.cta && !showWaitlist && !showContact && (
-          <div className="flex justify-center mt-6">
-            <button 
-              onClick={(e) => handleCtaClick(e, content.trailType, content.disabled, content.action)}
-              className={`px-8 py-4 rounded-full font-bold text-xl shadow-lg transition-all ${content.disabled ? 'bg-gray-400 text-gray-200 cursor-not-allowed shadow-none' : 'bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30'}`}
+          <div className="flex flex-col items-center gap-3 mt-2">
+            <button
+              onClick={handleCtaClick}
+              className={`px-10 py-5 rounded-full font-bold text-xl shadow-lg transition-all flex items-center gap-2 ${
+                content.disabled
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed shadow-none'
+                  : 'bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30'
+              }`}
             >
               {content.cta}
+              <ArrowRight className="w-5 h-5" />
             </button>
+
+            {content.ctaSubtext && (
+              <span className="text-sm text-brand-dark/50">{content.ctaSubtext}</span>
+            )}
+
+            {secondaryCta && (
+              <Link
+                to={secondaryCta.to}
+                className="text-brand-blue font-bold underline underline-offset-4 hover:opacity-80 transition"
+              >
+                {secondaryCta.label}
+              </Link>
+            )}
           </div>
         )}
 
