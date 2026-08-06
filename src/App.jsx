@@ -34,6 +34,10 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify" element={<OtpVerifyPage />} />
           <Route path="/q/:uniqueCode" element={<PublicEntityPage />} />
+          {/* Ajuda é pública: o rodapé do site aponta para cá, e quem
+              ainda não tem conta é quem mais precisa entender como o
+              sistema funciona antes de se cadastrar. */}
+          <Route path="/ajuda" element={<HelpPage />} />
           {/* Vitrine pública da causa — Fase 3, T2-R04.
               A listagem redireciona para a home quando não há nenhuma causa
               publicada (decisão do proprietário, 06/08/2026). */}
@@ -78,7 +82,6 @@ export default function App() {
             {/* Beneficiários e repasses — Fase 4, T4-R03/R05/R06/R08 */}
             <Route path="/repasses" element={<DisbursementsPage />} />
             <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/ajuda" element={<HelpPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
 

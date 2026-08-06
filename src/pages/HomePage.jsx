@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import TopBar from '../components/layout/TopBar';
 import MainMenu from '../components/layout/MainMenu';
 import DiamondHero from '../components/layout/DiamondHero';
@@ -22,9 +23,36 @@ import { causesApi } from '../services/api';
  * Enquanto a resposta não chega, `hasCauses` é `false`: o link aparecer e
  * sumir seria pior que aparecer um instante depois.
  */
+/** Seções válidas — o que vem pela URL é conferido contra esta lista. */
+const VALID_TRAILS = ['pessoas', 'pets', 'familia', 'grupo', 'empresa', 'doacoes', 'logistica', 'aventura', 'contato'];
+
 export default function HomePage() {
+  const [searchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState('pessoas');
   const [hasCauses, setHasCauses] = useState(false);
+
+  /**
+   * Abre a seção pedida pela URL.
+   *
+   * O rodapé e a Central de Ajuda ficam em outras rotas e precisam
+   * conseguir trazer o visitante para uma seção específica da home —
+   * âncora com `#` não resolve, porque a seção é trocada por estado do
+   * React, não por rolagem.
+   *
+   * `?contato=1` é atalho para a seção de contato, usado pela Ajuda.
+   */
+  useEffect(() => {
+    if (searchParams.get('contato')) {
+      setActiveCategory('contato');
+      return;
+    }
+
+    const trail = searchParams.get('trilha');
+
+    if (trail && VALID_TRAILS.includes(trail)) {
+      setActiveCategory(trail);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
