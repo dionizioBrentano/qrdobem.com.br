@@ -13,7 +13,7 @@ export default function TopBar({ onCategorySelect }) {
         <Link to="/login" className="hover:text-brand-cream transition-colors cursor-pointer text-center whitespace-nowrap">Entrar (Login)</Link>
         <Link to="/login?mode=register" className="hover:text-brand-cream transition-colors cursor-pointer text-center whitespace-nowrap">Cadastre-se</Link>
         <a href="#doar" onClick={handleDoarClick} className="hover:text-brand-cream transition-colors cursor-pointer text-yellow-300 text-center whitespace-nowrap">💛 Doe e Ajude (Donate)</a>
-        <a href="#suporte" className="hover:text-brand-cream transition-colors cursor-pointer text-center whitespace-nowrap">Suporte / Ajuda</a>
+        <Link to="/ajuda" className="hover:text-brand-cream transition-colors cursor-pointer text-center whitespace-nowrap">Suporte / Ajuda</Link>
       </div>
     </div>
   );
