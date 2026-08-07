@@ -86,29 +86,29 @@ export default function Layout() {
 
           {/* Menu desktop */}
           <div className="hidden md:flex items-center gap-6 text-sm font-bold text-white">
-            <Link to="/painel" className="hover:text-brand-cream transition-colors">
+            <Link to="/painel" className="hover:text-brand-blue-dark transition-colors">
               Painel de Controle
             </Link>
-            <Link to="/messages" className="hover:text-brand-cream transition-colors">
+            <Link to="/messages" className="hover:text-brand-blue-dark transition-colors">
               Mensagens
             </Link>
-            <Link to="/familia" className="hover:text-brand-cream transition-colors">
+            <Link to="/familia" className="hover:text-brand-blue-dark transition-colors">
               Família
             </Link>
-            <Link to="/saude" className="hover:text-brand-cream transition-colors">
+            <Link to="/saude" className="hover:text-brand-blue-dark transition-colors">
               Saúde
             </Link>
-            <Link to="/causa" className="hover:text-brand-cream transition-colors">
+            <Link to="/causa" className="hover:text-brand-blue-dark transition-colors">
               Causa
             </Link>
-            <Link to="/doacoes" className="hover:text-brand-cream transition-colors">
+            <Link to="/doacoes" className="hover:text-brand-blue-dark transition-colors">
               Doações
             </Link>
-            <Link to="/profile" className="hover:text-brand-cream transition-colors">
+            <Link to="/profile" className="hover:text-brand-blue-dark transition-colors">
               Perfil
             </Link>
             {isSuperAdmin && (
-              <Link to="/admin" className="hover:text-brand-cream transition-colors">
+              <Link to="/admin" className="hover:text-brand-blue-dark transition-colors">
                 Admin
               </Link>
             )}
@@ -122,7 +122,7 @@ export default function Layout() {
               title={`Conta ativa: ${displayName} (${activeEmail}) — ver minhas contas`}
             >
               <span
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-brand-cream text-brand-blue font-black text-base shrink-0"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-brand-accent text-white font-black text-base shrink-0"
                 aria-hidden="true"
               >
                 {initial}
@@ -159,7 +159,7 @@ export default function Layout() {
             {/* Bloco de identidade (mobile) */}
             <div className="flex items-center gap-3 pb-3 border-b border-brand-cream/20">
               <span
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-cream text-brand-blue font-black shrink-0"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-accent text-white font-black shrink-0"
                 aria-hidden="true"
               >
                 {initial}
@@ -173,38 +173,38 @@ export default function Layout() {
               </span>
             </div>
 
-            <Link to="/painel" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/painel" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Painel de Controle
             </Link>
-            <Link to="/messages" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/messages" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Mensagens
             </Link>
-            <Link to="/profile" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/profile" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Perfil
             </Link>
-            <Link to="/familia" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/familia" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Família
             </Link>
-            <Link to="/saude" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/saude" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Saúde
             </Link>
-            <Link to="/causa" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/causa" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Causa
             </Link>
-            <Link to="/doacoes" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/doacoes" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Doações
             </Link>
-            <Link to="/repasses" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/repasses" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Repasses
             </Link>
-            <Link to="/contas" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/contas" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Minhas contas
             </Link>
-            <Link to="/seguranca" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+            <Link to="/seguranca" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Segurança (2FA)
             </Link>
             {isSuperAdmin && (
-              <Link to="/admin" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors block py-1">
+              <Link to="/admin" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
                 Admin
               </Link>
             )}

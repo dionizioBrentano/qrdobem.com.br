@@ -6,12 +6,31 @@
   --color-brand-sand: #DAAD86;
   --color-brand-earth: #BC986A;
   --color-brand-olive: #8D8741;
-  
+
   --color-brand-dark: #1f2937;
+
+  /* Fundo das páginas. Separado de `brand-cream` de propósito: misturar
+     fundo e destaque na mesma variável foi o que fez o site inteiro ficar
+     amarelo. Toda página usa `bg-brand-bg`. */
+  --color-brand-bg: #FBFBFB;
+
+  /* Destaque sobre o azul: botão "Entrar", hover do menu, avatares.
+     `brand-accent-strong` é a versão para estados hover/pressionado. */
+  --color-brand-accent: #2F855A;
+  --color-brand-accent-strong: #14532D;
+
+  /* Hover dos LINKS de menu (só texto — botões usam `brand-accent`).
+     Azul escuro para escurecer sobre a barra azul clara. */
+  --color-brand-blue-dark: #1E3A5F;
+
+  /* Azul claro derivado do `brand-blue`, para superfícies em repouso —
+     hoje, os itens FECHADOS do acordeão da Ajuda. Aberto vira branco,
+     para o texto ler sobre fundo neutro. */
+  --color-brand-blue-soft: #DCE9F1;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-brand-cream);
+  background-color: var(--color-brand-bg);
   color: var(--color-brand-dark);
 }

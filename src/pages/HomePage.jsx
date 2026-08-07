@@ -71,7 +71,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-brand-cream font-sans m-0 p-0 flex flex-col">
+    <div className="w-full min-h-screen bg-brand-bg font-sans m-0 p-0 flex flex-col">
       <TopBar onCategorySelect={setActiveCategory} />
       <DiamondHero activeCategory={activeCategory} onCategorySelect={setActiveCategory} />
       <MainMenu

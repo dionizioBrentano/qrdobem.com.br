@@ -449,7 +449,7 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
 
         {/* Destaque */}
         {content.highlight && (
-          <div className="bg-brand-cream/40 p-8 rounded-3xl border-l-4 border-brand-blue shadow-sm my-4">
+          <div className="bg-brand-bg p-8 rounded-3xl border-l-4 border-brand-blue shadow-sm my-4">
             <div className="flex items-start gap-4">
               <ShieldCheck className="w-8 h-8 text-brand-blue shrink-0 mt-1" />
               <p className="text-xl font-bold text-brand-dark leading-relaxed">

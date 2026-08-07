@@ -229,7 +229,7 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm text-gray-700 mb-1">Número</label>
                 <input
@@ -237,6 +237,23 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
                   value={form.address_number}
                   onChange={(e) => update('address_number', e.target.value)}
                   required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                />
+              </div>
+              {/* O estado `address_complement` já existia aqui, mas sem
+                  campo na tela: quem completava o cadastro por este bloco
+                  não tinha como informar bloco/apartamento. Sem isso, o
+                  endereço de um prédio fica incompleto. Opcional, porque
+                  casa não tem complemento. */}
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">
+                  Complemento <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.address_complement}
+                  onChange={(e) => update('address_complement', e.target.value)}
+                  placeholder="Bloco A, apto 402"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
                 />
               </div>

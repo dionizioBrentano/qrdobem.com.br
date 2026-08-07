@@ -61,7 +61,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
               key={trail.id}
               href={trail.href}
               onClick={(e) => handleClick(e, trail.id)}
-              className={`hover:text-brand-cream transition-colors cursor-pointer ${
+              className={`hover:text-brand-blue-dark transition-colors cursor-pointer ${
                 activeCategory === trail.id ? 'text-brand-cream' : ''
               }`}
             >
@@ -76,7 +76,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
                 visitante a uma lista vazia é pior que não oferecer o
                 caminho — ele conclui que o sistema não tem conteúdo. */}
             {hasCauses && (
-              <Link to="/causas" className="hover:text-brand-cream transition-colors flex items-center gap-1">
+              <Link to="/causas" className="hover:text-brand-blue-dark transition-colors flex items-center gap-1">
                 <HeartHandshake className="w-4 h-4" />
                 Causas
               </Link>
@@ -85,7 +85,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
                 proprietário. A rota está desativada em App.jsx. */}
             <Link
               to="/login"
-              className="bg-brand-cream text-brand-blue px-4 py-1.5 rounded-lg hover:opacity-90 transition"
+              className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-1.5 rounded-lg hover:opacity-90 transition"
             >
               Entrar
             </Link>
@@ -110,7 +110,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
               key={trail.id}
               href={trail.href}
               onClick={(e) => handleClick(e, trail.id)}
-              className="hover:text-brand-cream transition-colors block py-2 cursor-pointer"
+              className="hover:text-brand-blue-dark transition-colors block py-2 cursor-pointer"
             >
               {trail.label}
             </a>
@@ -118,7 +118,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
 
           <span className="border-t border-brand-cream/20 pt-3 flex flex-col gap-3">
             {hasCauses && (
-              <Link to="/causas" onClick={() => setIsOpen(false)} className="hover:text-brand-cream transition-colors flex items-center gap-2">
+              <Link to="/causas" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4" />
                 Causas para apoiar
               </Link>
@@ -126,7 +126,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
             <Link
               to="/login"
               onClick={() => setIsOpen(false)}
-              className="bg-brand-cream text-brand-blue px-4 py-2 rounded-lg text-center"
+              className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-2 rounded-lg text-center"
             >
               Entrar
             </Link>

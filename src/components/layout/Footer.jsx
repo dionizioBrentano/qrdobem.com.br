@@ -93,7 +93,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="w-full bg-brand-cream text-brand-dark py-4 text-center font-semibold text-sm shadow-[0_-4px_6px_rgba(0,0,0,0.1)]">
+      <div className="w-full bg-brand-bg text-brand-dark py-4 text-center font-semibold text-sm shadow-[0_-4px_6px_rgba(0,0,0,0.1)]">
         &copy; Copyrights 2026 Qrdobem.
       </div>
     </footer>
