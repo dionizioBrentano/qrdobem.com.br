@@ -173,7 +173,7 @@ export default function AccountsPage() {
                 <button
                   onClick={() => handleSwitch(account.id)}
                   disabled={switching === account.id}
-                  className="bg-brand-blue text-white text-sm font-bold px-4 py-2 rounded hover:opacity-90 transition disabled:opacity-50"
+                  className="bg-brand-accent hover:bg-brand-accent-strong text-white text-sm font-bold px-4 py-2 rounded transition disabled:opacity-50"
                 >
                   {switching === account.id ? 'Trocando...' : 'Usar esta conta'}
                 </button>

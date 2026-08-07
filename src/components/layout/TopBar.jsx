@@ -14,8 +14,8 @@ export default function TopBar({ onCategorySelect }) {
         <Link to="/login" className="hover:text-brand-blue-dark transition-colors cursor-pointer text-center whitespace-nowrap">Entrar (Login)</Link>
         <Link to="/login?mode=register" className="hover:text-brand-blue-dark transition-colors cursor-pointer text-center whitespace-nowrap">Cadastre-se</Link>
         {/* Botão, não link: doar é a ação que a barra existe para destacar.
-            Mesmos tokens do "Entrar" do MainMenu (fundo verde, texto
-            branco, escurecendo no hover). O coração é ícone, não emoji,
+            Mesmos tokens do "Entrar" do MainMenu (fundo dourado brand-accent,
+            texto branco, clareando no hover). O coração é ícone, não emoji,
             para herdar `currentColor`. */}
         <a
           href="#doar"

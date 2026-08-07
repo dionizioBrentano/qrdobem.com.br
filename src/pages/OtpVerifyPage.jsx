@@ -83,7 +83,7 @@ export default function OtpVerifyPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
             >
               {loading ? 'Enviando...' : 'Enviar código'}
             </button>
@@ -102,7 +102,7 @@ export default function OtpVerifyPage() {
             <button
               type="submit"
               disabled={loading || code.length < 6}
-              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
             >
               {loading ? 'Verificando...' : 'Verificar'}
             </button>

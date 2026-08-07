@@ -49,33 +49,33 @@ export default function Footer() {
 
         {/* Coluna 2: trilhas */}
         <div className="flex flex-col gap-3">
-          <h4 className="text-brand-cream font-bold mb-2">Plataforma</h4>
-          <Link to={trailLink('familia')} className="text-white/70 hover:text-white transition-colors text-sm">
+          <h4 className="text-brand-accent font-bold mb-2">Plataforma</h4>
+          <Link to={trailLink('familia')} className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Para sua família
           </Link>
-          <Link to={trailLink('grupo')} className="text-white/70 hover:text-white transition-colors text-sm">
+          <Link to={trailLink('grupo')} className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Grupos e causas
           </Link>
-          <Link to={trailLink('empresa')} className="text-white/70 hover:text-white transition-colors text-sm">
+          <Link to={trailLink('empresa')} className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Empresas
           </Link>
-          <Link to={trailLink('doacoes')} className="text-white/70 hover:text-white transition-colors text-sm">
+          <Link to={trailLink('doacoes')} className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Doações
           </Link>
         </div>
 
         {/* Coluna 3: suporte */}
         <div className="flex flex-col gap-3">
-          <h4 className="text-brand-cream font-bold mb-2">Suporte</h4>
-          <Link to="/ajuda" className="text-white/70 hover:text-white transition-colors text-sm">
+          <h4 className="text-brand-accent font-bold mb-2">Suporte</h4>
+          <Link to="/ajuda" className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Central de Ajuda
           </Link>
-          <Link to={trailLink('contato')} className="text-white/70 hover:text-white transition-colors text-sm">
+          <Link to={trailLink('contato')} className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Fale com a equipe
           </Link>
           <a
             href="mailto:contato@qrdobem.com.br"
-            className="text-white/70 hover:text-white transition-colors text-sm"
+            className="text-white/70 hover:text-brand-accent transition-colors text-sm"
           >
             contato@qrdobem.com.br
           </a>
@@ -83,11 +83,11 @@ export default function Footer() {
 
         {/* Coluna 4: acesso */}
         <div className="flex flex-col gap-3">
-          <h4 className="text-brand-cream font-bold mb-2">Sua conta</h4>
-          <Link to="/login" className="text-white/70 hover:text-white transition-colors text-sm">
+          <h4 className="text-brand-accent font-bold mb-2">Sua conta</h4>
+          <Link to="/login" className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Entrar
           </Link>
-          <Link to="/register" className="text-white/70 hover:text-white transition-colors text-sm">
+          <Link to="/register" className="text-white/70 hover:text-brand-accent transition-colors text-sm">
             Criar conta
           </Link>
         </div>

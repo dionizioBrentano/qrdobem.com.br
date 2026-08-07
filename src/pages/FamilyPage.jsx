@@ -143,7 +143,7 @@ export default function FamilyPage() {
         {tree?.nodes?.length >= 2 && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition"
           >
             <Plus className="w-4 h-4" />
             Novo vínculo
@@ -239,7 +239,7 @@ export default function FamilyPage() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg disabled:opacity-50"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg disabled:opacity-50"
             >
               {saving ? 'Salvando...' : 'Criar vínculo'}
             </button>

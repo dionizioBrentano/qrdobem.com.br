@@ -128,7 +128,7 @@ export default function AdminPage() {
           <button
             type="submit"
             disabled={batchLoading}
-            className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
           >
             {batchLoading ? 'Criando...' : 'Criar Lote'}
           </button>

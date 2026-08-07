@@ -217,7 +217,7 @@ export default function BeneficiaryPage() {
             <h2 className="font-bold text-gray-900">O que você precisa</h2>
             <button
               onClick={() => setShowNeedForm(!showNeedForm)}
-              className="bg-brand-blue text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
             >
               <Plus className="w-4 h-4" />
               Pedir
@@ -258,7 +258,7 @@ export default function BeneficiaryPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full bg-brand-blue text-white font-bold py-3 rounded-lg disabled:opacity-50"
+                className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-bold py-3 rounded-lg disabled:opacity-50"
               >
                 {busy ? 'Enviando...' : 'Enviar pedido'}
               </button>

@@ -205,7 +205,7 @@ export default function DisbursementsPage() {
           <h2 className="font-bold text-gray-900">Beneficiários ({beneficiaries.length})</h2>
           <button
             onClick={() => setShowBeneficiaryForm(!showBeneficiaryForm)}
-            className="bg-brand-blue text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
           >
             <UserPlus className="w-4 h-4" />
             Novo
@@ -234,7 +234,7 @@ export default function DisbursementsPage() {
             />
             <button
               type="submit" disabled={busy}
-              className="bg-brand-blue text-white font-bold px-4 py-2 rounded text-sm md:col-span-4 disabled:opacity-50"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded text-sm md:col-span-4 disabled:opacity-50"
             >
               Cadastrar beneficiário
             </button>
@@ -291,7 +291,7 @@ export default function DisbursementsPage() {
           <button
             onClick={() => setShowDisbursementForm(!showDisbursementForm)}
             disabled={!beneficiaries.length}
-            className="bg-brand-blue text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             Novo
@@ -336,7 +336,7 @@ export default function DisbursementsPage() {
 
             <button
               type="submit" disabled={busy}
-              className="bg-brand-blue text-white font-bold px-4 py-2 rounded text-sm md:col-span-4 disabled:opacity-50"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded text-sm md:col-span-4 disabled:opacity-50"
             >
               Registrar repasse
             </button>

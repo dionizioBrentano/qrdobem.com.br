@@ -250,7 +250,7 @@ export default function MessagesPage() {
                               <button
                                 type="submit"
                                 disabled={sending}
-                                className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                                className="bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
                               >
                                 {sending ? 'Enviando...' : 'Responder'}
                               </button>

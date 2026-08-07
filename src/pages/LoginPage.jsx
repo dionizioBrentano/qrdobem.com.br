@@ -3,6 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api';
 
+// Trilhas que o painel sabe tratar. `cause` entra aqui porque a Home já a
+// grava (ContentArea) e o filtro antigo a descartava no caminho do login.
+const VALID_TRAILS = ['pet', 'person', 'object', 'family', 'cause'];
+
+// Subconjunto aceito pelo endpoint de link de cadastro (validação do backend).
+const API_TRAILS = ['pet', 'person', 'object'];
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +29,7 @@ export default function LoginPage() {
     }
 
     const trail = searchParams.get('trail');
-    if (['pet', 'person', 'object'].includes(trail)) {
+    if (VALID_TRAILS.includes(trail)) {
       sessionStorage.setItem('qrdobem_trail', trail);
     }
   }, [searchParams]);
@@ -63,7 +70,11 @@ export default function LoginPage() {
       // A trilha viaja com o token porque o sessionStorage não sobrevive
       // ao intervalo entre pedir o link e abrir o e-mail.
       const storedTrail = sessionStorage.getItem('qrdobem_trail');
-      const trail = ['pet', 'person', 'object'].includes(storedTrail) ? storedTrail : null;
+      // Aqui a lista é menor de propósito: o backend valida
+      // `in:pet,person,object` (RegisterController), e mandar `cause` ou
+      // `family` devolveria 422 e o usuário ficaria sem o link. A trilha
+      // completa continua no sessionStorage para o painel usar depois.
+      const trail = API_TRAILS.includes(storedTrail) ? storedTrail : null;
       await authApi.requestRegisterLink(email, trail);
       setSuccessMsg('Enviamos um link para seu e-mail!');
       setShowRegisterPrompt(false);
@@ -103,7 +114,7 @@ export default function LoginPage() {
             <button
               onClick={() => handleRequestLink()}
               disabled={loading}
-              className="bg-brand-blue text-white px-4 py-1.5 rounded font-medium hover:brightness-90 transition disabled:opacity-50"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-4 py-1.5 rounded font-medium transition disabled:opacity-50"
             >
               Sim, enviar link
             </button>
@@ -141,7 +152,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+            className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
           >
             {loading ? 'Aguarde...' : isRegisterMode ? 'Receber link de acesso' : 'Entrar'}
           </button>

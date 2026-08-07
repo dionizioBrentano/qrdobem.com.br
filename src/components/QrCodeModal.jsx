@@ -104,7 +104,7 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
               <a
                 href={data.qr_code_base64}
                 download={`qrdobem-${entity.unique_code}.svg`}
-                className="inline-block bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
+                className="inline-block bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2 rounded-lg text-sm font-medium transition"
               >
                 Baixar SVG
               </a>
@@ -113,14 +113,14 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
                   href={data.url || entity.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-5 py-2 rounded-lg text-sm font-medium transition"
+                  className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-5 py-2 rounded-lg text-sm font-medium transition"
                 >
                   Abrir página pública
                 </a>
                 <Link
                   to="/messages"
                   onClick={onClose}
-                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-5 py-2 rounded-lg text-sm font-medium transition"
+                  className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-5 py-2 rounded-lg text-sm font-medium transition"
                 >
                   Ver mensagens
                 </Link>
@@ -175,7 +175,7 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
                   <button
                     type="submit"
                     disabled={savingVaccine}
-                    className="w-full bg-brand-blue hover:brightness-90 text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                    className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
                   >
                     {savingVaccine ? 'Salvando...' : 'Salvar vacina'}
                   </button>

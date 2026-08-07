@@ -220,7 +220,7 @@ export default function ProfilePage() {
           ) : (
             <button
               onClick={() => navigate('/verify')}
-              className="bg-brand-blue hover:brightness-90 text-white px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
             >
               Verificar e-mail
             </button>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSaveCpf}
               disabled={cpfSaving || !cpf}
-              className="bg-brand-blue hover:brightness-90 text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
             >
               {cpfSaving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -389,7 +389,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-brand-blue hover:brightness-90 text-white px-6 py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white px-6 py-2.5 rounded-lg font-medium transition disabled:opacity-50"
           >
             {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>

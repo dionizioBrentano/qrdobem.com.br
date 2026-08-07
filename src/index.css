@@ -5,7 +5,8 @@
   --color-brand-cream: #FBEEC1;
   --color-brand-sand: #DAAD86;
   --color-brand-earth: #BC986A;
-  --color-brand-olive: #8D8741;
+  /* Dourado capturado do 60plus (--se-gold). Fonte única do dourado. */
+  --color-brand-olive: #b8975a;
 
   --color-brand-dark: #1f2937;
 
@@ -14,10 +15,14 @@
      amarelo. Toda página usa `bg-brand-bg`. */
   --color-brand-bg: #FBFBFB;
 
-  /* Destaque sobre o azul: botão "Entrar", hover do menu, avatares.
-     `brand-accent-strong` é a versão para estados hover/pressionado. */
-  --color-brand-accent: #2F855A;
-  --color-brand-accent-strong: #14532D;
+  /* Destaque sobre o azul: botões "Entrar" e "Doe e Ajude", títulos do
+     rodapé, item de menu ativo, avatares. É o MESMO dourado da causa: em vez
+     de repetir o hex, este token aponta para `brand-olive`, a fonte única do
+     dourado. Mudar o dourado num lugar só (brand-olive) propaga para tudo.
+     `brand-accent-strong` é o hover: no 60plus o dourado CLAREIA no hover
+     (--se-gold-light), não escurece. */
+  --color-brand-accent: var(--color-brand-olive);
+  --color-brand-accent-strong: #d4b47a;
 
   /* Hover dos LINKS de menu (só texto — botões usam `brand-accent`).
      Azul escuro para escurecer sobre a barra azul clara. */
@@ -27,6 +32,19 @@
      hoje, os itens FECHADOS do acordeão da Ajuda. Aberto vira branco,
      para o texto ler sobre fundo neutro. */
   --color-brand-blue-soft: #DCE9F1;
+
+  /* Azul da marca Mercado Pago — usado SÓ na tela de pagamento, para o
+     usuário reconhecer o provedor. Não é a cor de ação do app (que é o
+     dourado). Fica em token para não haver hex solto no componente. */
+  --color-mp: #009ee3;
+  --color-mp-strong: #008dcb;
+}
+
+/* Mãozinha global: <button> nasce com `cursor: default` no navegador, ao
+   contrário de <a>. Botão desabilitado fica de fora (mantém o cursor de
+   bloqueado onde a utilitária `disabled:cursor-not-allowed` definir). */
+button:not(:disabled) {
+  cursor: pointer;
 }
 
 body {

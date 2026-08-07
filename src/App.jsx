@@ -43,6 +43,10 @@ export default function App() {
               publicada (decisão do proprietário, 06/08/2026). */}
           <Route path="/causas" element={<CausesListPage />} />
           <Route path="/causa/:slug" element={<CausePublicPage />} />
+          {/* Doar NÃO exige conta (guest checkout) — Fase 4. O doador se
+              identifica na própria doação; login vira só prefill. O CTA da
+              landing e da vitrine da causa aponta para cá. */}
+          <Route path="/doacoes" element={<DonatePage />} />
           {/* URL única do beneficiário — Fase 4, T4-R05/R06/R07.
               Pública por definição: o beneficiário não tem conta. */}
           <Route path="/b/:uniqueCode" element={<BeneficiaryPage />} />
@@ -77,8 +81,8 @@ export default function App() {
             <Route path="/saude" element={<HealthPage />} />
             {/* Painel da causa: vitrine, moderação e lotes — Fase 3 */}
             <Route path="/causa" element={<CauseAdminPage />} />
-            {/* Doações — Fase 4, T4-R01 a T4-R04 */}
-            <Route path="/doacoes" element={<DonatePage />} />
+            {/* Doações (/doacoes) agora é rota PÚBLICA — ver acima. Doar não
+                exige conta; logado apenas prefila os dados. */}
             {/* Beneficiários e repasses — Fase 4, T4-R03/R05/R06/R08 */}
             <Route path="/repasses" element={<DisbursementsPage />} />
             <Route path="/messages" element={<MessagesPage />} />

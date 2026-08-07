@@ -274,14 +274,14 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                 href={result.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-6 py-2 rounded-lg transition font-medium"
+                className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-6 py-2 rounded-lg transition font-medium"
               >
                 Abrir página pública
               </a>
               <Link
                 to="/messages"
                 onClick={onCreated}
-                className="border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-6 py-2 rounded-lg transition font-medium"
+                className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-6 py-2 rounded-lg transition font-medium"
               >
                 Ver mensagens
               </Link>
@@ -289,7 +289,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
 
             <button
               onClick={onCreated}
-              className="bg-brand-blue hover:brightness-90 text-white px-6 py-2 rounded-lg transition font-medium"
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-6 py-2 rounded-lg transition font-medium"
             >
               Concluir
             </button>
@@ -764,7 +764,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
             <button
               type="submit"
               disabled={loading || !acceptedTerm}
-              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Registrando...' : 'Registrar QR Code'}
             </button>

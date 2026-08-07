@@ -134,7 +134,7 @@ export default function CausesListPage() {
             />
             <button
               type="submit"
-              className="flex-1 bg-brand-blue text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-1"
+              className="flex-1 bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-1"
             >
               <Search className="w-4 h-4" />
               Buscar
@@ -157,7 +157,7 @@ export default function CausesListPage() {
             <p className="text-gray-600">Nenhuma causa encontrada com esses filtros.</p>
             <button
               onClick={clearFilters}
-              className="mt-4 bg-brand-blue text-white font-bold px-5 py-2 rounded-lg text-sm"
+              className="mt-4 bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-5 py-2 rounded-lg text-sm"
             >
               Ver todas as causas
             </button>

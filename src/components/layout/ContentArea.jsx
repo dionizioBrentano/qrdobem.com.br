@@ -436,7 +436,7 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
           <div className="flex flex-col items-center gap-2 -mt-4">
             <button
               onClick={handleCtaClick}
-              className="px-8 py-4 rounded-full font-bold text-lg shadow-lg bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30 transition-all flex items-center gap-2"
+              className="px-8 py-4 rounded-full font-bold text-lg shadow-lg bg-brand-accent text-white hover:bg-brand-accent-strong hover:-translate-y-1 shadow-brand-olive/30 transition-all flex items-center gap-2 cursor-pointer"
             >
               {content.cta}
               <ArrowRight className="w-5 h-5" />
@@ -503,7 +503,7 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
               className={`px-10 py-5 rounded-full font-bold text-xl shadow-lg transition-all flex items-center gap-2 ${
                 content.disabled
                   ? 'bg-gray-400 text-gray-200 cursor-not-allowed shadow-none'
-                  : 'bg-brand-olive text-white hover:bg-brand-blue hover:-translate-y-1 shadow-brand-olive/30'
+                  : 'bg-brand-accent text-white hover:bg-brand-accent-strong hover:-translate-y-1 shadow-brand-olive/30 cursor-pointer'
               }`}
             >
               {content.cta}
@@ -533,7 +533,7 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
             ) : (
               <div className="flex flex-col gap-4">
                 <input required type="email" placeholder="Seu e-mail" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                <button disabled={status === 'loading'} type="submit" className="bg-brand-blue text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50 transition-colors">
+                <button disabled={status === 'loading'} type="submit" className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors">
                   {status === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Avisem-me'}
                 </button>
                 {status === 'error' && <p className="text-red-500 text-sm text-center font-medium">Ocorreu um erro. Tente novamente.</p>}
@@ -552,7 +552,7 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
                 <input required type="text" placeholder="Seu nome" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Seu e-mail" className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 <textarea required placeholder="Como podemos ajudar?" rows={4} className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-blue resize-none" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} />
-                <button disabled={status === 'loading'} type="submit" className="bg-brand-blue text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50 transition-colors">
+                <button disabled={status === 'loading'} type="submit" className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors">
                   {status === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-4 h-4"/> Enviar Mensagem</>}
                 </button>
                 {status === 'error' && <p className="text-red-500 text-sm text-center font-medium">Ocorreu um erro. Tente novamente.</p>}

@@ -82,10 +82,10 @@ const SECTIONS = [
     id: 'familia',
     title: 'Família: vários perfis, uma conta',
     body: [
-      'Não há limite de perfis. Você cadastra pessoas e pets na mesma conta e monta a árvore de vínculos entre eles.',
-      'Para criar um vínculo, é preciso ter pelo menos 2 perfis já cadastrados. Você escolhe quem, qual o tipo de relação, e de quem — com uma prévia da frase antes de salvar, para não inverter quem é responsável por quem.',
-      'O sistema aceita mais de um responsável legal, segundos casamentos e guarda compartilhada. O que ele impede é vínculo duplicado, uma pessoa vinculada a si mesma, e ciclos (por exemplo, A ser "pai" de B e B ser "pai" de A ao mesmo tempo).',
-      'Editar a árvore (criar ou remover vínculo) exige permissão específica dentro do espaço, que pode ser delegada pelo fundador.',
+      'Na Home, o card "Família" (botão "Criar a proteção da minha família") leva ao cadastro ou login já na trilha de família. Ao entrar, o painel abre com os botões "QR de Pessoa" e "QR de Pet" para cadastrar os primeiros perfis — cada QR consome 1 crédito, como qualquer outro.',
+      'Se quiser reunir todo mundo num espaço só, o painel oferece "Criar espaço família": dê um nome e confirme. Não gasta crédito nem exige CNPJ — o espaço é o contêiner que organiza as pessoas e para onde vai o alerta do Botão de Pânico. Enquanto você não criar, os QR Codes de pessoa e pet funcionam normalmente.',
+      'Com pelo menos 2 perfis cadastrados, aparece no painel o link "Árvore da família", que abre a página de vínculos. Lá você escolhe quem, o tipo de relação e de quem — com uma prévia da frase antes de salvar, para não inverter quem é responsável por quem.',
+      'A árvore aceita mais de um responsável legal, segundos casamentos e guarda compartilhada. O que ela impede é vínculo duplicado, uma pessoa vinculada a si mesma, e ciclos (por exemplo, A ser "pai" de B e B ser "pai" de A ao mesmo tempo).',
     ],
   },
   {
@@ -100,21 +100,26 @@ const SECTIONS = [
     id: 'causas',
     title: 'Quero cadastrar minha causa',
     body: [
-      'Não é preciso CNPJ. Se você lidera uma iniciativa com o seu próprio CPF já validado no perfil, pode criar um espaço do tipo "Causa".',
-      'Preencha a chamada curta, a história, categoria, cidade, meta em reais e a prestação de contas. A página só pode ser publicada depois que a chamada curta e a história estiverem preenchidas.',
-      'Fotos e vídeos enviados passam por moderação antes de aparecer na vitrine pública — proteção para quem aparece nas imagens e para a credibilidade da causa.',
-      'É possível gerar QR Codes em lote para a campanha (até 500 por vez) e vincular sua causa a uma OSCIP parceira maior, para quem precisar de recibo dedutível — o vínculo só pode ser criado pela OSCIP, não pela causa sozinha.',
+      'Não é preciso CNPJ. Na Home, o card "Grupos e Causas" tem o botão "Cadastrar minha causa", que leva ao cadastro ou login já na trilha de causa.',
+      'Ao entrar no painel, aparece o banner "Configurar minha causa" — clique nele para abrir o painel da causa. Se o seu perfil ainda estiver incompleto, complete o cadastro (apelido, CPF, telefone e endereço) antes: criar uma causa exige o perfil ativo, e a própria tela mostra o link para completá-lo.',
+      'Se você ainda não tem nenhuma causa, o painel abre com o formulário "Criar minha causa": só o nome é obrigatório; chamada curta, cidade e UF são opcionais. Confirme em "Criar causa".',
+      'Criada a causa, preencha a vitrine: chamada curta e história são obrigatórias para publicar; categoria, cidade, meta em reais e prestação de contas são complementos. Enquanto a chamada e a história não estiverem preenchidas, a página fica despublicada.',
+      'Ao publicar, a causa passa a aparecer na lista pública em "Causas" (o mesmo lugar do botão "Ver causas já cadastradas" da Home). Fotos e vídeos enviados passam por moderação antes de aparecer na vitrine — proteção para quem aparece nas imagens e para a credibilidade da causa.',
+      'Ainda no painel da causa, você pode gerar QR Codes em lote para a campanha (até 500 por vez) e vincular a causa a uma OSCIP parceira maior, para quem precisar de recibo dedutível — o vínculo só pode ser criado pela OSCIP, não pela causa sozinha.',
     ],
   },
   {
     id: 'doacoes',
     title: 'Como funcionam as doações',
     body: [
-      'Para doar, é preciso estar com sua conta logada.',
-      'Você escolhe o valor (mínimo R$ 1), a causa (ou deixa em aberto, "onde for mais necessário"), e a forma de pagamento: Pix, cartão de crédito ou Cartão Cidadão. Pode doar uma vez ou assinar uma doação mensal recorrente (por cartão).',
-      'A causa escolhida é registrada como destino da doação, não como recebedora direta: o valor vai para a OSCIP gestora do QR do Bem, que faz a distribuição e responde pela prestação de contas e emissão de recibo.',
-      'A doação só é confirmada como paga depois da confirmação do pagamento. Antes disso, ela aparece como pendente.',
-      'Você pode doar anonimamente — nesse caso seu nome não aparece na lista pública de doações da causa.',
+      'Doar não exige conta. Você se identifica na própria doação (nome, e-mail e CPF — dados que o meio de pagamento pede) e autoriza o uso desses dados para o pagamento, o recibo e a conciliação. Se já tiver conta e estiver logado, esses campos são preenchidos pelo seu perfil. O recibo chega no e-mail informado.',
+      'Você escolhe o valor (mínimo R$ 1), a causa (ou deixa em aberto, "onde for mais necessário") e a forma de pagamento: Pix, cartão de crédito ou Cartão Cidadão. A doação avulsa dispensa login; a doação mensal recorrente (por cartão) exige conta.',
+      'A causa escolhida é registrada como destino da doação, não como recebedora direta: o valor vai para a OSCIP gestora do QR do Bem, que faz a distribuição e responde pela prestação de contas e emissão do recibo.',
+      'Sobre o valor bruto da doação incide uma taxa operacional de 12%, destinada à OSCIP gestora do QR do Bem. É essa taxa que mantém a plataforma, emite o recibo, analisa as causas, dá suporte e divulga o trabalho. O custo do meio de pagamento (Pix ou cartão) é separado e discriminado à parte, conforme a operadora.',
+      'Antes de confirmar, você vê exatamente quanto é taxa e quanto chega à causa. Se preferir, marque "que o valor digitado vá 100% para a causa": nesse caso você assume a taxa operacional e o custo do pagamento por cima do valor doado. Também pode somar uma contribuição voluntária ao QR do Bem, separada dos 12%.',
+      'Esta é uma doação solidária com recibo da OSCIP. Ela NÃO reduz o Imposto de Renda como os incentivos da Lei Rouanet, do Fundo da Criança e do Adolescente (FIA) ou de Incentivo ao Esporte — esses exigem um projeto de lei homologado, que não é o caso aqui. Quando um projeto assim for homologado, o selo e o número do projeto passam a aparecer na página da doação.',
+      'Para empresa tributada pelo lucro real, a doação com recibo da OSCIP pode, em geral, ser lançada como despesa dedutível de até 2% do lucro operacional — o resultado da atividade-fim da empresa antes do Imposto de Renda. Nos demais regimes (Simples Nacional, lucro presumido) esse abatimento específico normalmente não se aplica. Confirme sempre com o contador do doador.',
+      'A doação só é confirmada como paga depois da confirmação do pagamento; antes disso, aparece como pendente. Você pode doar anonimamente ou autorizar que seu nome / razão social apareça em "Quem apoia esta causa".',
     ],
   },
   {
@@ -238,7 +243,7 @@ export default function HelpPage() {
           </p>
           <Link
             to="/?contato=1"
-            className="inline-block bg-brand-blue text-white font-bold px-5 py-2 rounded-lg text-sm hover:opacity-90 transition"
+            className="inline-block bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-5 py-2 rounded-lg text-sm transition"
           >
             Falar com a equipe
           </Link>

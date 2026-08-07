@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { entitiesApi, profileApi } from '../services/api';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { entitiesApi, profileApi, spacesApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
 import PurchaseCreditsModal from '../components/PurchaseCreditsModal';
@@ -15,24 +15,24 @@ const TRAIL_CTA = {
     title: 'Proteja quem você ama',
     subtitle: 'Crie um QR Code de identificação e emergência em poucos minutos.',
     button: 'Proteja quem você ama',
-    color: 'bg-brand-blue',
   },
   pet: {
     title: 'Proteja seu Pet',
     subtitle: 'Quem encontrar seu pet fala com você na hora, pelo QR Code da coleira.',
     button: 'Proteja seu Pet',
-    color: 'bg-brand-olive',
   },
   object: {
     title: 'Rastreie um objeto',
     subtitle: 'Cole o QR Code no que é seu e receba o contato de quem encontrar.',
     button: 'Rastreie um objeto',
-    color: 'bg-brand-blue',
   },
 };
 
+// Padrão único de todos os CTAs, igual aos botões do menu ("Entrar"/"Doe e
+// Ajude"): fundo dourado (brand-accent), texto branco, hover clareando
+// (brand-accent-strong). Só o fundo é dourado — o texto continua branco.
 const CTA_BASE_CLASS =
-  'text-white text-base font-bold px-6 py-3 rounded-lg shadow-sm transition hover:brightness-90 whitespace-nowrap';
+  'bg-brand-accent text-white hover:bg-brand-accent-strong text-base font-bold px-6 py-3 rounded-lg shadow-sm transition whitespace-nowrap cursor-pointer';
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -47,17 +47,42 @@ export default function DashboardPage() {
   const [activeSpaceId, setActiveSpaceId] = useState(null);
   const [activeTrail, setActiveTrail] = useState(null);
   const [showPurchase, setShowPurchase] = useState(false);
+  // Criação do espaço família — opcional e só oferecida quando não existe um.
+  const [familyName, setFamilyName] = useState('Minha família');
+  const [familyBusy, setFamilyBusy] = useState(false);
+  const [familyError, setFamilyError] = useState('');
+  const [familyProfileBlocked, setFamilyProfileBlocked] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const queryTrail = searchParams.get('trail');
     const storedTrail = sessionStorage.getItem('qrdobem_trail');
     const trail = queryTrail || storedTrail;
-    
-    if (['pet', 'person', 'object', 'family'].includes(trail)) {
+
+    if (['pet', 'person', 'object', 'family', 'cause'].includes(trail)) {
       setActiveTrail(trail);
     }
   }, [searchParams]);
+
+  // A causa não é um QR Code: não passa por crédito nem por EntityFormModal.
+  // O painel só reconhece a trilha e encaminha para /causa, que é onde o
+  // espaço é criado.
+  const isCauseTrail = activeTrail === 'cause';
+
+  const clearTrail = () => {
+    sessionStorage.removeItem('qrdobem_trail');
+    setActiveTrail(null);
+    if (searchParams.has('trail')) {
+      searchParams.delete('trail');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
+  const handleCauseCta = () => {
+    clearTrail();
+    navigate('/causa');
+  };
 
   const loadEntities = async (orgId, spaceId) => {
     setLoading(true);
@@ -91,12 +116,7 @@ export default function DashboardPage() {
 
   const handleEntityCreated = () => {
     setShowForm(false);
-    sessionStorage.removeItem('qrdobem_trail');
-    setActiveTrail(null);
-    if (searchParams.has('trail')) {
-      searchParams.delete('trail');
-      setSearchParams(searchParams, { replace: true });
-    }
+    clearTrail();
     loadEntities(activeOrgId);
     loadProfile();
   };
@@ -131,6 +151,14 @@ export default function DashboardPage() {
   const showConversionCta = Boolean(activeTrail) || !hasEntities;
   const trailCta = TRAIL_CTA[activeTrail] || null;
 
+  // Espaço família já existente. Enquanto a API antiga não devolver `spaces`,
+  // a lista vem vazia e o botão de criar simplesmente aparece — criar duas
+  // vezes é impossível porque, depois do primeiro, `familySpace` existe.
+  const familySpace = data?.spaces?.find((s) => s.type === 'family') || null;
+  const showCreateFamily = activeTrail === 'family' && !familySpace;
+  // A árvore precisa de um espaço para pendurar as pessoas.
+  const showFamilyTreeLink = Boolean(familySpace || activeSpaceId);
+
   // O CTA mantém sempre o mesmo texto de apelo, mas leva ao próximo obstáculo
   // real do usuário: pendências de cadastro -> créditos -> criação do QR.
   // A trilha continua no sessionStorage, então ao resolver cada etapa o
@@ -158,6 +186,26 @@ export default function DashboardPage() {
     setShowForm(true);
   };
 
+  // Espaço família não consome crédito nem passa pelo EntityFormModal: é só
+  // o contêiner que a árvore e o botão de pânico usam depois.
+  const handleCreateFamily = async () => {
+    setFamilyBusy(true);
+    setFamilyError('');
+    setFamilyProfileBlocked(false);
+    try {
+      await spacesApi.create({ type: 'family', name: familyName.trim() || 'Minha família' });
+      await loadEntities(activeOrgId);
+    } catch (err) {
+      // Mesmo Gate 1 da criação de causa (SpaceController@store).
+      if (err.status === 403 && String(err.data?.code || '').startsWith('PROFILE')) {
+        setFamilyProfileBlocked(true);
+      }
+      setFamilyError(err.message);
+    } finally {
+      setFamilyBusy(false);
+    }
+  };
+
   // Sem trilha não há tipo de entidade conhecido: o caminho é crédito primeiro.
   const handleGenericCta = () => {
     if (ctaStage === 'profile') {
@@ -174,7 +222,32 @@ export default function DashboardPage() {
 
       {/* Bloco de CTA de conversão */}
       <div className="space-y-3">
-        {showConversionCta && (
+        {isCauseTrail && (
+          <div className="bg-white border border-brand-olive/40 rounded-xl shadow-sm p-5 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <p className="text-lg font-bold text-brand-dark">
+                  Cadastrar minha causa
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  A causa tem painel próprio: vitrine, fotos e QR Codes em
+                  lote. Não é preciso CNPJ nem crédito para começar.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <button
+                  onClick={handleCauseCta}
+                  className={CTA_BASE_CLASS}
+                >
+                  Configurar minha causa
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isCauseTrail && showConversionCta && (
         <div className="bg-white border border-brand-blue/30 rounded-xl shadow-sm p-5 md:p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -196,13 +269,13 @@ export default function DashboardPage() {
                 <>
                   <button
                     onClick={() => handleTrailCta('person')}
-                    className={`${CTA_BASE_CLASS} bg-brand-blue`}
+                    className={CTA_BASE_CLASS}
                   >
                     QR de Pessoa
                   </button>
                   <button
                     onClick={() => handleTrailCta('pet')}
-                    className={`${CTA_BASE_CLASS} bg-brand-olive`}
+                    className={CTA_BASE_CLASS}
                   >
                     QR de Pet
                   </button>
@@ -210,14 +283,14 @@ export default function DashboardPage() {
               ) : trailCta ? (
                 <button
                   onClick={() => handleTrailCta()}
-                  className={`${CTA_BASE_CLASS} ${trailCta.color}`}
+                  className={CTA_BASE_CLASS}
                 >
                   {trailCta.button}
                 </button>
               ) : (
                 <button
                   onClick={handleGenericCta}
-                  className={`${CTA_BASE_CLASS} bg-brand-blue`}
+                  className={CTA_BASE_CLASS}
                 >
                   Comprar QR Code
                 </button>
@@ -226,7 +299,7 @@ export default function DashboardPage() {
               {/* TODO: QR órfão/pré-pago — spec futura (EntityStatus = aguardando_resgate).
                   Quando a detecção existir, este botão substitui o CTA acima. */}
               {false && (
-                <button className={`${CTA_BASE_CLASS} bg-brand-olive`}>
+                <button className={CTA_BASE_CLASS}>
                   Aproveite seu QR Code
                 </button>
               )}
@@ -236,16 +309,69 @@ export default function DashboardPage() {
           {ctaHint && (
             <p className="text-xs text-gray-500 mt-3">{ctaHint}</p>
           )}
+
+          {/* Opcional: o espaço família só existe se a pessoa quiser. Os QR
+              Codes acima funcionam sem ele. */}
+          {showCreateFamily && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-2">
+                Quer reunir todo mundo num espaço só? Crie a família e use a
+                árvore para organizar as pessoas.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text" maxLength={255}
+                  value={familyName}
+                  onChange={(e) => setFamilyName(e.target.value)}
+                  placeholder="Minha família"
+                  className="border border-gray-300 rounded px-3 py-2 text-sm min-w-[180px]"
+                />
+                <button
+                  onClick={handleCreateFamily}
+                  disabled={familyBusy}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50 transition"
+                >
+                  {familyBusy ? 'Criando...' : 'Criar espaço família'}
+                </button>
+              </div>
+
+              {familyError && (
+                <p className="text-xs text-red-600 mt-2">
+                  {familyError}
+                  {familyProfileBlocked && (
+                    <>
+                      {' '}
+                      <Link to="/profile" className="font-bold underline">
+                        Completar meu cadastro
+                      </Link>
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+          )}
         </div>
         )}
 
         {/* Sempre visível, independente de trilha ou de já ter QR Codes */}
-        <Link
-          to="/ajuda"
-          className="inline-block text-sm text-brand-blue hover:underline font-medium"
-        >
-          Como cadastrar e gerenciar os dados do seu QR Code
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link
+            to="/ajuda"
+            className="inline-block text-sm text-brand-blue hover:underline font-medium"
+          >
+            Como cadastrar e gerenciar os dados do seu QR Code
+          </Link>
+
+          {showFamilyTreeLink && (
+            <Link
+              to="/familia"
+              className="inline-block text-sm text-brand-blue hover:underline font-medium"
+            >
+              Árvore da família
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Bloco de cadastro pendente — alvo do CTA quando há pendências */}
@@ -270,7 +396,7 @@ export default function DashboardPage() {
               onClick={() => setShowForm(true)}
               disabled={!allowCreate}
               title={allowCreate ? '' : 'Complete o perfil ou adquira créditos'}
-              className="w-full md:w-auto bg-brand-blue hover:brightness-90 text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full md:w-auto bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               + Novo QR Code
             </button>
@@ -435,7 +561,11 @@ export default function DashboardPage() {
       {showForm && (
         <EntityFormModal
           organizationId={activeOrgId}
-          initialType={activeTrail === 'family' ? 'person' : (activeTrail || 'person')}
+          // `family` e `cause` não são tipos de entidade: o modal cai no
+          // padrão `person` em vez de receber um tipo que não existe lá.
+          initialType={
+            ['family', 'cause'].includes(activeTrail) ? 'person' : (activeTrail || 'person')
+          }
           onClose={() => setShowForm(false)}
           onCreated={handleEntityCreated}
         />

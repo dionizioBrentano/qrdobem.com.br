@@ -519,7 +519,7 @@ export default function PublicEntityPage() {
                   <button
                     type="submit"
                     disabled={sending}
-                    className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                    className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                   >
                     {sending ? 'Enviando...' : 'Enviar'}
                   </button>
@@ -563,7 +563,7 @@ export default function PublicEntityPage() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                  className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
                 >
                   {sending ? 'Enviando...' : 'Enviar Mensagem'}
                 </button>
@@ -584,7 +584,7 @@ export default function PublicEntityPage() {
                     {recoverError && <p className="text-xs text-red-600">{recoverError}</p>}
                     <button
                       type="submit"
-                      className="w-full border border-brand-blue text-brand-blue hover:bg-brand-blue/10 py-2 rounded-lg text-sm font-medium transition"
+                      className="w-full border border-brand-accent text-brand-accent hover:bg-brand-accent/10 py-2 rounded-lg text-sm font-medium transition"
                     >
                       Recuperar conversa
                     </button>
@@ -617,7 +617,7 @@ export default function PublicEntityPage() {
                 sessionStorage.setItem('qrdobem_trail', 'benefactor');
                 sessionStorage.setItem('qrdobem_origin_conversation', conversation.id);
               }}
-              className="inline-block mt-3 border border-brand-blue text-brand-blue hover:bg-brand-blue/10 px-5 py-2 rounded-lg text-sm font-medium transition"
+              className="inline-block mt-3 border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-5 py-2 rounded-lg text-sm font-medium transition"
             >
               Criar minha conta
             </Link>

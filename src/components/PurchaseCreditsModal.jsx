@@ -165,7 +165,7 @@ export default function PurchaseCreditsModal({ onClose }) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009ee3] mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mp mx-auto" />
         </div>
       </div>
     );
@@ -177,7 +177,7 @@ export default function PurchaseCreditsModal({ onClose }) {
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden p-6 text-center">
            <h2 className="text-xl font-semibold text-gray-900 mb-4">Processando Pagamento</h2>
            <p className="text-gray-600 mb-6">Aguardando confirmação do cartão...</p>
-           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009ee3] mx-auto" />
+           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mp mx-auto" />
            <p className="text-xs text-gray-400 mt-4">Isso pode levar alguns instantes.</p>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function PurchaseCreditsModal({ onClose }) {
                 />
                 <button 
                   onClick={copyToClipboard}
-                  className="bg-[#009ee3] hover:bg-[#008dcb] text-white px-4 py-2 rounded-r-lg text-sm font-medium transition"
+                  className="bg-mp hover:bg-mp-strong text-white px-4 py-2 rounded-r-lg text-sm font-medium transition"
                 >
                   Copiar
                 </button>
@@ -249,13 +249,13 @@ export default function PurchaseCreditsModal({ onClose }) {
           <div className="flex border-b mb-4">
             <button 
               onClick={() => { setMethod('pix'); setError(''); }}
-              className={`flex-1 py-2 font-medium text-sm transition-colors ${method === 'pix' ? 'border-b-2 border-[#009ee3] text-[#009ee3]' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-2 font-medium text-sm transition-colors ${method === 'pix' ? 'border-b-2 border-mp text-mp' : 'text-gray-500 hover:text-gray-700'}`}
             >
               PIX
             </button>
             <button 
               onClick={() => { setMethod('card'); setError(''); }}
-              className={`flex-1 py-2 font-medium text-sm transition-colors ${method === 'card' ? 'border-b-2 border-[#009ee3] text-[#009ee3]' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-2 font-medium text-sm transition-colors ${method === 'card' ? 'border-b-2 border-mp text-mp' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Cartão
             </button>
@@ -278,7 +278,7 @@ export default function PurchaseCreditsModal({ onClose }) {
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
               disabled={isSubmitting}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009ee3] focus:border-[#009ee3] disabled:opacity-50"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-mp focus:border-mp disabled:opacity-50"
             />
             <p className="text-xs text-gray-500 mt-1">
               Mínimo: {pricing?.min_quantity} | Máximo: {pricing?.max_quantity}
@@ -294,7 +294,7 @@ export default function PurchaseCreditsModal({ onClose }) {
             <button
               onClick={handlePurchasePix}
               disabled={isSubmitting}
-              className="w-full bg-[#009ee3] hover:bg-[#008dcb] text-white font-medium py-3 rounded-lg transition disabled:opacity-50"
+              className="w-full bg-mp hover:bg-mp-strong text-white font-medium py-3 rounded-lg transition disabled:opacity-50"
             >
               {isSubmitting ? 'Processando...' : 'Gerar PIX'}
             </button>

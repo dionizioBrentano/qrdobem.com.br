@@ -288,6 +288,13 @@ export const qrBatchesApi = {
 
 // --- Doações (T4-R01 a T4-R04) ---
 export const donationsApi = {
+  // Rateio da doação ANTES de confirmar: quanto é taxa da OSCIP/plataforma,
+  // quanto chega à causa, total a pagar. Público e sem efeito colateral —
+  // é a fonte única do breakdown, a mesma conta que o /donations usa.
+  // Body: amount, cover_fees?, extra_platform_support?, payment_method?
+  preview: (data) =>
+    request('/donations/preview', { method: 'POST', body: JSON.stringify(data) }),
+
   create: (data) =>
     request('/donations', { method: 'POST', body: JSON.stringify(data) }),
 

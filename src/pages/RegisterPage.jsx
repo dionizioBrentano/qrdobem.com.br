@@ -31,7 +31,11 @@ export default function RegisterPage() {
       .then((data) => {
         setEmail(data.email);
         // Trilha escolhida na Home antes do envio do link, devolvida pelo token.
-        if (['pet', 'person', 'object'].includes(data.trail)) {
+        // `cause` e `family` entram na lista para não serem descartadas se o
+        // token passar a carregá-las; hoje o backend só emite as três primeiras.
+        // Quando o token não traz trilha, a que já está no sessionStorage
+        // permanece — este bloco só grava, nunca limpa.
+        if (['pet', 'person', 'object', 'family', 'cause'].includes(data.trail)) {
           sessionStorage.setItem('qrdobem_trail', data.trail);
         }
         setLoading(false);
@@ -139,7 +143,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-blue hover:brightness-90 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
             >
               {loading ? 'Aguarde...' : 'Criar conta e Entrar'}
             </button>

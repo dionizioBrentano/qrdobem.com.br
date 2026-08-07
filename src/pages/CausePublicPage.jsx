@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { HeartHandshake, MapPin, ShieldCheck } from 'lucide-react';
-import { causesApi } from '../services/api';
+import { HeartHandshake, MapPin, ShieldCheck, Heart, Users } from 'lucide-react';
+import { causesApi, donationsApi } from '../services/api';
 
 /**
  * CausePublicPage — vitrine pública de uma causa.
@@ -17,6 +17,7 @@ import { causesApi } from '../services/api';
 export default function CausePublicPage() {
   const { slug } = useParams();
   const [data, setData] = useState(null);
+  const [supporters, setSupporters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -27,6 +28,14 @@ export default function CausePublicPage() {
       .then((res) => { if (!cancelled) setData(res); })
       .catch((err) => { if (!cancelled) setError(err.message || 'Causa não encontrada.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
+
+    // "Quem apoia esta causa": só quem doou (pago) E não optou por anonimato
+    // — a lista vem pronta do backend, que já esconde e-mail e anônimos.
+    // Nunca inventamos apoiadores: se ninguém optou por aparecer, a seção
+    // simplesmente não é renderizada.
+    donationsApi.publicList(slug)
+      .then((res) => { if (!cancelled) setSupporters(res.donations || []); })
+      .catch(() => { if (!cancelled) setSupporters([]); });
 
     return () => { cancelled = true; };
   }, [slug]);
@@ -97,6 +106,16 @@ export default function CausePublicPage() {
               />
             </div>
           )}
+
+          {/* CTA de doação. Leva ao fluxo de doar já com a causa selecionada;
+              lá o doador vê o rateio (taxa 12% + destino) antes de confirmar. */}
+          <Link
+            to={`/doacoes?causa=${slug}`}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-3 rounded-lg transition"
+          >
+            <Heart className="w-5 h-5" />
+            Doar para esta causa
+          </Link>
         </section>
 
         {/* Guarda-chuva: o doador precisa saber por qual entidade sai o
@@ -150,6 +169,33 @@ export default function CausePublicPage() {
                 </figure>
               ))}
             </div>
+          </section>
+        )}
+
+        {/* Quem apoia esta causa — só doadores pagos que autorizaram exibição.
+            A lista vem do backend sem e-mail e sem anônimos. */}
+        {supporters.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Users className="w-5 h-5 text-brand-blue" />
+              Quem apoia esta causa
+            </h2>
+            <ul className="space-y-2">
+              {supporters.map((s, index) => (
+                <li
+                  key={index}
+                  className="flex items-start justify-between gap-3 border border-gray-100 rounded-lg px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-800 truncate">{s.name}</p>
+                    {s.message && (
+                      <p className="text-xs text-gray-500 truncate">{s.message}</p>
+                    )}
+                  </div>
+                  <span className="font-bold text-brand-blue shrink-0">{money(s.amount)}</span>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

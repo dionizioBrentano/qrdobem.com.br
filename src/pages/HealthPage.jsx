@@ -222,7 +222,7 @@ export default function HealthPage() {
           <button
             type="submit"
             disabled={busy || !ean}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded text-sm disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded text-sm disabled:opacity-50"
           >
             Buscar
           </button>
@@ -300,7 +300,7 @@ export default function HealthPage() {
           </label>
           <button
             type="submit" disabled={busy}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded text-sm md:col-span-2 disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded text-sm md:col-span-2 disabled:opacity-50"
           >
             <Plus className="w-4 h-4 inline mr-1" />
             Adicionar medicação
@@ -386,7 +386,7 @@ export default function HealthPage() {
 
           <button
             type="submit" disabled={busy}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded text-sm md:col-span-2 disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded text-sm md:col-span-2 disabled:opacity-50"
           >
             Registrar
           </button>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HeartHandshake, Upload, Check, X, Printer, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { spacesApi, causesApi, mediaApi, qrBatchesApi } from '../services/api';
 
@@ -31,6 +32,16 @@ export default function CauseAdminPage() {
   });
 
   const [batchForm, setBatchForm] = useState({ quantity: 24, label: '' });
+
+  // Criação da primeira causa. O mínimo para existir um espaço: só `name` é
+  // obrigatório — a história, a meta e a prestação de contas são preenchidas
+  // depois, na vitrine, que já nasce despublicada.
+  const [createForm, setCreateForm] = useState({
+    name: '', headline: '', city: '', state: '',
+  });
+  // Marca o erro 403 de perfil incompleto: o caminho de saída não é tentar de
+  // novo, é completar o cadastro.
+  const [profileBlocked, setProfileBlocked] = useState(false);
 
   useEffect(() => {
     spacesApi.list()
@@ -77,6 +88,42 @@ export default function CauseAdminPage() {
   const flash = (message) => {
     setOk(message);
     setTimeout(() => setOk(''), 3000);
+  };
+
+  const handleCreateCause = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    setProfileBlocked(false);
+    try {
+      const res = await spacesApi.create({
+        type: 'cause',
+        name: createForm.name.trim(),
+        // Campos vazios não viajam: o backend aceita ausência, e mandar ''
+        // gravaria vitrine com string vazia em vez de nulo.
+        ...(createForm.headline.trim() && { headline: createForm.headline.trim() }),
+        ...(createForm.city.trim() && { city: createForm.city.trim() }),
+        // UF só viaja completa: o backend exige exatamente 2 letras e
+        // devolveria 422 por uma tecla solta no campo.
+        ...(createForm.state.trim().length === 2 && { state: createForm.state.trim() }),
+      });
+
+      const space = res.space;
+      setSpaces([space]);
+      // Não chamamos loadAll() aqui: `spaceId` ainda seria o valor antigo
+      // (null) dentro deste closure. O useEffect de `spaceId` dispara o
+      // carregamento assim que o estado novo entra.
+      setSpaceId(space.id);
+      flash('Causa criada. Agora conte a história dela.');
+    } catch (err) {
+      // 403 PROFILE_INCOMPLETE / PROFILE_INACTIVE — Gate 1 do backend.
+      if (err.status === 403 && String(err.data?.code || '').startsWith('PROFILE')) {
+        setProfileBlocked(true);
+      }
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleSaveShowcase = async (e) => {
@@ -163,9 +210,102 @@ export default function CauseAdminPage() {
 
   if (!spaces.length) {
     return (
-      <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm">
-        Você ainda não tem nenhuma causa. Crie um espaço do tipo "Causa" para
-        começar — não é preciso CNPJ.
+      <div className="space-y-4 max-w-xl">
+        <header>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <HeartHandshake className="w-6 h-6" />
+            Criar minha causa
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Você ainda não tem nenhuma causa. Comece com o nome — não é preciso
+            CNPJ. A história, as fotos e os QR Codes vêm no passo seguinte.
+          </p>
+        </header>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded p-3 text-sm flex gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              {error}
+              {profileBlocked && (
+                <>
+                  {' '}
+                  <Link to="/profile" className="font-bold underline">
+                    Completar meu cadastro
+                  </Link>
+                </>
+              )}
+            </span>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleCreateCause}
+          className="bg-white border border-gray-200 rounded-xl p-5 space-y-3"
+        >
+          <label className="block text-sm">
+            <span className="block font-bold text-gray-700 mb-1">
+              Nome da causa <span className="text-red-600">*</span>
+            </span>
+            <input
+              type="text" required maxLength={255}
+              placeholder="Ex.: Patas do Bairro"
+              value={createForm.name}
+              onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+          </label>
+
+          <label className="block text-sm">
+            <span className="block font-bold text-gray-700 mb-1">
+              Chamada curta <span className="text-gray-400 font-normal">(opcional)</span>
+            </span>
+            <input
+              type="text" maxLength={255}
+              placeholder="Ex.: Resgate e cuidado de animais atropelados"
+              value={createForm.headline}
+              onChange={(e) => setCreateForm({ ...createForm, headline: e.target.value })}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+          </label>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block text-sm sm:col-span-2">
+              <span className="block font-bold text-gray-700 mb-1">
+                Cidade <span className="text-gray-400 font-normal">(opcional)</span>
+              </span>
+              <input
+                type="text" maxLength={120}
+                value={createForm.city}
+                onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="block font-bold text-gray-700 mb-1">
+                UF <span className="text-gray-400 font-normal">(opcional)</span>
+              </span>
+              {/* O backend valida `size:2`: qualquer coisa fora disso volta 422. */}
+              <input
+                type="text" maxLength={2}
+                value={createForm.state}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, state: e.target.value.toUpperCase() })
+                }
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={busy || !createForm.name.trim()}
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+          >
+            {busy ? 'Criando...' : 'Criar causa'}
+          </button>
+        </form>
       </div>
     );
   }
@@ -279,7 +419,7 @@ export default function CauseAdminPage() {
 
           <button
             type="submit" disabled={busy}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
           >
             {busy ? 'Salvando...' : 'Salvar vitrine'}
           </button>
@@ -391,7 +531,7 @@ export default function CauseAdminPage() {
 
           <button
             type="submit" disabled={busy}
-            className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
           >
             Gerar lote
           </button>

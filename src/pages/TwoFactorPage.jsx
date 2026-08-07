@@ -213,7 +213,7 @@ export default function TwoFactorPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg disabled:opacity-50"
+                className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg disabled:opacity-50"
               >
                 {busy ? 'Verificando...' : 'Ativar'}
               </button>
@@ -227,7 +227,7 @@ export default function TwoFactorPage() {
         <button
           onClick={handleSetup}
           disabled={busy}
-          className="bg-brand-blue text-white font-bold px-5 py-3 rounded-lg disabled:opacity-50"
+          className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-5 py-3 rounded-lg disabled:opacity-50"
         >
           {busy ? 'Gerando...' : 'Ativar verificação em duas etapas'}
         </button>
