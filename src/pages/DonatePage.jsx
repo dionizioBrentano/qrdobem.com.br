@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Heart, Repeat, AlertCircle, Info, ShieldCheck } from 'lucide-react';
-import { donationsApi, causesApi } from '../services/api';
+import { Heart, Repeat, AlertCircle, Info, ShieldCheck, Copy, CheckCircle } from 'lucide-react';
+import { donationsApi, causesApi, creditsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PublicShell from '../components/layout/PublicShell';
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 /**
  * DonatePage — doação avulsa ou recorrente. PÚBLICA (guest checkout).
@@ -101,6 +102,19 @@ export default function DonatePage() {
 
   const [breakdown, setBreakdown] = useState(null);
   const [breakdownBusy, setBreakdownBusy] = useState(false);
+  const [pixData, setPixData] = useState(null);
+  const [publicToken, setPublicToken] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    creditsApi.mpPublicConfig()
+      .then((res) => {
+        if (res.public_key) {
+          initMercadoPago(res.public_key, { locale: res.locale || 'pt-BR' });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -135,6 +149,16 @@ export default function DonatePage() {
     : extraChoice === 'outro'
       ? round2(extraCustom)
       : Number(extraChoice);
+
+  const totalToPay = breakdown ? breakdown.total_to_pay : Number(form.amount);
+
+  const initialization = useMemo(() => ({ amount: totalToPay }), [totalToPay]);
+  const customization = useMemo(() => ({
+    paymentMethods: {
+      creditCard: 'all',
+      debitCard: 'all',
+    },
+  }), []);
 
   // Preview do rateio (debounce). Consome /donations/preview; se falhar (rede
   // ou 429), cai no espelho local para o bloco nunca sumir na frente do doador.
@@ -229,8 +253,12 @@ export default function DonatePage() {
         res = await donationsApi.create(body);
       }
 
-      // O Mercado Pago devolve o ponto de checkout. `init_point` é a URL
-      // de produção; `sandbox_init_point` só existe no ambiente de teste.
+      if (res.pix) {
+        setPixData(res.pix);
+        setPublicToken(res.public_token);
+        return;
+      }
+
       const checkoutUrl = res.checkout?.init_point || res.checkout?.sandbox_init_point;
 
       if (checkoutUrl) {
@@ -238,11 +266,91 @@ export default function DonatePage() {
         return;
       }
 
-      setError('Pagamento iniciado, mas não recebemos o link do Mercado Pago. Confira o seu e-mail.');
+      setError('Pagamento iniciado, mas não recebemos os dados de pagamento. Confira o seu e-mail.');
     } catch (err) {
       setError(friendlyError(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const onSubmitCard = async ({ formData }) => {
+    setError('');
+    
+    if (isGuest) {
+      const problem = validateGuest();
+      if (problem) { setError(problem); return; }
+    }
+    
+    setBusy(true);
+
+    try {
+      const body = {
+        amount: Number(form.amount),
+        cause_slug: form.cause_slug || null,
+        is_anonymous: !form.show_name,
+        message: form.message || null,
+        cover_fees: effectiveCover,
+        extra_platform_support: effectiveExtra,
+        
+        token: formData.token,
+        payment_method_id: formData.payment_method_id,
+        installments: formData.installments,
+        payer: formData.payer,
+        issuer_id: formData.issuer_id,
+      };
+      
+      if (isGuest) {
+        body.payer_name = payer.name.trim();
+        body.payer_email = payer.email.trim();
+        body.payer_cpf = payer.cpf;
+        body.consent_lgpd = true;
+      }
+
+      const res = await donationsApi.createCard(body);
+      
+      if (res.status === 'approved' || res.status === 'paid' || res.status === 'pending') {
+        setPublicToken(res.public_token);
+        if (res.status === 'paid' || res.status === 'approved') {
+            searchParams.set('status', 'success');
+        } else {
+            searchParams.set('status', 'pending');
+        }
+        window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}`);
+      } else {
+        setError('Pagamento recusado: ' + (res.message || res.status));
+      }
+    } catch (err) {
+      setError(friendlyError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCheckStatus = async () => {
+    if (!publicToken) return;
+    try {
+      setBusy(true);
+      const statusRes = await donationsApi.status(publicToken);
+      if (statusRes.status === 'paid') {
+         setPixData(null);
+         searchParams.set('status', 'success');
+         window.history.replaceState({}, '', `${window.location.pathname}?${searchParams}`);
+      } else {
+         alert('Pagamento ainda não confirmado. Aguarde mais alguns instantes.');
+      }
+    } catch (e) {
+      alert('Erro ao verificar status.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (pixData?.qr_code) {
+      navigator.clipboard.writeText(pixData.qr_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -251,7 +359,6 @@ export default function DonatePage() {
 
   // O botão mostra o TOTAL A PAGAR (com taxa/apoio quando o doador escolhe
   // cobrir), não o bruto digitado — para não surpreender no Mercado Pago.
-  const totalToPay = breakdown ? breakdown.total_to_pay : Number(form.amount);
   const feePercentLabel = breakdown
     ? Number(breakdown.platform_fee_percent).toLocaleString('pt-BR')
     : '12';
@@ -587,15 +694,68 @@ export default function DonatePage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-4 rounded-lg text-lg disabled:opacity-50"
-          >
-            {busy
-              ? 'Abrindo pagamento...'
-              : `Doar ${money(totalToPay)}${form.recurring ? ' / mês' : ''}`}
-          </button>
+          {pixData ? (
+            <div className="bg-white border-2 border-brand-blue rounded-xl p-6 flex flex-col items-center text-center space-y-4">
+              <h3 className="font-bold text-gray-900 text-lg">Pague com PIX</h3>
+              <p className="text-gray-600 text-sm mb-2">
+                Abra o app do seu banco e leia o QR Code ou cole o código abaixo.
+              </p>
+              {pixData.qr_code_base64 && (
+                <img 
+                  src={`data:image/png;base64,${pixData.qr_code_base64}`} 
+                  alt="QR Code PIX" 
+                  className="w-48 h-48 border rounded-lg p-2 bg-white"
+                />
+              )}
+              <div className="w-full mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1 text-left">PIX Copia e Cola</label>
+                <div className="flex">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={pixData.qr_code} 
+                    className="w-full px-3 py-2 border border-r-0 rounded-l-lg bg-gray-50 text-xs focus:outline-none"
+                  />
+                  <button 
+                    type="button"
+                    onClick={copyToClipboard}
+                    className="bg-brand-blue hover:bg-brand-blue-strong text-white px-4 py-2 rounded-r-lg text-sm font-medium transition flex items-center gap-2"
+                  >
+                    {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={handleCheckStatus}
+                disabled={busy}
+                className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition disabled:opacity-50"
+              >
+                {busy ? 'Verificando...' : 'Já paguei — atualizar'}
+              </button>
+            </div>
+          ) : form.payment_method === 'credit_card' && !form.recurring ? (
+            <div className="mt-4 border-t pt-4">
+              <Payment
+                key={totalToPay}
+                initialization={initialization}
+                customization={customization}
+                onSubmit={onSubmitCard}
+                onError={(err) => console.error('Brick Error:', err)}
+              />
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-4 rounded-lg text-lg disabled:opacity-50"
+            >
+              {busy
+                ? 'Processando...'
+                : `Doar ${money(totalToPay)}${form.recurring ? ' / mês' : ''}`}
+            </button>
+          )}
         </form>
         )}
 

@@ -324,6 +324,9 @@ export const donationsApi = {
   create: (data) =>
     request('/donation-causes', { method: 'POST', body: JSON.stringify(data) }),
 
+  createCard: (data) =>
+    request('/donation-causes/card', { method: 'POST', body: JSON.stringify(data) }),
+
   mine: () => request('/donation-causes/mine'),
 
   subscribe: (data) =>
