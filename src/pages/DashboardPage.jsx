@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingEntityCode, setEditingEntityCode] = useState(null);
   const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
   // Espaço de trilha ativo (F1). Fica null enquanto a API antiga não
@@ -183,6 +184,7 @@ export default function DashboardPage() {
       return;
     }
     if (type) setActiveTrail(type);
+    setEditingEntityCode(null);
     setShowForm(true);
   };
 
@@ -393,7 +395,10 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">Painel de Controle</h1>
           <div className="w-full md:w-auto text-right">
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setEditingEntityCode(null);
+                setShowForm(true);
+              }}
               disabled={!allowCreate}
               title={allowCreate ? '' : 'Complete o perfil ou adquira créditos'}
               className="w-full md:w-auto bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2.5 rounded-lg font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
@@ -507,7 +512,15 @@ export default function DashboardPage() {
                 return (
                   <tr key={entity.unique_code} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">
-                      {entity.name}
+                      <button 
+                        onClick={() => {
+                          setEditingEntityCode(entity.unique_code);
+                          setShowForm(true);
+                        }}
+                        className="text-brand-blue hover:underline text-left font-semibold"
+                      >
+                        {entity.name}
+                      </button>
                       {entity.has_active_emergency && (
                         <span className="inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
                           EMERGÊNCIA
@@ -561,12 +574,14 @@ export default function DashboardPage() {
       {showForm && (
         <EntityFormModal
           organizationId={activeOrgId}
-          // `family` e `cause` não são tipos de entidade: o modal cai no
-          // padrão `person` em vez de receber um tipo que não existe lá.
+          uniqueCode={editingEntityCode}
           initialType={
             ['family', 'cause'].includes(activeTrail) ? 'person' : (activeTrail || 'person')
           }
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            setEditingEntityCode(null);
+          }}
           onCreated={handleEntityCreated}
         />
       )}

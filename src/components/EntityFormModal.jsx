@@ -94,7 +94,7 @@ const EMPTY_OBJECT_FIELDS = {
   handling_notes_extra: '',
 };
 
-export default function EntityFormModal({ organizationId, initialType = 'person', onClose, onCreated }) {
+export default function EntityFormModal({ organizationId, uniqueCode, initialType = 'person', onClose, onCreated }) {
   const [form, setForm] = useState({
     type: initialType,
     name: '',
@@ -109,13 +109,91 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
   const [objectFields, setObjectFields] = useState(EMPTY_OBJECT_FIELDS);
   const [acceptedTerm, setAcceptedTerm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
   const [result, setResult] = useState(null);
 
+  const isEditing = Boolean(uniqueCode);
+
   useEffect(() => {
-    setForm((prev) => ({ ...prev, type: initialType }));
-  }, [initialType]);
+    if (!isEditing) {
+       setForm((prev) => ({ ...prev, type: initialType }));
+       return;
+    }
+
+    const loadEntity = async () => {
+      setLoadingEdit(true);
+      setError('');
+      try {
+        const res = await entitiesApi.getForEdit(uniqueCode);
+        setForm({
+          type: res.type,
+          name: res.name || '',
+          contact_phone: res.contact_phone || '',
+          contact_email: res.contact_email || '',
+          additional_info: res.additional_info || '',
+        });
+        
+        if (res.custom_attributes) {
+           setCustomAttrs(Object.entries(res.custom_attributes).map(([key, value]) => ({ key, value })));
+        }
+        
+        if (res.health_fields) {
+           const hFields = {};
+           res.health_fields.forEach(hf => {
+               hFields[hf.field_key] = { value: hf.field_value, is_public: hf.is_public };
+           });
+           setHealthFields(hFields);
+        }
+        
+        if (res.type === 'pet' && res.pet_fields) {
+           const pf = res.pet_fields;
+           setPetFields({
+               species: pf.species || 'dog',
+               species_other_description: pf.species_other_description || '',
+               size: pf.size || '',
+               size_is_public: Boolean(pf.size_is_public ?? true),
+               color: pf.color || '',
+               color_is_public: Boolean(pf.color_is_public ?? true),
+               is_neutered: pf.is_neutered || '',
+               is_neutered_is_public: Boolean(pf.is_neutered_is_public ?? true),
+               physical_description: pf.physical_description || '',
+               physical_description_is_public: Boolean(pf.physical_description_is_public ?? true),
+               clinical_notes: pf.clinical_notes || '',
+               clinical_notes_is_public: Boolean(pf.clinical_notes_is_public ?? true),
+               reference_contact: pf.reference_contact || '',
+               reference_contact_is_public: Boolean(pf.reference_contact_is_public ?? false),
+           });
+        }
+        
+        if (res.vaccinations) {
+           setVaccinations(res.vaccinations.map(v => ({ vaccine_name: v.vaccine_name, applied_at: v.applied_at })));
+        }
+        
+        if (res.type === 'object' && res.object_fields) {
+           const of = res.object_fields;
+           setObjectFields({
+               description: of.description || '',
+               description_is_public: Boolean(of.description_is_public),
+               public_label: of.public_label || '',
+               handling_fragile: Boolean(of.handling_fragile),
+               handling_light_sensitive: Boolean(of.handling_light_sensitive),
+               handling_keep_refrigerated: Boolean(of.handling_keep_refrigerated),
+               handling_do_not_invert: Boolean(of.handling_do_not_invert),
+               handling_sentimental_value: Boolean(of.handling_sentimental_value),
+               handling_notes_extra: of.handling_notes_extra || '',
+           });
+        }
+
+      } catch (err) {
+        setError('Erro ao carregar dados da entidade.');
+      } finally {
+        setLoadingEdit(false);
+      }
+    };
+    loadEntity();
+  }, [uniqueCode, initialType, isEditing]);
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -162,7 +240,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!acceptedTerm) return;
+    if (!isEditing && !acceptedTerm) return;
 
     setLoading(true);
     setError('');
@@ -188,10 +266,8 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
         return acc;
       }, []);
 
-      const res = await entitiesApi.create({
+      const payload = {
         ...form,
-        organization_id: organizationId,
-        accept_term: true,
         ...(Object.keys(attributes).length > 0 && { custom_attributes: attributes }),
         ...(health.length > 0 && { health_fields: health }),
         ...(form.type === 'pet' && {
@@ -205,6 +281,18 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
           vaccinations: vaccinations.filter((v) => v.vaccine_name.trim() && v.applied_at),
         }),
         ...(form.type === 'object' && { object_fields: objectFields }),
+      };
+
+      if (isEditing) {
+        await entitiesApi.update(uniqueCode, payload);
+        onCreated();
+        return;
+      }
+
+      const res = await entitiesApi.create({
+        ...payload,
+        organization_id: organizationId,
+        accept_term: true,
       });
       setResult(res);
     } catch (err) {
@@ -234,7 +322,7 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b">
           <h2 className="text-lg font-bold text-gray-900">
-            {result ? 'Registro criado' : 'Novo QR Code'}
+            {result ? 'Registro criado' : (isEditing ? 'Editar QR Code' : 'Novo QR Code')}
           </h2>
           <button
             onClick={result ? onCreated : onClose}
@@ -244,7 +332,11 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
           </button>
         </div>
 
-        {result ? (
+        {loadingEdit ? (
+          <div className="p-10 flex justify-center">
+             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue" />
+          </div>
+        ) : result ? (
           <div className="p-5 text-center space-y-4">
             <p className="text-sm text-gray-600">Compartilhe ou imprima o QR.</p>
             {result.qr_code_base64 ? (
@@ -314,12 +406,13 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
                   <button
                     key={t.value}
                     type="button"
-                    onClick={() => changeType(t.value)}
+                    onClick={() => !isEditing && changeType(t.value)}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
                       form.type === t.value
                         ? 'bg-brand-blue text-white border-brand-blue'
                         : 'bg-white text-gray-600 border-gray-300 hover:border-brand-blue'
-                    }`}
+                    } ${isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    disabled={isEditing}
                   >
                     {t.label}
                   </button>
@@ -755,18 +848,20 @@ export default function EntityFormModal({ organizationId, initialType = 'person'
               )}
             </div>
 
-            <TermAcceptance
-              type={form.type}
-              accepted={acceptedTerm}
-              onChange={setAcceptedTerm}
-            />
+            {!isEditing && (
+              <TermAcceptance
+                type={form.type}
+                accepted={acceptedTerm}
+                onChange={setAcceptedTerm}
+              />
+            )}
 
             <button
               type="submit"
-              disabled={loading || !acceptedTerm}
+              disabled={loading || (!isEditing && !acceptedTerm) || loadingEdit}
               className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Registrando...' : 'Registrar QR Code'}
+              {loading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Registrar QR Code')}
             </button>
           </form>
         )}

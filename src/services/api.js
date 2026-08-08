@@ -1,5 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
 
+export let reauthHandler = null;
+export const setReauthHandler = (handler) => { reauthHandler = handler; };
+
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('firebase_token');
 
@@ -31,6 +34,23 @@ async function request(endpoint, options = {}) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    if (res.status === 401 && token && !options._isRetry && !options._noReauth && reauthHandler) {
+      const reauthSuccess = await reauthHandler();
+      if (reauthSuccess) {
+        const isPayment = typeof options.body === 'string' && (
+          options.body.includes('card_token') || 
+          options.body.includes('card_number') || 
+          options.body.includes('"pan"') ||
+          options.body.includes('payment_method_id')
+        );
+        if (isPayment) {
+          throw new Error('Sessão expirada. Por segurança, repita o pagamento.');
+        }
+        return request(endpoint, { ...options, _isRetry: true });
+      }
+      throw new Error('Sessão expirada. Entre novamente para continuar.');
+    }
+
     const error = new Error(data?.error || `Erro ${res.status}`);
     error.status = res.status;
     error.data = data;
@@ -54,7 +74,7 @@ export const authApi = {
       body: JSON.stringify({ firebase_uid, code }),
     }),
 
-  me: () => request('/auth/me'),
+  me: (opts = {}) => request('/auth/me', opts),
 
   validateRegisterToken: (token) =>
     request(`/auth/register-validate?token=${token}`),
@@ -77,13 +97,19 @@ export const entitiesApi = {
   // `spaceId` é o contexto novo (F1). Opcional: sem ele, o backend resolve
   // o espaço a partir da organização, e quem não mandar nenhum dos dois
   // continua recebendo o comportamento antigo.
-  list: (organizationId, spaceId) => {
-    const params = new URLSearchParams();
-    if (organizationId) params.set('organization_id', organizationId);
-    if (spaceId) params.set('space_id', spaceId);
-    const qs = params.toString();
-    return request(`/entities${qs ? `?${qs}` : ''}`);
+  list: (organizationId = null, spaceId = null) => {
+    let url = '/entities?';
+    if (organizationId) url += `organization_id=${organizationId}&`;
+    if (spaceId) url += `space_id=${spaceId}`;
+    return request(url);
   },
+
+  getForEdit: (uniqueCode) => request(`/entities/${uniqueCode}/edit`),
+
+  update: (uniqueCode, payload) => request(`/entities/${uniqueCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }),
 
   create: (data) =>
     request('/entities', {
@@ -308,6 +334,9 @@ export const donationsApi = {
 
   // Público: últimas doações de uma causa.
   publicList: (slug) => request(`/causes/${slug}/donations`),
+
+  // Status público (Fase 0.2)
+  status: (token) => request(`/donation-causes/status/${token}`),
 };
 
 // --- Beneficiários e repasses (T4-R05, T4-R06, T4-R08, T4-R09) ---

@@ -21,8 +21,9 @@ import BeneficiaryPage from './pages/BeneficiaryPage';
 import MessagesPage from './pages/MessagesPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
+import AdminPage from './pages/AdminPage';
 import PublicEntityPage from './pages/PublicEntityPage';
-
+import DonationStatusPage from './pages/DonationStatusPage';
 export default function App() {
   return (
     <BrowserRouter>
@@ -47,6 +48,8 @@ export default function App() {
               identifica na própria doação; login vira só prefill. O CTA da
               landing e da vitrine da causa aponta para cá. */}
           <Route path="/doacoes" element={<DonatePage />} />
+          {/* Status público da doação via token (Fase 0.2) */}
+          <Route path="/doacao/status/:token" element={<DonationStatusPage />} />
           {/* URL única do beneficiário — Fase 4, T4-R05/R06/R07.
               Pública por definição: o beneficiário não tem conta. */}
           <Route path="/b/:uniqueCode" element={<BeneficiaryPage />} />

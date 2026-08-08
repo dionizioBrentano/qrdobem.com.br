@@ -6,7 +6,8 @@ import {
   firebaseRefreshToken,
   getStoredUser,
 } from '../services/firebase';
-import { authApi } from '../services/api';
+import { authApi, setReauthHandler } from '../services/api';
+import ReauthModal from '../components/ReauthModal';
 
 const AuthContext = createContext(null);
 
@@ -14,6 +15,15 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reauthCallback, setReauthCallback] = useState(null);
+
+  useEffect(() => {
+    setReauthHandler(() => {
+      return new Promise((resolve) => {
+        setReauthCallback(() => resolve);
+      });
+    });
+  }, []);
 
   // Restaura sessão ao carregar
   useEffect(() => {
@@ -24,7 +34,7 @@ export function AuthProvider({ children }) {
         return;
       }
       try {
-        const data = await authApi.me();
+        const data = await authApi.me({ _noReauth: true });
         setUser(stored);
         setTenant(data.tenant);
       } catch (err) {
@@ -33,7 +43,7 @@ export function AuthProvider({ children }) {
           const refreshed = await firebaseRefreshToken();
           if (refreshed) {
             try {
-              const data = await authApi.me();
+              const data = await authApi.me({ _noReauth: true });
               setUser(refreshed);
               setTenant(data.tenant);
             } catch {
@@ -86,6 +96,18 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ user, tenant, loading, login, register, logout, refreshTenant }}>
       {children}
+      {reauthCallback && (
+        <ReauthModal 
+          onSuccess={() => {
+            if (reauthCallback) reauthCallback(true);
+            setReauthCallback(null);
+          }}
+          onCancel={() => {
+            if (reauthCallback) reauthCallback(false);
+            setReauthCallback(null);
+          }}
+        />
+      )}
     </AuthContext.Provider>
   );
 }
