@@ -274,25 +274,7 @@ export default function DonatePage() {
           </p>
         </header>
 
-        {status === 'success' && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 text-sm">
-            Doação concluída. Obrigado! O recibo vai para o e-mail informado; a
-            confirmação pode levar alguns minutos.
-          </div>
-        )}
 
-        {status === 'pending' && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm">
-            Pagamento pendente. Assim que for compensado, enviamos o recibo por e-mail.
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm flex gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
 
         {loading ? (
           <div className="text-gray-500 py-8">Carregando...</div>
@@ -585,6 +567,25 @@ export default function DonatePage() {
               <span>{FISCAL_TEXT[fiscalProfile]}</span>
             </p>
           </div>
+
+          {status === 'success' && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 text-sm">
+              Doação concluída. Obrigado! O recibo vai para o e-mail informado; a confirmação pode levar alguns minutos.
+            </div>
+          )}
+
+          {status === 'pending' && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm">
+              Pagamento pendente. Assim que for compensado, enviamos o recibo por e-mail.
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm flex gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <button
             type="submit"

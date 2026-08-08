@@ -319,18 +319,18 @@ export const donationsApi = {
   // é a fonte única do breakdown, a mesma conta que o /donations usa.
   // Body: amount, cover_fees?, extra_platform_support?, payment_method?
   preview: (data) =>
-    request('/donations/preview', { method: 'POST', body: JSON.stringify(data) }),
+    request('/donation-causes/preview', { method: 'POST', body: JSON.stringify(data) }),
 
   create: (data) =>
-    request('/donations', { method: 'POST', body: JSON.stringify(data) }),
+    request('/donation-causes', { method: 'POST', body: JSON.stringify(data) }),
 
-  mine: () => request('/donations/mine'),
+  mine: () => request('/donation-causes/mine'),
 
   subscribe: (data) =>
-    request('/donations/subscribe', { method: 'POST', body: JSON.stringify(data) }),
+    request('/donation-causes/subscribe', { method: 'POST', body: JSON.stringify(data) }),
 
   cancelSubscription: (subscriptionId) =>
-    request(`/donations/${subscriptionId}/cancel-subscription`, { method: 'POST' }),
+    request(`/donation-causes/${subscriptionId}/cancel-subscription`, { method: 'POST' }),
 
   // Público: últimas doações de uma causa.
   publicList: (slug) => request(`/causes/${slug}/donations`),

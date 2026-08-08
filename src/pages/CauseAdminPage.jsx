@@ -24,6 +24,10 @@ export default function CauseAdminPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [ok, setOk] = useState('');
+  const [saveOk, setSaveOk] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [publishOk, setPublishOk] = useState('');
+  const [publishError, setPublishError] = useState('');
 
   const [form, setForm] = useState({
     headline: '', story: '', category: '', city: '', state: '',
@@ -129,16 +133,18 @@ export default function CauseAdminPage() {
   const handleSaveShowcase = async (e) => {
     e.preventDefault();
     setBusy(true);
-    setError('');
+    setSaveError('');
+    setSaveOk('');
     try {
       await causesApi.update(spaceId, {
         ...form,
         goal_amount: form.goal_amount === '' ? null : Number(form.goal_amount),
       });
-      flash('Vitrine salva.');
+      setSaveOk('Vitrine salva.');
+      setTimeout(() => setSaveOk(''), 3000);
       await loadAll();
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     } finally {
       setBusy(false);
     }
@@ -146,14 +152,16 @@ export default function CauseAdminPage() {
 
   const handlePublish = async (publish) => {
     setBusy(true);
-    setError('');
+    setPublishError('');
+    setPublishOk('');
     try {
       const res = await causesApi.publish(spaceId, publish);
-      flash(res.message);
+      setPublishOk(res.message);
+      setTimeout(() => setPublishOk(''), 3000);
       await loadAll();
     } catch (err) {
       // A mensagem do backend diz o que falta (chamada, história).
-      setError(err.message);
+      setPublishError(err.message);
     } finally {
       setBusy(false);
     }
@@ -362,6 +370,8 @@ export default function CauseAdminPage() {
                 Tornar não publicada
               </button>
             )}
+            {publishOk && <div className="text-sm font-medium text-emerald-600 mt-2 text-right">{publishOk}</div>}
+            {publishError && <div className="text-sm font-medium text-red-600 mt-2 text-right">{publishError}</div>}
           </div>
         </div>
 
@@ -433,12 +443,16 @@ export default function CauseAdminPage() {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
 
-          <button
-            type="submit" disabled={busy}
-            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-          >
-            {busy ? 'Salvando...' : 'Salvar vitrine'}
-          </button>
+          <div>
+            {saveError && <div className="text-sm font-medium text-red-600 mb-2">{saveError}</div>}
+            {saveOk && <div className="text-sm font-medium text-emerald-600 mb-2">{saveOk}</div>}
+            <button
+              type="submit" disabled={busy}
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            >
+              {busy ? 'Salvando...' : 'Salvar vitrine'}
+            </button>
+          </div>
         </form>
       </section>
 
