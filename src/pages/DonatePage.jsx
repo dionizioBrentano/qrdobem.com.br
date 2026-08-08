@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Heart, Repeat, AlertCircle, Info, ShieldCheck } from 'lucide-react';
 import { donationsApi, causesApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import PublicShell from '../components/layout/PublicShell';
 
 /**
  * DonatePage — doação avulsa ou recorrente. PÚBLICA (guest checkout).
@@ -258,19 +259,8 @@ export default function DonatePage() {
   const status = searchParams.get('status');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Barra própria: a página é pública e pode ser aberta fora do painel. */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-black text-brand-blue">QR do Bem</Link>
-          <Link
-            to={user ? '/painel' : '/login'}
-            className="text-sm text-brand-blue hover:underline font-medium"
-          >
-            {user ? 'Meu painel' : 'Entrar'}
-          </Link>
-        </div>
-      </div>
+    <PublicShell>
+      <div className="bg-gray-50 flex-1 w-full">
 
       <div className="max-w-2xl mx-auto p-4 py-8 space-y-6">
         <header>
@@ -637,6 +627,7 @@ export default function DonatePage() {
           </section>
         )}
       </div>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

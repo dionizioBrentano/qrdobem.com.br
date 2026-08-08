@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { HeartHandshake, MapPin, Search, ArrowLeft } from 'lucide-react';
 import { causesApi } from '../services/api';
+import PublicShell from '../components/layout/PublicShell';
 
 /**
  * CausesListPage — vitrine pública de todas as causas.
@@ -82,7 +83,8 @@ export default function CausesListPage() {
     Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PublicShell>
+      <div className="bg-gray-50 flex-1 w-full">
       <div className="max-w-5xl mx-auto p-4 pt-8 space-y-6">
 
         <header className="flex items-center justify-between gap-3">
@@ -215,6 +217,7 @@ export default function CausesListPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

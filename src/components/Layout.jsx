@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Breadcrumbs from './Breadcrumbs';
 
 /**
  * Layout — moldura das telas autenticadas (painel).
@@ -254,6 +255,7 @@ export default function Layout() {
 
       {/* Conteúdo */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full overflow-x-hidden">
+        <Breadcrumbs />
         <Outlet />
       </main>
     </div>

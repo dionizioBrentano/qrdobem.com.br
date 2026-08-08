@@ -349,11 +349,11 @@ export default function ContentArea({ activeCategory, hasCauses = false }) {
       return;
     }
 
-    // Rota direta (ex.: doações). Visitante sem conta vai para o login e
-    // volta ao destino depois de entrar — perder o destino no meio do
-    // caminho é a forma mais comum de abandonar a conversão.
+    // Rota direta (ex.: doações). A doação agora é um fluxo público
+    // (guest checkout), então enviamos o visitante direto para o destino,
+    // sem forçar login.
     if (content.ctaRoute) {
-      navigate(user ? content.ctaRoute : `/login?next=${encodeURIComponent(content.ctaRoute)}`);
+      navigate(content.ctaRoute);
       return;
     }
 

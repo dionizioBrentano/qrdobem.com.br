@@ -4,6 +4,7 @@ import { entitiesApi, conversationsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf } from '../utils/masks';
 import PublicPanicButton from '../components/PublicPanicButton';
+import PublicShell from '../components/layout/PublicShell';
 
 // Intervalo do polling da thread, em milissegundos.
 const POLL_INTERVAL = 12000;
@@ -240,21 +241,25 @@ export default function PublicEntityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-blue/10">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
-      </div>
+      <PublicShell>
+        <div className="bg-brand-blue/10 flex-1 flex items-center justify-center w-full">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
+        </div>
+      </PublicShell>
     );
   }
 
   if (error && !entity) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
-          <div className="text-5xl mb-4">😔</div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Registro não encontrado</h1>
-          <p className="text-gray-500">{error}</p>
+      <PublicShell>
+        <div className="bg-gray-50 flex-1 flex items-center justify-center p-4 w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
+            <div className="text-5xl mb-4">😔</div>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Registro não encontrado</h1>
+            <p className="text-gray-500">{error}</p>
+          </div>
         </div>
-      </div>
+      </PublicShell>
     );
   }
 
@@ -267,7 +272,8 @@ export default function PublicEntityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <PublicShell>
+      <div className="bg-gray-50 flex-1 p-4 w-full">
       <div className="max-w-md mx-auto space-y-4 pt-8">
         {/* White-label / patrocínio (Fase 5, T3-R02/T3-R03).
             Fica no topo, acima do conteúdo, e some quando não há marca —
@@ -682,5 +688,6 @@ export default function PublicEntityPage() {
         </div>
       )}
     </div>
+    </PublicShell>
   );
 }

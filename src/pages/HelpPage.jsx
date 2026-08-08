@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, LifeBuoy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import TopBar from '../components/layout/TopBar';
-import DiamondHero from '../components/layout/DiamondHero';
-import MainMenu from '../components/layout/MainMenu';
-import Footer from '../components/layout/Footer';
-import { causesApi } from '../services/api';
+import PublicShell from '../components/layout/PublicShell';
 
 /**
  * HelpPage — central de ajuda.
@@ -139,47 +135,10 @@ export default function HelpPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [openId, setOpenId] = useState('primeiros-passos');
-  const [hasCauses, setHasCauses] = useState(false);
 
-  /**
-   * Mesma consulta da HomePage: o MainMenu só mostra o link "Causas"
-   * quando existe ao menos uma causa publicada.
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    causesApi.list()
-      .then((res) => {
-        if (!cancelled) setHasCauses((res.causes || []).length > 0);
-      })
-      .catch(() => {
-        if (!cancelled) setHasCauses(false);
-      });
-
-    return () => { cancelled = true; };
-  }, []);
-
-  /**
-   * O cabeçalho da Home (DiamondHero e MainMenu) troca a seção de conteúdo
-   * por estado local — algo que só existe lá. Aqui, escolher uma trilha
-   * significa voltar para a Home naquela seção, usando o parâmetro de URL
-   * que a HomePage já lê.
-   */
-  const handleCategorySelect = (id) => {
-    navigate(id === 'contato' ? '/?contato=1' : `/?trilha=${id}`);
-  };
 
   return (
-    <div className="w-full min-h-screen bg-brand-bg font-sans m-0 p-0 flex flex-col">
-      {/* Cabeçalho idêntico ao da Home: os MESMOS componentes, na mesma
-          ordem. A Ajuda é uma página do site, não um ambiente à parte. */}
-      <TopBar onCategorySelect={handleCategorySelect} />
-      <DiamondHero activeCategory={null} onCategorySelect={handleCategorySelect} />
-      <MainMenu
-        activeCategory={null}
-        onCategorySelect={handleCategorySelect}
-        hasCauses={hasCauses}
-      />
+    <PublicShell>
 
       <div className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
         <header className="mb-8">
@@ -259,7 +218,6 @@ export default function HelpPage() {
         </div>
       </div>
 
-      <Footer />
-    </div>
+    </PublicShell>
   );
 }

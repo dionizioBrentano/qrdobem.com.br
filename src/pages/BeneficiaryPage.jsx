@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { HandHeart, Plus, Check, Camera, AlertCircle } from 'lucide-react';
 import { beneficiariesApi } from '../services/api';
+import PublicShell from '../components/layout/PublicShell';
 
 /**
  * BeneficiaryPage — a URL única do beneficiário.
@@ -114,21 +115,28 @@ export default function BeneficiaryPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Carregando...</div>;
+    return (
+      <PublicShell>
+        <div className="bg-gray-50 flex-1 flex items-center justify-center text-gray-500 w-full">Carregando...</div>
+      </PublicShell>
+    );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 text-center text-gray-700">
-        {error || 'Página não encontrada.'}
-      </div>
+      <PublicShell>
+        <div className="bg-gray-50 flex-1 flex items-center justify-center p-6 text-center text-gray-700 w-full">
+          {error || 'Página não encontrada.'}
+        </div>
+      </PublicShell>
     );
   }
 
   const { beneficiary, needs, pending_confirmation } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PublicShell>
+      <div className="bg-gray-50 flex-1 w-full">
       <div className="max-w-md mx-auto p-4 space-y-4 pt-8">
 
         <header className="bg-white rounded-2xl shadow-xl p-6 text-center">
@@ -314,6 +322,7 @@ export default function BeneficiaryPage() {
 
         <p className="text-center text-xs text-gray-400 py-4">QR do Bem</p>
       </div>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

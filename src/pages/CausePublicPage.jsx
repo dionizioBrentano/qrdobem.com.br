@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { HeartHandshake, MapPin, ShieldCheck, Heart, Users } from 'lucide-react';
 import { causesApi, donationsApi } from '../services/api';
+import PublicShell from '../components/layout/PublicShell';
 
 /**
  * CausePublicPage — vitrine pública de uma causa.
@@ -44,22 +45,29 @@ export default function CausePublicPage() {
     Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Carregando...</div>;
+    return (
+      <PublicShell>
+        <div className="bg-gray-50 flex-1 flex items-center justify-center text-gray-500 w-full">Carregando...</div>
+      </PublicShell>
+    );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-gray-700 mb-4">{error || 'Causa não encontrada.'}</p>
-        <Link to="/" className="text-brand-blue underline">Voltar ao início</Link>
-      </div>
+      <PublicShell>
+        <div className="bg-gray-50 flex-1 flex flex-col items-center justify-center p-6 text-center w-full">
+          <p className="text-gray-700 mb-4">{error || 'Causa não encontrada.'}</p>
+          <Link to="/" className="text-brand-blue underline">Voltar ao início</Link>
+        </div>
+      </PublicShell>
     );
   }
 
   const { cause, media, umbrella } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PublicShell>
+      <div className="bg-gray-50 flex-1 w-full">
       <div className="max-w-3xl mx-auto p-4 space-y-4 pt-8">
 
         <header className="bg-white rounded-2xl shadow-xl p-6">
@@ -80,43 +88,6 @@ export default function CausePublicPage() {
             </p>
           )}
         </header>
-
-        {/* Números. Só mostra barra de progresso quando há meta declarada:
-            nem toda causa trabalha com meta fechada, e barra sem meta seria
-            inventada. */}
-        <section className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Arrecadado</p>
-              <p className="text-3xl font-black text-brand-blue">{money(cause.raised_amount)}</p>
-            </div>
-            {cause.goal_amount && (
-              <div className="text-right">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Meta</p>
-                <p className="text-lg font-bold text-gray-700">{money(cause.goal_amount)}</p>
-              </div>
-            )}
-          </div>
-
-          {cause.progress !== null && cause.progress !== undefined && (
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-brand-blue h-3 rounded-full transition-all"
-                style={{ width: `${cause.progress}%` }}
-              />
-            </div>
-          )}
-
-          {/* CTA de doação. Leva ao fluxo de doar já com a causa selecionada;
-              lá o doador vê o rateio (taxa 12% + destino) antes de confirmar. */}
-          <Link
-            to={`/doacoes?causa=${slug}`}
-            className="mt-4 w-full flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-3 rounded-lg transition"
-          >
-            <Heart className="w-5 h-5" />
-            Doar para esta causa
-          </Link>
-        </section>
 
         {/* Guarda-chuva: o doador precisa saber por qual entidade sai o
             recibo, porque é dela que vem a dedutibilidade fiscal. */}
@@ -172,6 +143,43 @@ export default function CausePublicPage() {
           </section>
         )}
 
+        {/* Números. Só mostra barra de progresso quando há meta declarada:
+            nem toda causa trabalha com meta fechada, e barra sem meta seria
+            inventada. */}
+        <section className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Arrecadado</p>
+              <p className="text-3xl font-black text-brand-blue">{money(cause.raised_amount)}</p>
+            </div>
+            {cause.goal_amount && (
+              <div className="text-right">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Meta</p>
+                <p className="text-lg font-bold text-gray-700">{money(cause.goal_amount)}</p>
+              </div>
+            )}
+          </div>
+
+          {cause.progress !== null && cause.progress !== undefined && (
+            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-brand-blue h-3 rounded-full transition-all"
+                style={{ width: `${cause.progress}%` }}
+              />
+            </div>
+          )}
+
+          {/* CTA de doação. Leva ao fluxo de doar já com a causa selecionada;
+              lá o doador vê o rateio (taxa 12% + destino) antes de confirmar. */}
+          <Link
+            to={`/doacoes?causa=${slug}`}
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-3 rounded-lg transition"
+          >
+            <Heart className="w-5 h-5" />
+            Doar para esta causa
+          </Link>
+        </section>
+
         {/* Quem apoia esta causa — só doadores pagos que autorizaram exibição.
             A lista vem do backend sem e-mail e sem anônimos. */}
         {supporters.length > 0 && (
@@ -199,10 +207,14 @@ export default function CausePublicPage() {
           </section>
         )}
 
-        <footer className="text-center text-xs text-gray-400 py-6">
-          <Link to="/" className="underline">QR do Bem</Link>
-        </footer>
+        <div className="text-center mt-6">
+          <Link to="/causas" className="text-brand-blue underline font-bold">
+            Voltar
+          </Link>
+        </div>
+
+        </div>
       </div>
-    </div>
+    </PublicShell>
   );
 }
