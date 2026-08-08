@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HeartHandshake, Upload, Check, X, Printer, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { spacesApi, causesApi, mediaApi, qrBatchesApi } from '../services/api';
+import { HeartHandshake, Upload, Check, X, AlertCircle } from 'lucide-react';
+import { spacesApi, causesApi, mediaApi } from '../services/api';
 
 /**
  * CauseAdminPage — painel da causa: vitrine, mídia e QR em lote.
@@ -20,7 +20,6 @@ export default function CauseAdminPage() {
   const [spaceId, setSpaceId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [media, setMedia] = useState([]);
-  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -30,8 +29,6 @@ export default function CauseAdminPage() {
     headline: '', story: '', category: '', city: '', state: '',
     goal_amount: '', accountability: '',
   });
-
-  const [batchForm, setBatchForm] = useState({ quantity: 24, label: '' });
 
   // Criação da primeira causa. O mínimo para existir um espaço: só `name` é
   // obrigatório — a história, a meta e a prestação de contas são preenchidas
@@ -62,22 +59,25 @@ export default function CauseAdminPage() {
   const loadAll = async () => {
     setError('');
     try {
-      const [detailRes, mediaRes, batchRes] = await Promise.all([
+      const [detailRes, mediaRes] = await Promise.all([
         spacesApi.show(spaceId),
         mediaApi.list(spaceId),
-        qrBatchesApi.list(spaceId),
       ]);
 
       setDetail(detailRes.space);
       setMedia(mediaRes.media || []);
-      setBatches(batchRes.batches || []);
 
       const cause = detailRes.space?.cause;
       if (cause) {
         setForm((prev) => ({
           ...prev,
           headline: cause.headline || '',
+          story: cause.story || '',
+          category: cause.category || '',
+          city: cause.city || '',
+          state: cause.state || '',
           goal_amount: cause.goal_amount || '',
+          accountability: cause.accountability || '',
         }));
       }
     } catch (err) {
@@ -184,25 +184,6 @@ export default function CauseAdminPage() {
       await loadAll();
     } catch (err) {
       setError(err.message);
-    }
-  };
-
-  const handleCreateBatch = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    setError('');
-    try {
-      const res = await qrBatchesApi.create(
-        spaceId,
-        Number(batchForm.quantity),
-        batchForm.label || null
-      );
-      flash(res.message);
-      await loadAll();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -348,22 +329,57 @@ export default function CauseAdminPage() {
 
       {/* Vitrine */}
       <section className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-900">Vitrine pública</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="font-bold text-gray-900">Vitrine pública</h2>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${detail?.cause?.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'}`}>
+              {detail?.cause?.is_published ? 'Publicada' : 'Não publicada'}
+            </span>
+            {detail?.cause?.is_published && detail?.cause?.slug && (
+              <Link to={`/causa/${detail.cause.slug}`} target="_blank" className="text-sm text-brand-blue hover:underline ml-2">
+                Ver página pública
+              </Link>
+            )}
+          </div>
 
-          <button
-            onClick={() => handlePublish(!detail?.cause?.is_published)}
-            disabled={busy}
-            className={`text-sm font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 ${
-              detail?.cause?.is_published
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            {detail?.cause?.is_published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            {detail?.cause?.is_published ? 'Publicada' : 'Despublicada'}
-          </button>
+          <div>
+            {!detail?.cause?.is_published ? (
+              <button
+                type="button"
+                onClick={() => handlePublish(true)}
+                disabled={busy || !form.headline.trim() || !form.story.trim()}
+                className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+              >
+                Publicar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handlePublish(false)}
+                disabled={busy}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+              >
+                Tornar não publicada
+              </button>
+            )}
+          </div>
         </div>
+
+        {!detail?.cause?.is_published && (
+          <div className="mb-4 text-sm bg-gray-50 p-3 rounded border border-gray-200">
+            <p className="font-bold mb-2">Preencha e salve a vitrine antes de publicar.</p>
+            <ul className="text-gray-600 space-y-1">
+              <li className="flex items-center gap-2">
+                {form.headline.trim() ? <Check className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4 text-red-600" />}
+                Chamada curta
+              </li>
+              <li className="flex items-center gap-2">
+                {form.story.trim() ? <Check className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4 text-red-600" />}
+                História
+              </li>
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleSaveShowcase} className="space-y-3">
           <input
@@ -504,66 +520,6 @@ export default function CauseAdminPage() {
         )}
       </section>
 
-      {/* QR em lote */}
-      <section className="bg-white border border-gray-200 rounded-xl p-5">
-        <h2 className="font-bold text-gray-900 mb-3">QR Codes em lote</h2>
-
-        <form onSubmit={handleCreateBatch} className="flex flex-wrap gap-2 items-end mb-4">
-          <label className="text-sm">
-            <span className="block font-bold text-gray-700 mb-1">Quantidade</span>
-            <input
-              type="number" min="1" max="500" required
-              value={batchForm.quantity}
-              onChange={(e) => setBatchForm({ ...batchForm, quantity: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2 w-28 text-sm"
-            />
-          </label>
-
-          <label className="text-sm flex-1 min-w-[180px]">
-            <span className="block font-bold text-gray-700 mb-1">Identificação</span>
-            <input
-              type="text" maxLength={255} placeholder="Ex.: Campanha outubro"
-              value={batchForm.label}
-              onChange={(e) => setBatchForm({ ...batchForm, label: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-            />
-          </label>
-
-          <button
-            type="submit" disabled={busy}
-            className="bg-brand-accent hover:bg-brand-accent-strong text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-          >
-            Gerar lote
-          </button>
-        </form>
-
-        {batches.length === 0 ? (
-          <p className="text-sm text-gray-400">Nenhum lote gerado.</p>
-        ) : (
-          <ul className="space-y-2">
-            {batches.map((b) => (
-              <li key={b.id} className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                <span>
-                  <strong>{b.label || `Lote ${b.id}`}</strong> — {b.quantity} etiquetas
-                </span>
-                {/* A folha de impressão abre em aba nova, e aba nova não
-                    leva o header Authorization. O middleware FirebaseAuth
-                    aceita o token por query (`id_token`) justamente para
-                    este caso — ver app/Http/Middleware/FirebaseAuth.php. */}
-                <a
-                  href={`${b.print_url}?id_token=${encodeURIComponent(localStorage.getItem('firebase_token') || '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-brand-blue font-bold flex items-center gap-1"
-                >
-                  <Printer className="w-4 h-4" />
-                  Imprimir
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }

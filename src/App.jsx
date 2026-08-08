@@ -21,7 +21,6 @@ import BeneficiaryPage from './pages/BeneficiaryPage';
 import MessagesPage from './pages/MessagesPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
-import AdminPage from './pages/AdminPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
 export default function App() {
