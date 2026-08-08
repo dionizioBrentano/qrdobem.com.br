@@ -335,8 +335,8 @@ export default function CauseAdminPage() {
             <span className={`text-xs font-bold px-2 py-1 rounded-full ${detail?.cause?.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'}`}>
               {detail?.cause?.is_published ? 'Publicada' : 'Não publicada'}
             </span>
-            {detail?.cause?.is_published && detail?.cause?.slug && (
-              <Link to={`/causa/${detail.cause.slug}`} target="_blank" className="text-sm text-brand-blue hover:underline ml-2">
+            {detail?.cause?.is_published && detail?.slug && (
+              <Link to={`/causa/${detail.slug}`} target="_blank" className="text-sm text-brand-blue hover:underline ml-2">
                 Ver página pública
               </Link>
             )}
