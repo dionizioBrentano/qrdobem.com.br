@@ -386,7 +386,7 @@ export default function DonatePage() {
         {loading ? (
           <div className="text-gray-500 py-8">Carregando...</div>
         ) : (
-        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
           <label className="block">
             <span className="block font-bold text-gray-700 mb-1 text-sm">Causa</span>
             <select
@@ -450,18 +450,25 @@ export default function DonatePage() {
           {/* Assinatura recorrente no Mercado Pago é sempre por cartão — não
               faz sentido oferecer Pix aqui e frustrar na tela seguinte. */}
           {!form.recurring && (
-            <label className="block">
-              <span className="block font-bold text-gray-700 mb-1 text-sm">Forma de pagamento</span>
-              <select
-                value={form.payment_method}
-                onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              >
-                <option value="pix">Pix</option>
-                <option value="credit_card">Cartão de crédito</option>
-                <option value="citizen_card">Cartão Cidadão</option>
-              </select>
-            </label>
+            <div className="block">
+              <span className="block font-bold text-gray-700 mb-2 text-sm">Forma de pagamento</span>
+              <div className="flex border-b">
+                <button 
+                  type="button"
+                  onClick={() => setForm({ ...form, payment_method: 'pix' })}
+                  className={`flex-1 py-2 font-medium text-sm transition-colors ${form.payment_method === 'pix' ? 'border-b-2 border-brand-accent text-brand-accent' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  PIX
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setForm({ ...form, payment_method: 'credit_card' })}
+                  className={`flex-1 py-2 font-medium text-sm transition-colors ${form.payment_method === 'credit_card' ? 'border-b-2 border-brand-accent text-brand-accent' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Cartão de crédito
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Identificação do doador — só sem sessão. Os meios de pagamento
@@ -747,16 +754,21 @@ export default function DonatePage() {
             </div>
           ) : (
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={busy}
               className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-4 rounded-lg text-lg disabled:opacity-50"
             >
               {busy
                 ? 'Processando...'
-                : `Doar ${money(totalToPay)}${form.recurring ? ' / mês' : ''}`}
+                : (form.recurring 
+                    ? `Assinar ${money(totalToPay)} / mês` 
+                    : form.payment_method === 'pix' 
+                      ? `Gerar PIX de ${money(totalToPay)}` 
+                      : `Doar ${money(totalToPay)}`)}
             </button>
           )}
-        </form>
+        </div>
         )}
 
         {mine?.donations?.length > 0 && (
