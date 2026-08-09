@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, HeartHandshake } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * MainMenu — menu do site público.
@@ -20,6 +21,8 @@ import { Menu, X, HeartHandshake } from 'lucide-react';
  */
 export default function MainMenu({ activeCategory, onCategorySelect, hasCauses = false }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, tenant } = useAuth();
+  const displayName = tenant?.nickname || tenant?.name || user?.email || 'Painel';
 
   const handleClick = (e, id) => {
     e.preventDefault();
@@ -38,7 +41,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
   ];
 
   return (
-    <nav className="w-full bg-brand-blue shadow-md sticky top-0 z-50 transition-all duration-300">
+    <nav id="main-menu-nav" className="w-full bg-brand-blue shadow-md sticky top-0 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logotipo. `logo-mini.svg` (50 KB) em vez do ícone genérico —
             e clicável, porque logotipo de cabeçalho que não volta ao topo
@@ -88,12 +91,21 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
             )}
             {/* Link do Mapa de calor removido em 06/08/2026 por decisão do
                 proprietário. A rota está desativada em App.jsx. */}
-            <Link
-              to="/login"
-              className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-1.5 rounded-lg transition"
-            >
-              Entrar
-            </Link>
+            {user ? (
+              <Link
+                to="/painel"
+                className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-1.5 rounded-lg transition"
+              >
+                {displayName}
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-1.5 rounded-lg transition"
+              >
+                Entrar
+              </Link>
+            )}
           </span>
         </div>
 
@@ -128,13 +140,23 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
                 Causas para apoiar
               </Link>
             )}
-            <Link
-              to="/login"
-              onClick={() => setIsOpen(false)}
-              className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-2 rounded-lg text-center transition"
-            >
-              Entrar
-            </Link>
+            {user ? (
+              <Link
+                to="/painel"
+                onClick={() => setIsOpen(false)}
+                className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-2 rounded-lg text-center transition"
+              >
+                {displayName}
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="bg-brand-accent text-white hover:bg-brand-accent-strong px-4 py-2 rounded-lg text-center transition"
+              >
+                Entrar
+              </Link>
+            )}
           </span>
         </div>
       )}

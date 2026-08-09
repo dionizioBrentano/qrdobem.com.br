@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api';
+import PublicShell from '../components/layout/PublicShell';
 
 // Trilhas que o painel sabe tratar. `cause` entra aqui porque a Home já a
 // grava (ContentArea) e o filtro antigo a descartava no caminho do login.
@@ -87,7 +88,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <PublicShell>
+      <div className="py-12 flex items-center justify-center bg-gray-50">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-brand-blue">QR do Bem</h1>
@@ -174,6 +176,7 @@ export default function LoginPage() {
           </button>
         </p>
       </div>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

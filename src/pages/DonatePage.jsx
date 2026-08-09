@@ -70,7 +70,7 @@ export default function DonatePage() {
       .then(([causesRes, mineRes]) => {
         const causesArray = Array.isArray(causesRes) 
           ? causesRes 
-          : (causesRes?.data && Array.isArray(causesRes.data) ? causesRes.data : []);
+          : (causesRes?.causes || causesRes?.data || []);
         setCauses(causesArray);
         setMine(mineRes);
       })
@@ -147,7 +147,11 @@ export default function DonatePage() {
 
   return (
     <PublicShell>
-      <div className="bg-gray-50 flex-1 w-full">
+      <div 
+        ref={(el) => el && el.focus()} 
+        tabIndex="-1" 
+        className="bg-gray-50 flex-1 w-full outline-none"
+      >
 
       <div className="max-w-2xl mx-auto p-4 py-8 space-y-6">
         <header>
@@ -164,12 +168,18 @@ export default function DonatePage() {
 
 
         {loading ? (
-          <div className="text-gray-500 py-8">Carregando...</div>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-blue border-t-transparent"></div>
+              <p className="mt-4 font-bold text-brand-blue text-lg">Carregando doação...</p>
+            </div>
+          </div>
         ) : (
         <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
           <label className="block">
             <span className="block font-bold text-gray-700 mb-1 text-sm">Causa</span>
             <select
+              autoFocus
               value={form.cause_slug}
               onChange={(e) => setForm({ ...form, cause_slug: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2"

@@ -35,7 +35,8 @@ export default function Layout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    sessionStorage.clear(); // Limpa também o cache de sessão por segurança extra
+    navigate('/');
   };
 
   const isSuperAdmin = tenant?.role === 'superadmin';

@@ -22,16 +22,16 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- 
-      GOOGLE ANALYTICS (Nativo):
-      Usando a variável de ambiente do Vite para injetar diretamente no HTML.
-      Isso garante que o robô do Google encontre o rastreador no código-fonte original.
+      GOOGLE ANALYTICS (Nativo e Estático):
+      Código inserido diretamente no HTML para não depender do arquivo .env no momento do build.
+      O robô do Google vai encontrar o rastreador instantaneamente.
     -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_ID%"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QY00F6EBNR"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', '%VITE_GA_ID%');
+      gtag('config', 'G-QY00F6EBNR');
     </script>
     
   </head>

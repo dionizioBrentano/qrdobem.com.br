@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { creditsApi, donationsApi } from '../services/api';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
@@ -22,6 +23,7 @@ export default function CheckoutModal({ intent, onClose }) {
     zipCode: tenant?.address_zipcode ? maskCep(tenant.address_zipcode) : '',
     streetName: tenant?.address_street || '',
     streetNumber: tenant?.address_number || '',
+    complement: tenant?.address_complement || '',
     neighborhood: tenant?.address_neighborhood || '',
     city: tenant?.address_city || '',
     federalUnit: tenant?.address_state || ''
@@ -39,12 +41,20 @@ export default function CheckoutModal({ intent, onClose }) {
   const initialization = useMemo(() => {
     const init = { amount };
     if (addressConfirmed) {
+      const fullName = (intent.payload?.payer_name || tenant?.name || tenant?.nickname || '').toUpperCase();
+      const nameParts = fullName.trim().split(' ');
+      const firstName = nameParts[0] || undefined;
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
+
       init.payer = {
         email: intent.payload?.payer_email || tenant?.email || undefined,
+        firstName,
+        lastName,
         address: {
           zipCode: address.zipCode.replace(/\D/g, ''),
           streetName: address.streetName,
           streetNumber: address.streetNumber,
+          complement: address.complement,
           neighborhood: address.neighborhood,
           city: address.city,
           federalUnit: address.federalUnit
@@ -268,31 +278,33 @@ export default function CheckoutModal({ intent, onClose }) {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mp mx-auto" />
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (orderId && !pixData) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden p-6 text-center">
            <h2 className="text-xl font-semibold text-gray-900 mb-4">Processando Pagamento</h2>
            <p className="text-gray-600 mb-6">Aguardando confirmação do cartão...</p>
            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mp mx-auto" />
            <p className="text-xs text-gray-400 mt-4">Isso pode levar alguns instantes.</p>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   if (pixData) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
           <div className="flex justify-between items-center p-4 border-b">
             <h2 className="text-xl font-semibold text-gray-900">Pagamento PIX</h2>
@@ -334,14 +346,15 @@ export default function CheckoutModal({ intent, onClose }) {
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   const total = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
           <h2 className="text-xl font-semibold text-gray-900">{isCredits ? 'Comprar Créditos' : 'Pagamento da Doação'}</h2>
@@ -408,7 +421,7 @@ export default function CheckoutModal({ intent, onClose }) {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-gray-700 mb-1">Número</label>
                   <input
@@ -416,6 +429,15 @@ export default function CheckoutModal({ intent, onClose }) {
                     value={address.streetNumber}
                     onChange={(e) => updateAddress('streetNumber', e.target.value)}
                     required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Comp. (opcional)</label>
+                  <input
+                    type="text"
+                    value={address.complement}
+                    onChange={(e) => updateAddress('complement', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
                   />
                 </div>
@@ -480,7 +502,8 @@ export default function CheckoutModal({ intent, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

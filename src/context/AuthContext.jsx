@@ -18,9 +18,9 @@ export function AuthProvider({ children }) {
   const [reauthCallback, setReauthCallback] = useState(null);
 
   useEffect(() => {
-    setReauthHandler(() => {
+    setReauthHandler((title, message) => {
       return new Promise((resolve) => {
-        setReauthCallback(() => resolve);
+        setReauthCallback(() => ({ resolve, title, message }));
       });
     });
   }, []);
@@ -98,12 +98,14 @@ export function AuthProvider({ children }) {
       {children}
       {reauthCallback && (
         <ReauthModal 
+          title={reauthCallback.title}
+          message={reauthCallback.message}
           onSuccess={() => {
-            if (reauthCallback) reauthCallback(true);
+            if (reauthCallback.resolve) reauthCallback.resolve(true);
             setReauthCallback(null);
           }}
           onCancel={() => {
-            if (reauthCallback) reauthCallback(false);
+            if (reauthCallback.resolve) reauthCallback.resolve(false);
             setReauthCallback(null);
           }}
         />

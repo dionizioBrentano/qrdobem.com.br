@@ -242,8 +242,11 @@ export default function PublicEntityPage() {
   if (loading) {
     return (
       <PublicShell>
-        <div className="bg-brand-blue/10 flex-1 flex items-center justify-center w-full">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-blue border-t-transparent"></div>
+            <p className="mt-4 font-bold text-brand-blue text-lg">Carregando...</p>
+          </div>
         </div>
       </PublicShell>
     );
@@ -273,7 +276,11 @@ export default function PublicEntityPage() {
 
   return (
     <PublicShell>
-      <div className="bg-gray-50 flex-1 p-4 w-full">
+      <div 
+        ref={(el) => el && el.focus()} 
+        tabIndex="-1" 
+        className="bg-gray-50 flex-1 p-4 w-full outline-none"
+      >
       <div className="max-w-md mx-auto space-y-4 pt-8">
         {/* White-label / patrocínio (Fase 5, T3-R02/T3-R03).
             Fica no topo, acima do conteúdo, e some quando não há marca —

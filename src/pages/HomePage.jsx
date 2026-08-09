@@ -70,6 +70,18 @@ export default function HomePage() {
     return () => { cancelled = true; };
   }, []);
 
+  // Alinha o menu inferior (MainMenu) no topo da tela sempre que a seção muda.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const menuEl = document.getElementById('main-menu-nav');
+      if (menuEl) {
+        const topPos = menuEl.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: topPos, behavior: 'smooth' });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeCategory]);
+
   return (
     <div className="w-full min-h-screen bg-brand-bg font-sans m-0 p-0 flex flex-col">
       <TopBar onCategorySelect={setActiveCategory} />

@@ -84,7 +84,11 @@ export default function CausesListPage() {
 
   return (
     <PublicShell>
-      <div className="bg-gray-50 flex-1 w-full">
+      <div 
+        ref={(el) => el && el.focus()} 
+        tabIndex="-1" 
+        className="bg-gray-50 flex-1 w-full outline-none"
+      >
       <div className="max-w-5xl mx-auto p-4 pt-8 space-y-6">
 
         <header className="flex items-center justify-between gap-3">
@@ -151,7 +155,12 @@ export default function CausesListPage() {
         )}
 
         {loading ? (
-          <p className="text-gray-500 py-12 text-center">Carregando causas...</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-blue border-t-transparent"></div>
+              <p className="mt-4 font-bold text-brand-blue text-lg">Carregando causas...</p>
+            </div>
+          </div>
         ) : causes.length === 0 ? (
           /* Só chega aqui com filtro aplicado: sem nenhuma causa, a página
              já redirecionou para a home. */

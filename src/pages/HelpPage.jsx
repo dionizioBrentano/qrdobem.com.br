@@ -140,7 +140,11 @@ export default function HelpPage() {
   return (
     <PublicShell>
 
-      <div className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
+      <div 
+        ref={(el) => el && el.focus()} 
+        tabIndex="-1" 
+        className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 outline-none"
+      >
         <header className="mb-8">
           <h1 className="text-2xl md:text-3xl font-black text-brand-blue flex items-center gap-2">
             <LifeBuoy className="w-6 h-6" />

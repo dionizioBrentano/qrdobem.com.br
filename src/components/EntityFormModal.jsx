@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { entitiesApi } from '../services/api';
+import { entitiesApi, reauthHandler } from '../services/api';
 import TermAcceptance from './TermAcceptance';
 
 const TYPES = [
@@ -20,8 +20,8 @@ const CUSTOM_ATTR_VALUE_MAX = 500;
 
 // Lista fechada, espelha EntityHealthField::FIELD_KEYS no backend.
 // `restricted` marca os que nunca podem virar públicos.
+// NOTA: blood_type foi movido para um campo separado na interface (caixas de seleção).
 const HEALTH_FIELDS = [
-  { key: 'blood_type', label: 'Tipo sanguíneo', placeholder: 'O+, AB-...' },
   { key: 'allergies', label: 'Alergias' },
   { key: 'chronic_conditions', label: 'Condições crônicas', placeholder: 'Diabetes, epilepsia...' },
   { key: 'continuous_medications', label: 'Medicamentos de uso contínuo', restricted: true },
@@ -104,6 +104,8 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
   });
   const [customAttrs, setCustomAttrs] = useState([]);
   const [healthFields, setHealthFields] = useState({});
+  const [bloodType, setBloodType] = useState('');
+  const [bloodRh, setBloodRh] = useState('');
   const [petFields, setPetFields] = useState(EMPTY_PET_FIELDS);
   const [vaccinations, setVaccinations] = useState([]);
   const [objectFields, setObjectFields] = useState(EMPTY_OBJECT_FIELDS);
@@ -143,6 +145,12 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
            const hFields = {};
            res.health_fields.forEach(hf => {
                hFields[hf.field_key] = { value: hf.field_value, is_public: hf.is_public };
+               if (hf.field_key === 'blood_type') {
+                   const val = hf.field_value || '';
+                   if (val.includes('+')) { setBloodRh('+'); setBloodType(val.replace('+', '').trim()); }
+                   else if (val.includes('-')) { setBloodRh('-'); setBloodType(val.replace('-', '').trim()); }
+                   else { setBloodRh(''); setBloodType(val.trim()); }
+               }
            });
            setHealthFields(hFields);
         }
@@ -245,6 +253,19 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
     setLoading(true);
     setError('');
     setErrorCode('');
+    
+    // Validação extra de segurança para edições
+    if (isEditing && reauthHandler) {
+      const success = await reauthHandler(
+        'Autorização Necessária',
+        'Por segurança, confirme sua senha (e código 2FA, se ativado) para salvar as alterações deste QR Code.'
+      );
+      if (!success) {
+        setLoading(false);
+        return;
+      }
+    }
+    
     try {
       // Pares incompletos não vão para a API — o backend espera chave e valor.
       const attributes = customAttrs.reduce((acc, { key, value }) => {
@@ -265,6 +286,15 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
         }
         return acc;
       }, []);
+
+      const bloodStr = bloodType ? `${bloodType}${bloodRh}` : '';
+      if (bloodStr) {
+        health.push({
+          field_key: 'blood_type',
+          field_value: bloodStr,
+          is_public: Boolean(healthFields['blood_type']?.is_public),
+        });
+      }
 
       const payload = {
         ...form,
@@ -318,7 +348,7 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b">
           <h2 className="text-lg font-bold text-gray-900">
@@ -739,6 +769,43 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
               </p>
 
               <div className="space-y-3">
+                {/* Tipo Sanguíneo (Campos separados) */}
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Tipo sanguíneo e Fator RH</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={bloodType}
+                      onChange={(e) => setBloodType(e.target.value)}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none bg-white"
+                    >
+                      <option value="">Não informar</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="AB">AB</option>
+                      <option value="O">O</option>
+                    </select>
+                    <select
+                      value={bloodRh}
+                      onChange={(e) => setBloodRh(e.target.value)}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none bg-white"
+                      disabled={!bloodType}
+                    >
+                      <option value="">(Sem RH)</option>
+                      <option value="+">Positivo (+)</option>
+                      <option value="-">Negativo (-)</option>
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(healthFields['blood_type']?.is_public)}
+                      onChange={(e) => updateHealthField('blood_type', { is_public: e.target.checked })}
+                      className="h-4 w-4 accent-brand-blue"
+                    />
+                    <span className="text-xs text-gray-500">Tornar público</span>
+                  </label>
+                </div>
+
                 {HEALTH_FIELDS.map(({ key, label, placeholder, restricted, emergencyOnly }) => (
                   <div key={key}>
                     <label className="block text-sm text-gray-700 mb-1">{label}</label>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import PublicShell from '../components/layout/PublicShell';
 
 export default function OtpVerifyPage() {
   const { user, refreshTenant } = useAuth();
@@ -58,7 +59,8 @@ export default function OtpVerifyPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <PublicShell>
+      <div className="py-12 flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-brand-blue text-center mb-2">Verificação de E-mail</h1>
         <p className="text-gray-500 text-center text-sm mb-6">
@@ -116,6 +118,7 @@ export default function OtpVerifyPage() {
           </form>
         )}
       </div>
-    </div>
+      </div>
+    </PublicShell>
   );
 }
