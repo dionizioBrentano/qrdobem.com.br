@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { entitiesApi, profileApi, spacesApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
-import PurchaseCreditsModal from '../components/PurchaseCreditsModal';
+import CheckoutModal from '../components/CheckoutModal';
 import CompleteRegistrationBlock from '../components/CompleteRegistrationBlock';
 import SpaceSelector from '../components/SpaceSelector';
 import PanicButton from '../components/PanicButton';
@@ -47,7 +47,7 @@ export default function DashboardPage() {
   // devolver `active_space_id` — o painel funciona igual nesse caso.
   const [activeSpaceId, setActiveSpaceId] = useState(null);
   const [activeTrail, setActiveTrail] = useState(null);
-  const [showPurchase, setShowPurchase] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
   // Criação do espaço família — opcional e só oferecida quando não existe um.
   const [familyName, setFamilyName] = useState('Minha família');
   const [familyBusy, setFamilyBusy] = useState(false);
@@ -180,7 +180,7 @@ export default function DashboardPage() {
       return;
     }
     if (ctaStage === 'credits') {
-      setShowPurchase(true);
+      setShowBuyModal(true);
       return;
     }
     if (type) setActiveTrail(type);
@@ -216,7 +216,7 @@ export default function DashboardPage() {
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    setShowPurchase(true);
+    setShowBuyModal(true);
   };
 
   return (
@@ -428,7 +428,7 @@ export default function DashboardPage() {
         {noCredits && !isDashboardBlocked && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm flex justify-between items-center mb-6">
             <span>Sem créditos no momento. Adquira mais para continuar criando.</span>
-            <button onClick={() => setShowPurchase(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded text-xs font-bold transition">Comprar Créditos</button>
+            <button onClick={() => setShowBuyModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded text-xs font-bold transition">Comprar Créditos</button>
           </div>
         )}
 
@@ -469,7 +469,7 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-500">Créditos disponíveis</p>
               <p className="text-3xl font-bold text-brand-blue">{data?.quota ?? 0}</p>
             </div>
-            <button onClick={() => setShowPurchase(true)} disabled={isDashboardBlocked} className="mt-4 text-brand-blue hover:text-brand-blue text-sm font-medium text-left disabled:opacity-50">
+            <button onClick={() => setShowBuyModal(true)} disabled={isDashboardBlocked} className="mt-4 text-brand-blue hover:text-brand-blue text-sm font-medium text-left disabled:opacity-50">
               + Comprar Créditos
             </button>
           </div>
@@ -597,8 +597,14 @@ export default function DashboardPage() {
         />
       )}
 
-      {showPurchase && (
-        <PurchaseCreditsModal onClose={() => setShowPurchase(false)} />
+      {showBuyModal && (
+        <CheckoutModal 
+          intent={{ type: 'credits' }} 
+          onClose={(success) => {
+            setShowBuyModal(false);
+            if (success) window.location.reload();
+          }} 
+        />
       )}
     </div>
   );

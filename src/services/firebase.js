@@ -57,6 +57,20 @@ export async function firebaseRegister(email, password) {
   };
 }
 
+export async function firebaseAnonymousLogin() {
+  const data = await firebaseRequest('signUp', {
+    returnSecureToken: true,
+  });
+  localStorage.setItem('firebase_token', data.idToken);
+  localStorage.setItem('firebase_refresh', data.refreshToken);
+  localStorage.setItem('firebase_uid', data.localId);
+  // Anônimos não têm e-mail na conta Firebase
+  return {
+    uid: data.localId,
+    token: data.idToken,
+  };
+}
+
 export async function firebaseRefreshToken() {
   const refreshToken = localStorage.getItem('firebase_refresh');
   if (!refreshToken) return null;

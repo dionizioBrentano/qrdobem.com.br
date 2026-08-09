@@ -1,10 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Heart, Repeat, AlertCircle, Info, ShieldCheck } from 'lucide-react';
-import { donationsApi, causesApi, creditsApi } from '../services/api';
+import { donationsApi, causesApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PublicShell from '../components/layout/PublicShell';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+import CheckoutModal from '../components/CheckoutModal';
 
 const money = (val) => Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const feePercentLabel = '12';
@@ -55,26 +55,17 @@ export default function DonatePage() {
 
   const [breakdown, setBreakdown] = useState(null);
   const [breakdownBusy, setBreakdownBusy] = useState(false);
-  const [pixData, setPixData] = useState(null);
-  const [orderId, setOrderId] = useState(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const effectiveCover = form.cover_fees;
   const effectiveExtra = !supportOn ? 0 : extraChoice === 'outro' ? parseFloat(extraCustom) || 0 : Number(extraChoice);
 
   const totalToPay = breakdown ? breakdown.total_to_pay : Number(form.amount);
 
-  const initialization = useMemo(() => ({ amount: totalToPay }), [totalToPay]);
-  const customization = useMemo(() => ({
-    paymentMethods: {
-      creditCard: 'all',
-      debitCard: 'all',
-    },
-  }), []);
-
   useEffect(() => {
     Promise.all([
       causesApi.list(),
-      !isGuest ? donationsApi.mine() : Promise.resolve(null)
+      !isGuest ? donationsApi.mine().catch(() => null) : Promise.resolve(null)
     ])
       .then(([causesRes, mineRes]) => {
         const causesArray = Array.isArray(causesRes) 
@@ -88,16 +79,6 @@ export default function DonatePage() {
       })
       .finally(() => setLoading(false));
   }, [isGuest]);
-
-  useEffect(() => {
-    creditsApi.mpPublicConfig()
-      .then((res) => {
-        if (res.public_key) {
-          initMercadoPago(res.public_key, { locale: res.locale || 'pt-BR' });
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     const val = Number(form.amount);
@@ -135,125 +116,34 @@ export default function DonatePage() {
     return null;
   };
 
-  const handleSubmitPix = async (e) => {
+  const handleProceed = async (e) => {
     e.preventDefault();
     setError('');
     if (isGuest) {
       const problem = validateGuest();
       if (problem) { setError(problem); return; }
     }
-    setBusy(true);
-    try {
-      const payload = {
-        amount: Number(form.amount),
-        cause_slug: form.cause_slug || null,
-        payment_method: 'pix',
-        is_anonymous: !form.show_name,
-        message: form.message || null,
-        cover_fees: effectiveCover,
-        extra_platform_support: effectiveExtra,
-      };
-      if (isGuest) {
-        payload.payer_name = payer.name.trim();
-        payload.payer_email = payer.email.trim();
-        payload.payer_cpf = payer.cpf;
-        payload.consent_lgpd = true;
-      }
-      const res = form.recurring ? await donationsApi.subscribe(payload) : await donationsApi.create(payload);
-      if (res.pix) {
-        setPixData(res.pix);
-        setOrderId(res.public_token);
-      } else {
-        setError('Pagamento não pôde ser iniciado.');
-      }
-    } catch (err) {
-      setError(friendlyError(err));
-    } finally {
-      setBusy(false);
-    }
+    setShowCheckoutModal(true);
   };
 
-  const onSubmitCard = async ({ formData }) => {
-    setError('');
+  const getDonationPayload = () => {
+    const payload = {
+      amount: Number(form.amount),
+      cause_slug: form.cause_slug || null,
+      is_anonymous: !form.show_name,
+      message: form.message || null,
+      cover_fees: effectiveCover,
+      extra_platform_support: effectiveExtra,
+      recurring: form.recurring,
+    };
     if (isGuest) {
-      const problem = validateGuest();
-      if (problem) { throw new Error(problem); }
+      payload.payer_name = payer.name.trim();
+      payload.payer_email = payer.email.trim();
+      payload.payer_cpf = payer.cpf;
+      payload.consent_lgpd = true;
     }
-    setBusy(true);
-    try {
-      const body = {
-        amount: Number(form.amount),
-        cause_slug: form.cause_slug || null,
-        is_anonymous: !form.show_name,
-        message: form.message || null,
-        cover_fees: effectiveCover,
-        extra_platform_support: effectiveExtra,
-        token: formData.token,
-        payment_method_id: formData.payment_method_id,
-        installments: formData.installments,
-        issuer_id: formData.issuer_id,
-      };
-      if (isGuest) {
-        body.payer_name = payer.name.trim();
-        body.payer_email = payer.email.trim();
-        body.payer_cpf = payer.cpf;
-        body.consent_lgpd = true;
-      }
-      const res = await donationsApi.createCard(body);
-      if (res.status === 'approved' || res.status === 'paid' || res.status === 'pending') {
-        setOrderId(res.public_token);
-      } else {
-        throw new Error('Pagamento recusado: ' + (res.message || res.status));
-      }
-    } catch (err) {
-      setError(friendlyError(err));
-      throw err;
-    } finally {
-      setBusy(false);
-    }
+    return payload;
   };
-
-  const handleCheckStatus = async () => {
-    if (!orderId) return;
-    try {
-      const statusRes = await donationsApi.status(orderId);
-      if (statusRes.status === 'paid') {
-         window.location.href = '/?status=success';
-      } else {
-         alert('Pagamento ainda não confirmado. Aguarde mais alguns instantes.');
-      }
-    } catch (e) {
-      alert('Erro ao verificar status.');
-    }
-  };
-
-  const copyToClipboard = () => {
-    if (pixData?.qr_code) {
-      navigator.clipboard.writeText(pixData.qr_code);
-      alert('Código PIX copiado!');
-    }
-  };
-
-  useEffect(() => {
-    let intervalId;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 24;
-    if (orderId) {
-      intervalId = setInterval(async () => {
-        try {
-          attempts++;
-          const statusRes = await donationsApi.status(orderId);
-          if (statusRes.status === 'paid') {
-            clearInterval(intervalId);
-            window.location.href = '/?status=success';
-          } else if (attempts >= MAX_ATTEMPTS) {
-            clearInterval(intervalId);
-          }
-        } catch (e) { console.error('Polling error', e); }
-      }, 5000);
-    }
-    return () => { if (intervalId) clearInterval(intervalId); };
-  }, [orderId]);
 
   return (
     <PublicShell>
@@ -337,27 +227,7 @@ export default function DonatePage() {
             )}
           </label>
 
-          {!form.recurring && (
-            <div className="block">
-              <span className="block font-bold text-gray-700 mb-2 text-sm">Forma de pagamento</span>
-              <div className="flex border-b mb-4">
-                <button 
-                  type="button"
-                  onClick={() => { setForm({ ...form, payment_method: 'pix' }); setError(''); }}
-                  className={`flex-1 py-2 font-medium text-sm transition-colors ${form.payment_method === 'pix' ? 'border-b-2 border-brand-accent text-brand-accent' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  PIX
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => { setForm({ ...form, payment_method: 'credit_card' }); setError(''); }}
-                  className={`flex-1 py-2 font-medium text-sm transition-colors ${form.payment_method === 'credit_card' ? 'border-b-2 border-brand-accent text-brand-accent' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  Cartão de crédito
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {/* Identificação do doador — só sem sessão. Os meios de pagamento
               exigem nome, e-mail e CPF; o consentimento LGPD é obrigatório. */}
@@ -589,95 +459,29 @@ export default function DonatePage() {
             </div>
           )}
 
-          {orderId && !pixData && form.payment_method === 'credit_card' && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden p-6 text-center">
-                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Processando Pagamento</h2>
-                 <p className="text-gray-600 mb-6">Aguardando confirmação do cartão...</p>
-                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue mx-auto" />
-                 <p className="text-xs text-gray-400 mt-4">Isso pode levar alguns instantes.</p>
-              </div>
-            </div>
-          )}
-
-          {pixData && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="flex justify-between items-center p-4 border-b">
-                  <h2 className="text-xl font-semibold text-gray-900">Pagamento PIX</h2>
-                  <button onClick={() => setPixData(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-                </div>
-                <div className="p-6 flex flex-col items-center text-center space-y-4">
-                  <p className="text-gray-600 text-sm mb-2">
-                    Pague com PIX no app do seu banco. A doação entra automaticamente após a confirmação.
-                  </p>
-                  {pixData.qr_code_base64 && (
-                    <img 
-                      src={`data:image/png;base64,${pixData.qr_code_base64}`} 
-                      alt="QR Code PIX" 
-                      className="w-48 h-48 border rounded-lg p-2 bg-white"
-                    />
-                  )}
-                  <div className="w-full mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1 text-left">PIX Copia e Cola</label>
-                    <div className="flex">
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={pixData.qr_code} 
-                        className="w-full px-3 py-2 border rounded-l-lg bg-gray-50 text-xs focus:outline-none"
-                      />
-                      <button 
-                        type="button"
-                        onClick={copyToClipboard}
-                        className="bg-brand-blue hover:bg-brand-blue-strong text-white px-4 py-2 rounded-r-lg text-sm font-medium transition"
-                      >
-                        Copiar
-                      </button>
-                    </div>
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={handleCheckStatus}
-                    className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition"
-                  >
-                    Já paguei — atualizar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
             <span className="text-gray-600 font-medium">Total a pagar:</span>
             <span className="text-xl font-bold text-gray-900">{money(totalToPay)}{form.recurring ? ' / mês' : ''}</span>
           </div>
 
-          {form.payment_method === 'pix' || form.recurring ? (
-            <button
-              type="button"
-              onClick={handleSubmitPix}
-              disabled={busy}
-              className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-4 rounded-lg text-lg disabled:opacity-50"
-            >
-              {busy
-                ? 'Processando...'
-                : (form.recurring 
-                    ? `Assinar com Checkout Pro` 
-                    : `Gerar PIX`)}
-            </button>
-          ) : (
-            <div className="mt-4">
-              <Payment
-                key={totalToPay}
-                initialization={initialization}
-                customization={customization}
-                onSubmit={onSubmitCard}
-                onError={(err) => console.error('Brick Error:', err)}
-              />
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={handleProceed}
+            className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-black py-4 rounded-lg text-lg transition"
+          >
+            Ir para pagamento
+          </button>
         </div>
+        )}
+
+        {showCheckoutModal && (
+          <CheckoutModal 
+            intent={{ type: 'donation', payload: getDonationPayload(), amount: totalToPay }} 
+            onClose={(success) => {
+              setShowCheckoutModal(false);
+              if (success) window.location.href = '/?status=success';
+            }} 
+          />
         )}
 
         {mine?.donations?.length > 0 && (
