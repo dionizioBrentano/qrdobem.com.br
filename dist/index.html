@@ -20,7 +20,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="QRdoBem" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <script type="module" crossorigin src="/assets/index-0okxGhQl.js"></script>
+
+    <!-- 
+      GOOGLE ANALYTICS (Nativo):
+      Usando a variável de ambiente do Vite para injetar diretamente no HTML.
+      Isso garante que o robô do Google encontre o rastreador no código-fonte original.
+    -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <script type="module" crossorigin src="/assets/index-PnMtAw8i.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Dl7osMbo.css">
   </head>
   <body>
