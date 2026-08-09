@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import GoogleAnalytics from './components/GoogleAnalytics';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
@@ -23,9 +24,11 @@ import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
+
 export default function App() {
   return (
     <BrowserRouter>
+      <GoogleAnalytics />
       <AuthProvider>
         <Routes>
           {/* Rotas públicas */}

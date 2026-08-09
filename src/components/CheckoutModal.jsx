@@ -2,8 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { creditsApi, donationsApi } from '../services/api';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+import { useAuth } from '../context/AuthContext';
+import { maskCep } from '../utils/masks';
 
 export default function CheckoutModal({ intent, onClose }) {
+  const { tenant } = useAuth();
   const isCredits = intent.type === 'credits';
 
   const [pricing, setPricing] = useState(null);
@@ -15,14 +18,46 @@ export default function CheckoutModal({ intent, onClose }) {
   const [pixData, setPixData] = useState(null);
   const [orderId, setOrderId] = useState(null);
 
+  const [address, setAddress] = useState({
+    zipCode: tenant?.address_zipcode ? maskCep(tenant.address_zipcode) : '',
+    streetName: tenant?.address_street || '',
+    streetNumber: tenant?.address_number || '',
+    neighborhood: tenant?.address_neighborhood || '',
+    city: tenant?.address_city || '',
+    federalUnit: tenant?.address_state || ''
+  });
+  
+  const [addressConfirmed, setAddressConfirmed] = useState(
+    !!(tenant?.address_zipcode && tenant?.address_street && tenant?.address_number)
+  );
+  const [cepLoading, setCepLoading] = useState(false);
+
   const amount = isCredits 
     ? Number(((pricing?.unit_price || 0) * quantity).toFixed(2)) 
     : intent.amount;
 
-  const initialization = useMemo(() => ({ amount }), [amount]);
+  const initialization = useMemo(() => {
+    const init = { amount };
+    if (addressConfirmed) {
+      init.payer = {
+        email: intent.payload?.payer_email || tenant?.email || undefined,
+        address: {
+          zipCode: address.zipCode.replace(/\D/g, ''),
+          streetName: address.streetName,
+          streetNumber: address.streetNumber,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          federalUnit: address.federalUnit
+        }
+      };
+    }
+    return init;
+  }, [amount, addressConfirmed, address, intent.payload, tenant]);
   const customization = useMemo(() => ({
     paymentMethods: {
       pix: 'all',
+      ticket: 'all',
+      bankTransfer: 'all',
       creditCard: 'all',
       debitCard: 'all',
     },
@@ -127,7 +162,7 @@ export default function CheckoutModal({ intent, onClose }) {
           const payload = {
             ...formData,
             quantity,
-            payer_email: formData.payer?.email,
+            payer_email: formData.payer?.email || tenant?.email,
             identification_type: formData.payer?.identification?.type,
             identification_number: formData.payer?.identification?.number,
           };
@@ -204,6 +239,31 @@ export default function CheckoutModal({ intent, onClose }) {
     if (pixData?.qr_code) {
       navigator.clipboard.writeText(pixData.qr_code);
       alert('Código PIX copiado!');
+    }
+  };
+
+  const updateAddress = (field, value) => setAddress(prev => ({ ...prev, [field]: value }));
+
+  const handleCepBlur = async () => {
+    const cep = address.zipCode.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setAddress((prev) => ({
+          ...prev,
+          streetName: data.logradouro || prev.streetName,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          federalUnit: data.uf || prev.federalUnit,
+        }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCepLoading(false);
     }
   };
 
@@ -320,15 +380,104 @@ export default function CheckoutModal({ intent, onClose }) {
             <span className="text-xl font-bold text-gray-900">{total}</span>
           </div>
 
-          <div className="mt-4">
-            <Payment
-              key={amount}
-              initialization={initialization}
-              customization={customization}
-              onSubmit={onSubmit}
-              onError={(err) => console.error('Brick Error:', err)}
-            />
-          </div>
+          {!addressConfirmed ? (
+            <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+              <h3 className="font-bold text-gray-800 text-sm mb-2">Endereço de Cobrança</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">CEP {cepLoading && '...'}</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={address.zipCode}
+                    onChange={(e) => updateAddress('zipCode', maskCep(e.target.value))}
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Rua</label>
+                  <input
+                    type="text"
+                    value={address.streetName}
+                    onChange={(e) => updateAddress('streetName', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Número</label>
+                  <input
+                    type="text"
+                    value={address.streetNumber}
+                    onChange={(e) => updateAddress('streetNumber', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Bairro</label>
+                  <input
+                    type="text"
+                    value={address.neighborhood}
+                    onChange={(e) => updateAddress('neighborhood', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Cidade</label>
+                  <input
+                    type="text"
+                    value={address.city}
+                    onChange={(e) => updateAddress('city', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">UF</label>
+                  <input
+                    type="text"
+                    value={address.federalUnit}
+                    onChange={(e) => updateAddress('federalUnit', e.target.value.toUpperCase().slice(0, 2))}
+                    maxLength={2}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none uppercase text-center"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (address.zipCode.length >= 8 && address.streetName && address.streetNumber) {
+                    setAddressConfirmed(true);
+                  } else {
+                    setError('Preencha os campos obrigatórios do endereço (CEP, Rua e Número).');
+                  }
+                }}
+                className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white font-bold py-3 rounded-lg transition mt-4"
+              >
+                Continuar para Pagamento
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <Payment
+                key={amount}
+                initialization={initialization}
+                customization={customization}
+                onSubmit={onSubmit}
+                onError={(err) => console.error('Brick Error:', err)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
