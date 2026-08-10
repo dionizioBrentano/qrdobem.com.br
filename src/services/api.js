@@ -573,3 +573,11 @@ export const contactApi = {
       body: JSON.stringify(data),
     }),
 };
+
+// --- Generic API Wrapper (Usado para endpoints não mapeados acima) ---
+export const api = {
+  get: (url, options = {}) => request(url, { ...options, method: 'GET' }),
+  post: (url, data, options = {}) => request(url, { ...options, method: 'POST', body: JSON.stringify(data) }),
+  put: (url, data, options = {}) => request(url, { ...options, method: 'PUT', body: JSON.stringify(data) }),
+  delete: (url, options = {}) => request(url, { ...options, method: 'DELETE' }),
+};
