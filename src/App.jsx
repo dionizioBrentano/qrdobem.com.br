@@ -22,6 +22,8 @@ import BeneficiaryPage from './pages/BeneficiaryPage';
 import MessagesPage from './pages/MessagesPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
+import TeamPage from './pages/TeamPage';
+import SubspacesPage from './pages/SubspacesPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
 
@@ -80,6 +82,8 @@ export default function App() {
             <Route path="/contas" element={<AccountsPage />} />
             {/* Árvore genealógica — Fase 1, entrega 1.6 (T1-R02) */}
             <Route path="/familia" element={<FamilyPage />} />
+            <Route path="/equipe" element={<TeamPage />} />
+            <Route path="/subgrupos" element={<SubspacesPage />} />
             {/* Verificação em duas etapas — Fase 1, entrega 1.5 (T1-R05) */}
             <Route path="/seguranca" element={<TwoFactorPage />} />
             {/* Diário de saúde e medicação — Fase 6, T1-R08 a T1-R11 */}
