@@ -1,6 +1,6 @@
 # QR do Bem — Frontend React: Estado Atual e Roadmap
 
-**Atualizado em:** 01/07/2026  
+**Atualizado em:** 09/08/2026  
 **Stack:** React 18 + Vite, Tailwind CSS, Firebase REST API (sem SDK)  
 **Deploy:** Build no Windows (`npm run build`), upload da pasta `dist/` para `~/qrdobem.com.br/` via CPanel  
 **API:** https://api.qrdobem.com.br/api  
@@ -338,27 +338,24 @@ O frontend NUNCA confia nos seus próprios dados. Sempre envia para o backend va
 - [x] Exibir QR Code real (`QrCodeModal.jsx`) com download em SVG
 - [x] Build final gerado em `dist/`
 
-### Fase 6 — Pendente
-- [ ] Login com Google (Fase 1 original, ainda não feita)
-- [ ] Editar / suspender / excluir QR Code (a API ainda não tem esses endpoints)
-- [ ] Checkout com Mercado Pago
+### Fase 6 — Implementações (Agosto/2026)
+- [ ] Login com Google (Pendente)
+- [ ] Editar / suspender / excluir QR Code (em progresso na API)
+- [x] Checkout com Mercado Pago (Bricks e Guest Checkout)
 
 ---
 
-## 7. MERCADO PAGO (FUTURO)
+## 7. MERCADO PAGO (ATUAL)
 
-A integração com Mercado Pago vai exigir uma página de checkout. Os dados do pagador que o MP precisa já são coletados pelas nossas gates:
+A integração com Mercado Pago via **Bricks** está implementada e suporta tanto pagamentos logados quanto **Guest Checkout** (sem login, especialmente para doações).
 
-- **PIX:** email + nome + CPF → já temos no Gate 1
-- **Cartão:** email + nome + CPF + endereço → já temos no Gate 2
-- **Dados do cartão:** coletados pelo formulário do Mercado Pago (PCI compliance deles). Nós NUNCA armazenamos número de cartão.
+Os dados do pagador são coletados conforme a operação:
+- **PIX:** email + nome + CPF.
+- **Cartão:** email + nome + CPF + endereço.
+- **Dados do cartão:** coletados pelo Mercado Pago Bricks (PCI compliance). Nunca armazenamos número de cartão no nosso backend.
 
-**Fricção adicional:** ZERO. Os dados que o MP exige são exatamente os que já coletamos.
+**Próximo Passo (Fase 1 do Roadmap Geral):** Homologação e Testes de regressão no ambiente real para validar a idempotência do webhook e o rateio (DonationFeeCalculator).
 
-Criar:
-- [ ] `src/pages/CheckoutPage.jsx` — seleção de créditos, escolha de pagamento (PIX/cartão)
-- [ ] Integração com Mercado Pago JS SDK (frontend) para tokenizar cartão
-- [ ] Endpoint backend `POST /checkout` para processar pagamento
 
 ---
 

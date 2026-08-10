@@ -109,9 +109,8 @@ export default function DonatePage() {
   };
 
   const validateGuest = () => {
-    if (!payer.name.trim()) return 'Informe o seu nome completo.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payer.email)) return 'Informe um e-mail válido.';
-    if (payer.cpf.replace(/\D/g, '').length !== 11) return 'Informe um CPF válido (11 dígitos).';
+    if (!payer.name.trim()) return 'Informe o seu nome (pode ser apenas o primeiro nome se quiser).';
+    if (payer.cpf.replace(/\D/g, '').length !== 11) return 'Informe um CPF válido (11 dígitos, obrigatório para antifraude do Banco Central).';
     if (!consentLgpd) return 'É preciso autorizar o uso dos dados para concluir a doação.';
     return null;
   };
@@ -137,8 +136,8 @@ export default function DonatePage() {
       recurring: form.recurring,
     };
     if (isGuest) {
-      payload.payer_name = payer.name.trim();
-      payload.payer_email = payer.email.trim();
+      payload.payer_name = payer.name.trim() || 'Doador Anônimo';
+      payload.payer_email = payer.email.trim() || 'doador@anonimo.qrdobem.com.br';
       payload.payer_cpf = payer.cpf;
       payload.consent_lgpd = true;
     }
@@ -147,11 +146,7 @@ export default function DonatePage() {
 
   return (
     <PublicShell>
-      <div 
-        ref={(el) => el && el.focus()} 
-        tabIndex="-1" 
-        className="bg-gray-50 flex-1 w-full outline-none"
-      >
+      <div className="bg-gray-50 flex-1 w-full outline-none">
 
       <div className="max-w-2xl mx-auto p-4 py-8 space-y-6">
         <header>
@@ -254,7 +249,7 @@ export default function DonatePage() {
               />
               <input
                 type="email"
-                placeholder="E-mail (para o recibo)"
+                placeholder="E-mail (opcional, apenas se quiser o recibo)"
                 autoComplete="email"
                 value={payer.email}
                 onChange={(e) => setPayer({ ...payer, email: e.target.value })}

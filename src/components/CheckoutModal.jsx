@@ -30,7 +30,7 @@ export default function CheckoutModal({ intent, onClose }) {
   });
   
   const [addressConfirmed, setAddressConfirmed] = useState(
-    !!(tenant?.address_zipcode && tenant?.address_street && tenant?.address_number)
+    !!(tenant?.address_zipcode && tenant?.address_street && tenant?.address_number) || intent.type === 'donation'
   );
   const [cepLoading, setCepLoading] = useState(false);
 
@@ -46,10 +46,13 @@ export default function CheckoutModal({ intent, onClose }) {
       const firstName = nameParts[0] || undefined;
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
 
+      const cpfRaw = intent.payload?.payer_cpf ? intent.payload.payer_cpf.replace(/\D/g, '') : null;
+
       init.payer = {
         email: intent.payload?.payer_email || tenant?.email || undefined,
         firstName,
         lastName,
+        ...(cpfRaw ? { identification: { type: 'CPF', number: cpfRaw } } : {}),
         address: {
           zipCode: address.zipCode.replace(/\D/g, ''),
           streetName: address.streetName,
@@ -62,7 +65,23 @@ export default function CheckoutModal({ intent, onClose }) {
       };
     }
     return init;
-  }, [amount, addressConfirmed, address, intent.payload, tenant]);
+  }, [
+    amount, 
+    addressConfirmed, 
+    address.zipCode, 
+    address.streetName, 
+    address.streetNumber,
+    address.complement,
+    address.neighborhood,
+    address.city,
+    address.federalUnit,
+    intent.payload?.payer_name,
+    intent.payload?.payer_email,
+    intent.payload?.payer_cpf,
+    tenant?.name,
+    tenant?.nickname,
+    tenant?.email
+  ]);
   const customization = useMemo(() => ({
     paymentMethods: {
       pix: 'all',
