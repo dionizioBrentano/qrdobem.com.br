@@ -121,7 +121,7 @@ export default function MainMenu({ activeCategory, onCategorySelect, hasCauses =
 
       {/* Menu mobile */}
       {isOpen && (
-        <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full">
+        <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full max-h-[calc(100vh-70px)] overflow-y-auto">
           {trails.map((trail) => (
             <a
               key={trail.id}

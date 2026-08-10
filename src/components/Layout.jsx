@@ -157,7 +157,7 @@ export default function Layout() {
 
         {/* Menu mobile */}
         {isOpen && (
-          <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full">
+          <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full max-h-[calc(100vh-70px)] overflow-y-auto">
             {/* Bloco de identidade (mobile) */}
             <div className="flex items-center gap-3 pb-3 border-b border-brand-cream/20">
               <span
