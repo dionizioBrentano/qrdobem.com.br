@@ -1,3 +1,5 @@
+import { firebaseRefreshToken, firebaseLogout } from './firebase';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
 
 export let reauthHandler = null;
@@ -6,10 +8,6 @@ export const setReauthHandler = (handler) => { reauthHandler = handler; };
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('firebase_token');
 
-  // Upload de mídia (T2-R05) manda FormData. Nesse caso o Content-Type
-  // NÃO pode ser definido por nós: o browser precisa gerar o cabeçalho
-  // multipart com o boundary, e um valor fixo aqui quebraria o parse no
-  // servidor.
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
   const headers = {
@@ -19,8 +17,6 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  // Remove chaves anuladas pelo chamador (ex.: Content-Type: undefined),
-  // que virariam o texto "undefined" no cabeçalho.
   Object.keys(headers).forEach((key) => {
     if (headers[key] === undefined) delete headers[key];
   });
@@ -34,21 +30,20 @@ async function request(endpoint, options = {}) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    if (res.status === 401 && token && !options._isRetry && !options._noReauth && reauthHandler) {
-      const reauthSuccess = await reauthHandler();
-      if (reauthSuccess) {
-        const isPayment = typeof options.body === 'string' && (
-          options.body.includes('card_token') || 
-          options.body.includes('card_number') || 
-          options.body.includes('"pan"') ||
-          options.body.includes('payment_method_id')
-        );
-        if (isPayment) {
-          throw new Error('Sessão expirada. Por segurança, repita o pagamento.');
-        }
+    if (res.status === 401 && token && !options._isRetry && !options._noReauth) {
+      // Tenta atualizar o token silenciosamente
+      const refreshed = await firebaseRefreshToken();
+      
+      if (refreshed) {
+        // Token atualizado com sucesso, repete a requisição original
         return request(endpoint, { ...options, _isRetry: true });
+      } else {
+        // Falhou o refresh, força logout e vai para o login
+        firebaseLogout();
+        window.location.href = '/login?expired=true';
+        // Interrompe a promise atual para não estourar erro na tela antes do redirect
+        return new Promise(() => {}); 
       }
-      throw new Error('Sessão expirada. Entre novamente para continuar.');
     }
 
     const error = new Error(data?.error || `Erro ${res.status}`);

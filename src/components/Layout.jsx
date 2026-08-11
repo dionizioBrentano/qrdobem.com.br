@@ -87,9 +87,9 @@ export default function Layout() {
           </Link>
 
           {/* Menu desktop */}
-          <div className="hidden md:flex items-center gap-6 text-sm font-bold text-white">
+          <div className="hidden xl:flex flex-wrap items-center justify-end gap-3 lg:gap-5 text-sm font-bold text-white flex-1 pl-4">
             <Link to="/painel" className="hover:text-brand-blue-dark transition-colors">
-              Painel de Controle
+              Painel
             </Link>
             <Link to="/messages" className="hover:text-brand-blue-dark transition-colors">
               Mensagens
@@ -126,18 +126,18 @@ export default function Layout() {
                 clica aqui justamente para trocar. */}
             <Link
               to="/contas"
-              className="flex items-center gap-2 pl-4 border-l border-white/20 hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 pl-3 border-l border-white/20 hover:opacity-90 transition-opacity ml-2"
               title={`Conta ativa: ${displayName} (${activeEmail}) — ver minhas contas`}
             >
               <span
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-brand-accent text-white font-black text-base shrink-0"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-accent text-white font-black text-sm shrink-0"
                 aria-hidden="true"
               >
                 {initial}
               </span>
               <span className="flex flex-col leading-tight text-left">
-                <span className="text-white truncate max-w-[160px]">{displayName}</span>
-                <span className="text-brand-cream/90 font-normal text-xs truncate max-w-[160px]">
+                <span className="text-white truncate max-w-[120px] text-xs">{displayName}</span>
+                <span className="text-brand-cream/90 font-normal text-[10px] truncate max-w-[120px]">
                   {activeEmail}
                 </span>
               </span>
@@ -145,7 +145,7 @@ export default function Layout() {
 
             <button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded transition"
+              className="bg-red-500 hover:bg-red-600 px-3 py-1.5 text-xs rounded transition ml-1"
             >
               Sair
             </button>
@@ -153,7 +153,7 @@ export default function Layout() {
 
           {/* Hambúrguer (mobile) */}
           <button
-            className="md:hidden text-white p-2"
+            className="xl:hidden text-white p-2"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
           >
@@ -163,7 +163,7 @@ export default function Layout() {
 
         {/* Menu mobile */}
         {isOpen && (
-          <div className="md:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute w-full max-h-[calc(100vh-70px)] overflow-y-auto">
+          <div className="xl:hidden bg-brand-blue border-t border-brand-blue px-6 py-4 flex flex-col gap-4 font-bold text-white shadow-xl absolute left-0 w-full max-h-[calc(100vh-70px)] overflow-y-auto">
             {/* Bloco de identidade (mobile) */}
             <div className="flex items-center gap-3 pb-3 border-b border-brand-cream/20">
               <span

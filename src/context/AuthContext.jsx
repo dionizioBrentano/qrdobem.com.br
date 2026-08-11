@@ -6,8 +6,7 @@ import {
   firebaseRefreshToken,
   getStoredUser,
 } from '../services/firebase';
-import { authApi, setReauthHandler } from '../services/api';
-import ReauthModal from '../components/ReauthModal';
+import { authApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -15,15 +14,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [reauthCallback, setReauthCallback] = useState(null);
-
-  useEffect(() => {
-    setReauthHandler((title, message) => {
-      return new Promise((resolve) => {
-        setReauthCallback(() => ({ resolve, title, message }));
-      });
-    });
-  }, []);
 
   // Restaura sessão ao carregar
   useEffect(() => {
@@ -78,11 +68,10 @@ export function AuthProvider({ children }) {
     firebaseLogout();
     setUser(null);
     setTenant(null);
+    window.location.href = '/login';
   };
 
-  // Rebusca o tenant no backend. Usado depois de verificar o e-mail ou
-  // completar o perfil, para a navegação refletir o novo profile_status
-  // sem obrigar o usuário a recarregar a página.
+  // Rebusca o tenant no backend.
   const refreshTenant = async () => {
     try {
       const data = await authApi.me();
@@ -96,20 +85,6 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ user, tenant, loading, login, register, logout, refreshTenant }}>
       {children}
-      {reauthCallback && (
-        <ReauthModal 
-          title={reauthCallback.title}
-          message={reauthCallback.message}
-          onSuccess={() => {
-            if (reauthCallback.resolve) reauthCallback.resolve(true);
-            setReauthCallback(null);
-          }}
-          onCancel={() => {
-            if (reauthCallback.resolve) reauthCallback.resolve(false);
-            setReauthCallback(null);
-          }}
-        />
-      )}
     </AuthContext.Provider>
   );
 }
