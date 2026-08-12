@@ -332,7 +332,11 @@ export default function PublicEntityPage() {
         </div>
 
         {/* Botão de Pânico público (T1-R07) em todos os tipos de entidade. */}
-        <PublicPanicButton uniqueCode={uniqueCode} entityType={entity.type} />
+        <PublicPanicButton 
+          uniqueCode={uniqueCode} 
+          entityType={entity.type} 
+          onSuccess={() => loadEntity()} 
+        />
 
         {/* Objeto: texto público em destaque + avisos de manuseio */}
         {entity.type === 'object' && entity.object_info && (
@@ -427,7 +431,7 @@ export default function PublicEntityPage() {
         )}
 
         {/* Saúde — a API já entrega só o que pode ser exibido */}
-        {entity.health_info && Object.keys(entity.health_info).length > 0 && (
+        {entity.health_info && Object.keys(entity.health_info).length > 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-medium text-red-600 mb-2">Informações de Saúde</h3>
             <dl className="space-y-1 text-sm">
@@ -439,6 +443,12 @@ export default function PublicEntityPage() {
               ))}
             </dl>
           </div>
+        ) : (
+          entity.has_active_emergency && entity.type !== 'object' && (
+            <div className="bg-white rounded-2xl shadow-sm p-5 text-center">
+              <p className="text-gray-500 text-sm">Sem informações de saúde cadastradas.</p>
+            </div>
+          )
         )}
 
         {/* Informações */}

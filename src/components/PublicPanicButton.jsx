@@ -16,10 +16,10 @@ import { panicApi } from '../services/api';
  * Confirmação em dois toques pelo mesmo motivo do painel: alarme disparado
  * por engano queima a credibilidade do sistema.
  */
-export default function PublicPanicButton({ uniqueCode, entityType = 'person' }) {
+export default function PublicPanicButton({ uniqueCode, entityType = 'person', onSuccess }) {
   const [armed, setArmed] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sentMessage, setSentMessage] = useState('');
   const [error, setError] = useState('');
 
   /** Posição com timeout curto: esperar GPS travar atrasa o socorro. */
@@ -44,8 +44,9 @@ export default function PublicPanicButton({ uniqueCode, entityType = 'person' })
 
     try {
       const position = await getPosition();
-      await panicApi.triggerPublic(uniqueCode, position || {});
-      setSent(true);
+      const res = await panicApi.triggerPublic(uniqueCode, position || {});
+      setSentMessage(res.message || 'Alerta enviado ao responsável.');
+      if (onSuccess) onSuccess();
     } catch (err) {
       setError(err.message || 'Não foi possível enviar o alerta. Se houver risco de vida, ligue 192 ou 190.');
     } finally {
@@ -53,16 +54,11 @@ export default function PublicPanicButton({ uniqueCode, entityType = 'person' })
     }
   };
 
-  if (sent) {
+  if (sentMessage) {
     return (
       <div className="border-2 border-emerald-500 bg-emerald-50 rounded-xl p-4 text-center">
         <Check className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-        <p className="font-bold text-emerald-900">Alerta enviado ao responsável.</p>
-        {entityType === 'person' && (
-          <p className="text-sm text-emerald-800 mt-1">
-            Se houver risco de vida, ligue <strong>192</strong> (SAMU) ou <strong>190</strong> (Polícia).
-          </p>
-        )}
+        <p className="font-bold text-emerald-900 whitespace-pre-wrap">{sentMessage}</p>
       </div>
     );
   }
