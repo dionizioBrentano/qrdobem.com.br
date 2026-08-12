@@ -1,38 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { maskCpf } from '../utils/masks';
 
-export default function CpfInput({ value, onChange, ...props }) {
-  const [isFocused, setIsFocused] = useState(false);
+export default function CpfInput({ value, onChange, onFocus, onBlur, ...rest }) {
+  const inputRef = useRef(null);
+  const [cursor, setCursor] = useState(null);
 
-  // Quando focado exibe apenas dígitos, quando sem foco exibe mascarado.
-  const displayValue = isFocused 
-    ? (value || '').replace(/\D/g, '') 
-    : maskCpf(value);
+  const displayValue = maskCpf(value || '');
+
+  useLayoutEffect(() => {
+    if (inputRef.current && cursor !== null) {
+      inputRef.current.setSelectionRange(cursor, cursor);
+    }
+  }, [displayValue, cursor]);
 
   const handleChange = (e) => {
-    // Mantém apenas os números limitados a 11 dígitos
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+    const el = e.target;
+    let start = el.selectionStart;
     
-    // Repassa o valor mascarado para o state pai, padronizando os dados
+    const raw = el.value.replace(/\D/g, '').slice(0, 11);
+    const masked = maskCpf(raw);
+
+    // Ajusta o cursor para ir para o fim caso o usuário digite no final e uma formatação aconteça
+    if (masked.length > displayValue.length && start === el.value.length) {
+      start = masked.length;
+    }
+    
+    setCursor(start);
+    
     if (onChange) {
-      onChange(maskCpf(digits));
+      onChange(masked);
     }
   };
 
   return (
     <input
+      {...rest}
+      ref={inputRef}
       type="tel"
+      inputMode="numeric"
+      autoComplete="off"
       value={displayValue}
       onChange={handleChange}
-      onFocus={(e) => {
-        setIsFocused(true);
-        if (props.onFocus) props.onFocus(e);
-      }}
-      onBlur={(e) => {
-        setIsFocused(false);
-        if (props.onBlur) props.onBlur(e);
-      }}
-      {...props}
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 }

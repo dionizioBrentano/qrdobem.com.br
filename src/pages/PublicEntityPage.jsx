@@ -549,7 +549,7 @@ export default function PublicEntityPage() {
                   placeholder="Como quer ser chamado"
                   value={startForm.benefactor_nickname}
                   onChange={(e) =>
-                    setStartForm({ ...startForm, benefactor_nickname: e.target.value })
+                    setStartForm((prev) => ({ ...prev, benefactor_nickname: e.target.value }))
                   }
                   maxLength={255}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
@@ -557,7 +557,7 @@ export default function PublicEntityPage() {
                 <textarea
                   placeholder="Sua mensagem *"
                   value={startForm.message}
-                  onChange={(e) => setStartForm({ ...startForm, message: e.target.value })}
+                  onChange={(e) => setStartForm((prev) => ({ ...prev, message: e.target.value }))}
                   required
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none resize-none"
@@ -567,7 +567,7 @@ export default function PublicEntityPage() {
                     type="text"
                     placeholder="Código de recuperação (4 caracteres)"
                     value={startForm.recovery_code}
-                    onChange={(e) => setStartForm({ ...startForm, recovery_code: e.target.value })}
+                    onChange={(e) => setStartForm((prev) => ({ ...prev, recovery_code: e.target.value }))}
                     maxLength={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
                   />
