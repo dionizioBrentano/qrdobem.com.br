@@ -26,6 +26,7 @@ import TeamPage from './pages/TeamPage';
 import SubspacesPage from './pages/SubspacesPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
+import { PanicContactInvitePage } from './pages/PanicContactInvitePage';
 
 export default function App() {
   return (
@@ -57,6 +58,8 @@ export default function App() {
           {/* URL única do beneficiário — Fase 4, T4-R05/R06/R07.
               Pública por definição: o beneficiário não tem conta. */}
           <Route path="/b/:uniqueCode" element={<BeneficiaryPage />} />
+          {/* Aceite de contato de pânico — Pública, sem conta completa. */}
+          <Route path="/convite-panico/:token" element={<PanicContactInvitePage />} />
           {/*
             Mapa de calor (Fase 6, T2-R07) — DESATIVADO em 06/08/2026 por
             decisão do proprietário.

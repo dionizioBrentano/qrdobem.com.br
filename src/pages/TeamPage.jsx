@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Users, UserPlus, Shield, UserX, UserCheck } from 'lucide-react';
+import EmergencyContactsList from '../components/EmergencyContactsList';
 
 export default function TeamPage() {
   const { tenant } = useAuth();
@@ -262,6 +263,13 @@ export default function TeamPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Seção de Contatos de Pânico */}
+      {activeSpaceId && (
+        <div className="mt-8">
+          <EmergencyContactsList spaceId={activeSpaceId} />
         </div>
       )}
     </div>

@@ -564,9 +564,41 @@ export const waitlistApi = {
 export const contactApi = {
   send: (data) =>
     request('/contact', {
-      method: 'POST',
-      body: JSON.stringify(data),
     }),
+
+  // Prova social (T4-R07). Só aceita depois da confirmação.
+  sendProof: (uniqueCode, disbursementId, file, caption = '') => {
+    const form = new FormData();
+    form.append('file', file);
+    if (caption) form.append('caption', caption);
+
+    return request(`/b/${uniqueCode}/disbursements/${disbursementId}/proof`, {
+      method: 'POST',
+      body: form,
+      headers: { 'Content-Type': undefined },
+    });
+  },
+};
+
+
+// --- Emergency Contacts (Panic) ---
+export const emergencyContactsApi = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/emergency-contacts${qs ? `?${qs}` : ''}`);
+  },
+  create: (data) =>
+    request('/emergency-contacts', { method: 'POST', body: JSON.stringify(data) }),
+  remove: (id) =>
+    request(`/emergency-contacts/${id}`, { method: 'DELETE' }),
+  resend: (id) =>
+    request(`/emergency-contacts/${id}/resend-invite`, { method: 'POST' }),
+  getInvite: (token) =>
+    request(`/emergency-contact-invites/${token}`),
+  acceptInvite: (token) =>
+    request(`/emergency-contact-invites/${token}/accept`, { method: 'POST', body: JSON.stringify({ accept_term: true }) }),
+  pushSubscription: (token, data) =>
+    request(`/emergency-contact-invites/${token}/push-subscription`, { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // --- Generic API Wrapper (Usado para endpoints não mapeados acima) ---
