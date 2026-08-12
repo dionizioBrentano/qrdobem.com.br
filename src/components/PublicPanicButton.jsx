@@ -16,7 +16,7 @@ import { panicApi } from '../services/api';
  * Confirmação em dois toques pelo mesmo motivo do painel: alarme disparado
  * por engano queima a credibilidade do sistema.
  */
-export default function PublicPanicButton({ uniqueCode }) {
+export default function PublicPanicButton({ uniqueCode, entityType = 'person' }) {
   const [armed, setArmed] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -57,10 +57,12 @@ export default function PublicPanicButton({ uniqueCode }) {
     return (
       <div className="border-2 border-emerald-500 bg-emerald-50 rounded-xl p-4 text-center">
         <Check className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-        <p className="font-bold text-emerald-900">Alerta enviado à família.</p>
-        <p className="text-sm text-emerald-800 mt-1">
-          Se houver risco de vida, ligue <strong>192</strong> (SAMU) ou <strong>190</strong> (Polícia).
-        </p>
+        <p className="font-bold text-emerald-900">Alerta enviado ao responsável.</p>
+        {entityType === 'person' && (
+          <p className="text-sm text-emerald-800 mt-1">
+            Se houver risco de vida, ligue <strong>192</strong> (SAMU) ou <strong>190</strong> (Polícia).
+          </p>
+        )}
       </div>
     );
   }
@@ -69,7 +71,7 @@ export default function PublicPanicButton({ uniqueCode }) {
     return (
       <div className="border-2 border-red-500 bg-red-50 rounded-xl p-4 space-y-3">
         <p className="text-sm font-bold text-red-800">
-          Confirmar? A família desta pessoa será avisada imediatamente.
+          Confirmar? O responsável será avisado imediatamente.
         </p>
         <div className="flex gap-2">
           <button
@@ -77,7 +79,7 @@ export default function PublicPanicButton({ uniqueCode }) {
             disabled={sending}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-lg disabled:opacity-50"
           >
-            {sending ? 'Enviando...' : 'SIM, AVISAR A FAMÍLIA'}
+            {sending ? 'Enviando...' : 'SIM, AVISAR O RESPONSÁVEL'}
           </button>
           <button
             onClick={() => setArmed(false)}
@@ -97,7 +99,7 @@ export default function PublicPanicButton({ uniqueCode }) {
       className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow transition"
     >
       <AlertTriangle className="w-6 h-6" />
-      AVISAR A FAMÍLIA — EMERGÊNCIA
+      AVISAR RESPONSÁVEL — URGENTE
     </button>
   );
 }

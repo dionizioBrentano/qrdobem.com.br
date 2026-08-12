@@ -331,10 +331,8 @@ export default function PublicEntityPage() {
           <p className="text-gray-500 text-sm">{entity.organization}</p>
         </div>
 
-        {/* Botão de Pânico público (T1-R07): quem encontrou a pessoa avisa
-            a família na hora. Só para pessoa — objeto perdido não é
-            emergência, e o alarme perderia o sentido se aparecesse sempre. */}
-        {entity.type === 'person' && <PublicPanicButton uniqueCode={uniqueCode} />}
+        {/* Botão de Pânico público (T1-R07) em todos os tipos de entidade. */}
+        <PublicPanicButton uniqueCode={uniqueCode} entityType={entity.type} />
 
         {/* Objeto: texto público em destaque + avisos de manuseio */}
         {entity.type === 'object' && entity.object_info && (
