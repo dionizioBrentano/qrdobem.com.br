@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { entitiesApi, conversationsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { isValidCpf, maskCpf } from '../utils/masks';
 import PublicPanicButton from '../components/PublicPanicButton';
 import PublicShell from '../components/layout/PublicShell';
-import CpfInput from '../components/CpfInput';
 
 // Intervalo do polling da thread, em milissegundos.
 const POLL_INTERVAL = 12000;
@@ -81,7 +79,6 @@ export default function PublicEntityPage() {
   const [riskWarning, setRiskWarning] = useState(null);
 
   const [showEmergency, setShowEmergency] = useState(false);
-  const [emergencyCpf, setEmergencyCpf] = useState('');
   const [emergencyError, setEmergencyError] = useState('');
   const [declaring, setDeclaring] = useState(false);
 
@@ -220,17 +217,13 @@ export default function PublicEntityPage() {
 
   const handleDeclareEmergency = async (e) => {
     e.preventDefault();
-    if (!isValidCpf(emergencyCpf)) {
-      setEmergencyError('CPF inválido. Confira os números.');
-      return;
-    }
 
     setDeclaring(true);
     setEmergencyError('');
     try {
-      await entitiesApi.declareEmergency(uniqueCode, emergencyCpf.replace(/\D/g, ''));
+      const { latitude, longitude } = await captureLocation();
+      await entitiesApi.declareEmergency(uniqueCode, { latitude, longitude });
       setShowEmergency(false);
-      setEmergencyCpf('');
       // Recarrega para exibir os campos ampliados liberados pela emergência.
       await loadEntity();
     } catch (err) {
@@ -676,19 +669,9 @@ export default function PublicEntityPage() {
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Seu CPF</label>
-                <CpfInput
-                  value={emergencyCpf}
-                  onChange={setEmergencyCpf}
-                  placeholder="000.000.000-00"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Guardado de forma criptografada. Registra quem declarou a emergência.
-                </p>
-              </div>
+              <p className="text-sm text-gray-700 text-center">
+                Podemos usar a localização deste aparelho para ajudar o atendimento (opcional).
+              </p>
 
               <button
                 type="submit"

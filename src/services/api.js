@@ -124,10 +124,10 @@ export const entitiesApi = {
       body: JSON.stringify(data),
     }),
 
-  declareEmergency: (uniqueCode, declarantCpf) =>
+  declareEmergency: (uniqueCode, data = {}) =>
     request(`/entities/${uniqueCode}/declare-emergency`, {
       method: 'POST',
-      body: JSON.stringify({ declarant_cpf: declarantCpf }),
+      body: JSON.stringify(data),
     }),
 };
 
