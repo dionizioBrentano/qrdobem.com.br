@@ -69,8 +69,13 @@ export function PanicContactInvitePage() {
     const registration = await navigator.serviceWorker.ready;
     
     // Obter VAPID public key da API
-    const res = await fetch(import.meta.env.VITE_API_URL + '/push/public-key' || 'https://api.qrdobem.com.br/api/push/public-key');
+    const base = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
+    const res = await fetch(`${base}/push/public-key`);
     const { publicKey } = await res.json();
+    
+    if (!publicKey) {
+      throw new Error('Chave de notificação indisponível. Contate o suporte.');
+    }
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
