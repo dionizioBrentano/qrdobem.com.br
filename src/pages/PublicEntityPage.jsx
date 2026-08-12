@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf } from '../utils/masks';
 import PublicPanicButton from '../components/PublicPanicButton';
 import PublicShell from '../components/layout/PublicShell';
+import CpfInput from '../components/CpfInput';
 
 // Intervalo do polling da thread, em milissegundos.
 const POLL_INTERVAL = 12000;
@@ -677,11 +678,9 @@ export default function PublicEntityPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Seu CPF</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
+                <CpfInput
                   value={emergencyCpf}
-                  onChange={(e) => setEmergencyCpf(maskCpf(e.target.value))}
+                  onChange={setEmergencyCpf}
                   placeholder="000.000.000-00"
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"

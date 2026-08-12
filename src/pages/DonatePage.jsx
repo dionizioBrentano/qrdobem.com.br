@@ -5,6 +5,7 @@ import { donationsApi, causesApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PublicShell from '../components/layout/PublicShell';
 import CheckoutModal from '../components/CheckoutModal';
+import CpfInput from '../components/CpfInput';
 
 const money = (val) => Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const feePercentLabel = '12';
@@ -255,13 +256,11 @@ export default function DonatePage() {
                 onChange={(e) => setPayer({ ...payer, email: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               />
-              <input
-                type="text"
-                inputMode="numeric"
+              <CpfInput
                 placeholder="CPF"
                 value={payer.cpf}
-                onChange={(e) => setPayer({ ...payer, cpf: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                onChange={(val) => setPayer({ ...payer, cpf: val })}
+                className="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
               <label className="flex items-start gap-2 text-xs text-gray-600">
                 <input

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { profileApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf, maskCep, maskPhone } from '../utils/masks';
+import CpfInput from '../components/CpfInput';
 
 const FIELD_LABELS = {
   email_verified: 'Verificar o e-mail',
@@ -237,15 +238,13 @@ export default function ProfilePage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <input
-            type="text"
-            inputMode="numeric"
-            value={cpf}
-            onChange={(e) => setCpf(maskCpf(e.target.value))}
-            placeholder="000.000.000-00"
-            disabled={cpfSaved}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none disabled:bg-gray-50 disabled:text-gray-500"
-          />
+            <CpfInput
+              value={cpf}
+              onChange={setCpf}
+              placeholder="000.000.000-00"
+              disabled={cpfSaved}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue outline-none disabled:bg-gray-50 disabled:text-gray-500"
+            />
           {!cpfSaved && (
             <button
               onClick={handleSaveCpf}
