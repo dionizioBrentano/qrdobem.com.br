@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import TopBar from '../components/layout/TopBar';
 import MainMenu from '../components/layout/MainMenu';
@@ -10,85 +10,108 @@ import { causesApi } from '../services/api';
 /**
  * HomePage — site público.
  *
- * ALTERAÇÃO DE 06/08/2026 (decisão do proprietário):
- * o menu "Causas" e o link para a listagem só aparecem quando existe ao
- * menos uma causa publicada. Levar o visitante a uma página vazia é pior
- * que não oferecer o caminho — ele conclui que o sistema não tem conteúdo
- * e vai embora.
- *
- * A verificação é feita UMA vez aqui e propagada para o menu e para o
- * conteúdo. Cada componente buscando por conta própria faria duas
- * requisições para responder a mesma pergunta.
- *
- * Enquanto a resposta não chega, `hasCauses` é `false`: o link aparecer e
- * sumir seria pior que aparecer um instante depois.
+ * Entrada em "/" (sem query): hero visível no topo, sem auto-scroll.
+ * Troca de trilha (clique ou ?trilha= / ?contato=): ativa seção e rola ao conteúdo.
  */
-/** Seções válidas — o que vem pela URL é conferido contra esta lista. */
-const VALID_TRAILS = ['pessoas', 'pets', 'familia', 'grupo', 'empresa', 'doacoes', 'logistica', 'aventura', 'contato'];
+const VALID_TRAILS = [
+  'pessoas',
+  'pets',
+  'familia',
+  'grupo',
+  'empresa',
+  'doacoes',
+  'logistica',
+  'aventura',
+  'contato',
+];
+
+function scrollToContent() {
+  const timer = setTimeout(() => {
+    const el =
+      document.getElementById('content-area') ||
+      document.getElementById('main-menu-nav');
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  }, 100);
+  return () => clearTimeout(timer);
+}
 
 export default function HomePage() {
   const [searchParams] = useSearchParams();
+  // Conteúdo default "pessoas", mas a entrada NÃO dispara scroll.
   const [activeCategory, setActiveCategory] = useState('pessoas');
   const [hasCauses, setHasCauses] = useState(false);
+  // Só rola quando o usuário (ou a URL de deep-link) pede uma trilha.
+  const shouldScrollRef = useRef(false);
+
+  const selectCategory = useCallback((id) => {
+    shouldScrollRef.current = true;
+    setActiveCategory(id);
+  }, []);
 
   /**
-   * Abre a seção pedida pela URL.
-   *
-   * O rodapé e a Central de Ajuda ficam em outras rotas e precisam
-   * conseguir trazer o visitante para uma seção específica da home —
-   * âncora com `#` não resolve, porque a seção é trocada por estado do
-   * React, não por rolagem.
-   *
-   * `?contato=1` é atalho para a seção de contato, usado pela Ajuda.
+   * Deep-link: ?trilha= / ?contato=1
+   * Nesses casos o visitante veio com intenção de seção → pode rolar.
    */
   useEffect(() => {
     if (searchParams.get('contato')) {
+      shouldScrollRef.current = true;
       setActiveCategory('contato');
       return;
     }
 
     const trail = searchParams.get('trilha');
-
     if (trail && VALID_TRAILS.includes(trail)) {
+      shouldScrollRef.current = true;
       setActiveCategory(trail);
     }
   }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
-
-    causesApi.list()
+    causesApi
+      .list()
       .then((res) => {
         if (!cancelled) setHasCauses((res.causes || []).length > 0);
       })
-      // Falha na consulta = trata como se não houvesse causa. O site
-      // público não pode quebrar porque um endpoint secundário caiu.
       .catch(() => {
         if (!cancelled) setHasCauses(false);
       });
-
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Alinha o menu inferior (MainMenu) no topo da tela sempre que a seção muda.
+  // Scroll só após escolha de trilha (não na montagem inicial de "/").
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const menuEl = document.getElementById('main-menu-nav');
-      if (menuEl) {
-        const topPos = menuEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: topPos, behavior: 'smooth' });
-      }
-    }, 100);
-    return () => clearTimeout(timer);
+    if (!shouldScrollRef.current) return undefined;
+    shouldScrollRef.current = false;
+    return scrollToContent();
   }, [activeCategory]);
+
+  // Garante topo na primeira pintura quando a URL está limpa.
+  useEffect(() => {
+    const hasDeepLink =
+      searchParams.get('contato') ||
+      (searchParams.get('trilha') &&
+        VALID_TRAILS.includes(searchParams.get('trilha')));
+    if (!hasDeepLink) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na montagem
+  }, []);
 
   return (
     <div className="w-full min-h-screen bg-brand-bg font-sans m-0 p-0 flex flex-col">
-      <TopBar onCategorySelect={setActiveCategory} />
-      <DiamondHero activeCategory={activeCategory} onCategorySelect={setActiveCategory} />
+      <TopBar onCategorySelect={selectCategory} />
+      <DiamondHero
+        activeCategory={activeCategory}
+        onCategorySelect={selectCategory}
+      />
       <MainMenu
         activeCategory={activeCategory}
-        onCategorySelect={setActiveCategory}
+        onCategorySelect={selectCategory}
         hasCauses={hasCauses}
       />
       <ContentArea activeCategory={activeCategory} hasCauses={hasCauses} />
