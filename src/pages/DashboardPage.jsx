@@ -612,7 +612,18 @@ export default function DashboardPage() {
             setShowForm(false);
             setEditingEntityCode(null);
           }}
-          onCreated={handleEntityCreated}
+          onCreated={(newCode) => {
+            loadEntities(activeOrgId);
+            loadProfile();
+            if (activeTrail === 'aventura' && newCode && typeof newCode === 'string') {
+              clearTrail();
+              setEditingEntityCode(newCode);
+            } else {
+              setShowForm(false);
+              setEditingEntityCode(null);
+              clearTrail();
+            }
+          }}
         />
       )}
 

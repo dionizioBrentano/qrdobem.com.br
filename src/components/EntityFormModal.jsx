@@ -442,7 +442,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
             {result ? 'Registro criado' : (isEditing ? 'Editar QR Code' : 'Novo QR Code')}
           </h2>
           <button
-            onClick={result ? onCreated : onClose}
+            onClick={result ? () => onCreated(result?.unique_code) : onClose}
             className="text-gray-400 hover:text-gray-600 text-2xl"
           >
             &times;
@@ -478,7 +478,25 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
               </div>
             )}
 
-            <div className="pt-2 flex flex-col gap-2">
+            {(() => {
+              const targetSpaceId = activeSpaceId || result?.space_id || form.space_id;
+              if (form.type !== 'person' || !targetSpaceId) return null;
+              
+              return (
+                <div className="pt-5 border-t border-gray-100 mt-6 text-left">
+                  <h3 className="text-lg font-bold text-red-600 flex items-center gap-2 mb-4">
+                    <ShieldAlert className="w-5 h-5" />
+                    Proteção Ativa
+                  </h3>
+                  <div className="space-y-6">
+                    <PanicButton spaceId={targetSpaceId} entityId={result?.id || form.id} />
+                    <EmergencyContactsList spaceId={targetSpaceId} entityId={result?.id || form.id} />
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="pt-2 flex flex-col gap-2 mt-4">
               <a
                 href={result.url}
                 target="_blank"
@@ -488,20 +506,20 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                 Abrir página pública
               </a>
               <Link
-                to="/messages"
-                onClick={onCreated}
-                className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-6 py-2 rounded-lg transition font-medium"
-              >
-                Ver mensagens
-              </Link>
-            </div>
+                  to="/messages"
+                  onClick={() => onCreated(result.unique_code)}
+                  className="border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-6 py-2 rounded-lg transition font-medium"
+                >
+                  Ver mensagens
+                </Link>
+              </div>
 
-            <button
-              onClick={onCreated}
-              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-6 py-2 rounded-lg transition font-medium"
-            >
-              Concluir
-            </button>
+              <button
+                onClick={() => onCreated(result.unique_code)}
+                className="bg-brand-accent hover:bg-brand-accent-strong text-white px-6 py-2 rounded-lg transition font-medium"
+              >
+                Concluir
+              </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
