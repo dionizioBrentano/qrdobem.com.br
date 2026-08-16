@@ -133,10 +133,15 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
       setLoadingContacts(true);
       emergencyContactsApi.list()
         .then(res => {
-          const contacts = Array.isArray(res) ? res : (res.data || []);
-          setHasEmergencyContact(contacts.length > 0);
+          const list = Array.isArray(res?.contacts) ? res.contacts : (Array.isArray(res) ? res : (res?.data || []));
+          const hasValidContact = list.some(c => c.status === 'accepted' || c.term_accepted_at);
+          setHasEmergencyContact(hasValidContact || list.length > 0);
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+          console.error(err);
+          setHasEmergencyContact(false);
+          setError('Falha ao verificar contatos de emergência. Tente novamente.');
+        })
         .finally(() => setLoadingContacts(false));
     }
   }, [isAventuraFlow, isEditing]);
