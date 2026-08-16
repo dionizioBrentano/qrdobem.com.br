@@ -1057,7 +1057,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                         className="hidden" 
                         onChange={handleUploadMedia} 
                         disabled={loadingMedia} 
-                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,application/pdf"
+                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
                       />
                       {loadingMedia ? 'Enviando...' : 'Enviar arquivo'}
                     </label>
