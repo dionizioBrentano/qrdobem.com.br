@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { entitiesApi, conversationsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { Check } from 'lucide-react';
 import PublicPanicButton from '../components/PublicPanicButton';
 import PublicShell from '../components/layout/PublicShell';
 
@@ -81,8 +82,21 @@ export default function PublicEntityPage() {
   const [showEmergency, setShowEmergency] = useState(false);
   const [emergencyError, setEmergencyError] = useState('');
   const [declaring, setDeclaring] = useState(false);
+  const [emergencySuccess, setEmergencySuccess] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const nicknamePrefilled = useRef(false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     loadEntity();
@@ -218,16 +232,25 @@ export default function PublicEntityPage() {
   const handleDeclareEmergency = async (e) => {
     e.preventDefault();
 
+    if (isOffline) {
+      setEmergencyError('Sem conexão: Não é possível avisar o sistema ou liberar dados extras.');
+      return;
+    }
+
     setDeclaring(true);
     setEmergencyError('');
     try {
       const { latitude, longitude } = await captureLocation();
       await entitiesApi.declareEmergency(uniqueCode, { latitude, longitude });
-      setShowEmergency(false);
+      setEmergencySuccess(true);
+      setTimeout(() => {
+        setShowEmergency(false);
+        setEmergencySuccess(false);
+      }, 3500);
       // Recarrega para exibir os campos ampliados liberados pela emergência.
       await loadEntity();
     } catch (err) {
-      setEmergencyError(err.data?.error || err.message);
+      setEmergencyError('Não foi possível enviar — tente de novo / ligue 192 ou 190');
     } finally {
       setDeclaring(false);
     }
@@ -657,30 +680,47 @@ export default function PublicEntityPage() {
               </button>
             </div>
 
-            <form onSubmit={handleDeclareEmergency} className="p-5 space-y-4">
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
-                Isso vai expor informações de saúde sensíveis desta pessoa e notificar o
-                responsável imediatamente por e-mail. Use apenas em emergência real.
-              </div>
-
-              {emergencyError && (
-                <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {emergencyError}
+            {emergencySuccess ? (
+              <div className="p-8 text-center space-y-4 animate-in fade-in zoom-in">
+                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <Check className="w-10 h-10 text-emerald-600" />
                 </div>
-              )}
+                <p className="text-2xl font-black text-emerald-600">Declaração registrada</p>
+                <p className="text-gray-600 font-medium leading-tight">
+                  Os dados médicos confidenciais estão agora visíveis na tela.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleDeclareEmergency} className="p-5 space-y-5">
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-900 p-4 rounded-r-lg space-y-2 shadow-sm">
+                  <p className="font-black text-lg uppercase tracking-wide">Atenção</p>
+                  <p className="text-sm font-medium leading-tight">
+                    Ao confirmar, você <strong>liberará imediatamente</strong> o acesso aos <strong>dados médicos sensíveis</strong> desta pessoa.
+                  </p>
+                  <p className="text-xs text-red-700 font-bold mt-1">
+                    O responsável será notificado. Use apenas em emergência real.
+                  </p>
+                </div>
 
-              <p className="text-sm text-gray-700 text-center">
-                Podemos usar a localização deste aparelho para ajudar o atendimento (opcional).
-              </p>
+                {emergencyError && (
+                  <div className="bg-red-600 text-white font-bold p-4 rounded-xl text-center shadow-lg border-2 border-red-800 animate-in shake">
+                    {emergencyError}
+                  </div>
+                )}
 
-              <button
-                type="submit"
-                disabled={declaring}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-bold transition disabled:opacity-50"
-              >
-                {declaring ? 'Declarando...' : 'Confirmar emergência'}
-              </button>
-            </form>
+                <p className="text-xs text-gray-500 text-center font-medium">
+                  Podemos usar a localização deste aparelho para ajudar o socorro (opcional).
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={declaring}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-black text-lg transition shadow-md active:scale-95 disabled:opacity-50"
+                >
+                  {declaring ? 'DECLARANDO...' : 'CONFIRMAR EMERGÊNCIA'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}

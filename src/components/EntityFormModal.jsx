@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { entitiesApi, reauthHandler } from '../services/api';
+import { entitiesApi, reauthHandler, emergencyContactsApi } from '../services/api';
 import TermAcceptance from './TermAcceptance';
+import { Upload, Trash2, File as FileIcon, ShieldAlert } from 'lucide-react';
+import PanicButton from './PanicButton';
+import EmergencyContactsList from './EmergencyContactsList';
 
 const TYPES = [
   { value: 'person', label: 'Pessoa' },
@@ -94,7 +97,7 @@ const EMPTY_OBJECT_FIELDS = {
   handling_notes_extra: '',
 };
 
-export default function EntityFormModal({ organizationId, uniqueCode, initialType = 'person', onClose, onCreated }) {
+export default function EntityFormModal({ organizationId, activeSpaceId, uniqueCode, activeTrail, initialType = 'person', onClose, onCreated }) {
   const [form, setForm] = useState({
     type: initialType,
     name: '',
@@ -116,7 +119,27 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
   const [errorCode, setErrorCode] = useState('');
   const [result, setResult] = useState(null);
 
+  const [media, setMedia] = useState([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+
+  const [hasEmergencyContact, setHasEmergencyContact] = useState(true);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
   const isEditing = Boolean(uniqueCode);
+  const isAventuraFlow = activeTrail === 'aventura';
+
+  useEffect(() => {
+    if (isAventuraFlow && !isEditing) {
+      setLoadingContacts(true);
+      emergencyContactsApi.list()
+        .then(res => {
+          const contacts = Array.isArray(res) ? res : (res.data || []);
+          setHasEmergencyContact(contacts.length > 0);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoadingContacts(false));
+    }
+  }, [isAventuraFlow, isEditing]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -128,8 +151,14 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
       setLoadingEdit(true);
       setError('');
       try {
-        const res = await entitiesApi.getForEdit(uniqueCode);
+        const [res, mediaRes] = await Promise.all([
+          entitiesApi.getForEdit(uniqueCode),
+          entitiesApi.listMedia(uniqueCode).catch(() => ({ media: [] }))
+        ]);
+        setMedia(mediaRes.media || []);
         setForm({
+          id: res.id,
+          space_id: res.space_id,
           type: res.type,
           name: res.name || '',
           contact_phone: res.contact_phone || '',
@@ -246,9 +275,66 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
     setAcceptedTerm(false);
   };
 
+  const handleUploadMedia = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      alert('O arquivo é muito grande (máximo 20MB).');
+      return;
+    }
+
+    setLoadingMedia(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await entitiesApi.uploadMedia(uniqueCode, formData);
+      const mediaRes = await entitiesApi.listMedia(uniqueCode);
+      setMedia(mediaRes.media || []);
+    } catch (err) {
+      alert(err.data?.error || 'Erro ao enviar o arquivo.');
+    } finally {
+      setLoadingMedia(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveMedia = async (mediaId) => {
+    if (!window.confirm('Tem certeza que deseja remover este arquivo?')) return;
+    
+    setLoadingMedia(true);
+    try {
+      await entitiesApi.removeMedia(uniqueCode, mediaId);
+      setMedia((prev) => prev.filter((m) => m.id !== mediaId));
+    } catch (err) {
+      alert('Erro ao remover arquivo.');
+    } finally {
+      setLoadingMedia(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing && !acceptedTerm) return;
+
+    if (isAventuraFlow && !isEditing) {
+      if (!hasEmergencyContact) {
+        setError('Para gerar a identidade de emergência, você precisa cadastrar pelo menos 1 contato de emergência no seu perfil.');
+        return;
+      }
+      
+      const hasHealthData = 
+        bloodType || 
+        (healthFields['allergies']?.value?.trim()) || 
+        (healthFields['chronic_conditions']?.value?.trim()) ||
+        (healthFields['continuous_medications']?.value?.trim());
+
+      if (!hasHealthData) {
+        setError('Para maior segurança na aventura, preencha pelo menos uma informação médica (ex: Tipo sanguíneo ou Alergias).');
+        return;
+      }
+    }
 
     setLoading(true);
     setError('');
@@ -298,6 +384,7 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
 
       const payload = {
         ...form,
+        ...(activeTrail && { intent: activeTrail }),
         ...(Object.keys(attributes).length > 0 && { custom_attributes: attributes }),
         ...(health.length > 0 && { health_fields: health }),
         ...(form.type === 'pet' && {
@@ -315,7 +402,7 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
 
       if (isEditing) {
         await entitiesApi.update(uniqueCode, payload);
-        onCreated();
+        onCreated(uniqueCode);
         return;
       }
 
@@ -762,13 +849,16 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
             )}
 
             {form.type === 'person' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Informações de saúde</label>
-              <p className="text-xs text-gray-400 mb-3">
-                Preencha só o que fizer sentido. Cada campo é privado até você marcar como público.
-              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Informações de saúde {isAventuraFlow && <span className="text-brand-accent">(Obrigatório na Aventura)</span>}
+                </label>
+                <p className="text-xs text-gray-400 mb-3">
+                  Preencha só o que fizer sentido. Cada campo é privado até você marcar como público.
+                  {isAventuraFlow && ' Para identidades de emergência, solicitamos ao menos 1 dado vital (como tipo sanguíneo ou alergia).'}
+                </p>
 
-              <div className="space-y-3">
+                <div className="space-y-3">
                 {/* Tipo Sanguíneo (Campos separados) */}
                 <div>
                   <label className="block text-sm text-gray-700 mb-1">Tipo sanguíneo e Fator RH</label>
@@ -908,12 +998,79 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
               >
                 + Adicionar campo
               </button>
-              {customAttrs.length >= MAX_CUSTOM_ATTRS && (
+                  {customAttrs.length >= MAX_CUSTOM_ATTRS && (
                 <p className="text-xs text-gray-400 mt-1">
                   Limite de {MAX_CUSTOM_ATTRS} campos personalizados atingido.
                 </p>
               )}
-            </div>
+                </div>
+
+                {(() => {
+                  const targetSpaceId = activeSpaceId || form.space_id;
+                  if (!isEditing || form.type !== 'person' || !targetSpaceId) return null;
+                  
+                  return (
+                    <div className="pt-5 border-t border-gray-100">
+                      <h3 className="text-lg font-bold text-red-600 flex items-center gap-2 mb-4">
+                        <ShieldAlert className="w-5 h-5" />
+                        Proteção Ativa
+                      </h3>
+                      <div className="space-y-6">
+                        <PanicButton spaceId={targetSpaceId} entityId={form.id} />
+                        <EmergencyContactsList spaceId={targetSpaceId} entityId={form.id} />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {isEditing && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">Arquivos</label>
+                    <label className="cursor-pointer text-brand-blue hover:text-brand-accent flex items-center gap-1 text-sm font-medium">
+                      <Upload size={16} />
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        onChange={handleUploadMedia} 
+                        disabled={loadingMedia} 
+                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,application/pdf"
+                      />
+                      {loadingMedia ? 'Enviando...' : 'Enviar arquivo'}
+                    </label>
+                  </div>
+                  
+                  {media.length === 0 ? (
+                    <p className="text-xs text-gray-400">Nenhum arquivo enviado.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {media.map(m => (
+                        <div key={m.id} className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <FileIcon size={16} className="text-gray-400 flex-shrink-0" />
+                            <div className="truncate">
+                              <p className="text-sm text-gray-700 truncate">{m.caption || `Arquivo ${m.id}`}</p>
+                              <p className="text-xs text-gray-400 flex gap-2">
+                                <span>{(m.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+                                <span>•</span>
+                                <span>{m.status === 'pending' ? 'Aguardando revisão' : m.status === 'rejected' ? 'Reprovada' : 'Aprovada'}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMedia(m.id)}
+                            disabled={loadingMedia}
+                            className="text-gray-400 hover:text-red-500 p-1"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
             {!isEditing && (
               <TermAcceptance
@@ -923,9 +1080,25 @@ export default function EntityFormModal({ organizationId, uniqueCode, initialTyp
               />
             )}
 
+            {!isEditing && isAventuraFlow && loadingContacts && (
+              <div className="text-sm text-gray-500 text-center py-2">
+                Verificando contatos de emergência...
+              </div>
+            )}
+
+            {!isEditing && isAventuraFlow && !loadingContacts && !hasEmergencyContact && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm mb-4">
+                <strong>Atenção:</strong> Você ainda não possui contatos de emergência.
+                <br />
+                <Link to="/painel" className="underline mt-1 inline-block">
+                  Voltar e adicionar contato
+                </Link>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading || (!isEditing && !acceptedTerm) || loadingEdit}
+              disabled={loading || (!isEditing && !acceptedTerm) || loadingEdit || (isAventuraFlow && !hasEmergencyContact && !isEditing)}
               className="w-full bg-brand-accent hover:bg-brand-accent-strong text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Registrar QR Code')}

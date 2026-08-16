@@ -16,6 +16,11 @@ const TRAIL_CTA = {
     subtitle: 'Crie um QR Code de identificação e emergência em poucos minutos.',
     button: 'Proteja quem você ama',
   },
+  aventura: {
+    title: 'Identidade de Emergência',
+    subtitle: 'Proteção ativa para quem vive em movimento.',
+    button: 'Criar identidade',
+  },
   pet: {
     title: 'Proteja seu Pet',
     subtitle: 'Quem encontrar seu pet fala com você na hora, pelo QR Code da coleira.',
@@ -61,7 +66,7 @@ export default function DashboardPage() {
     const storedTrail = sessionStorage.getItem('qrdobem_trail');
     const trail = queryTrail || storedTrail;
 
-    if (['pet', 'person', 'object', 'family', 'cause'].includes(trail)) {
+    if (['pet', 'person', 'object', 'family', 'cause', 'aventura'].includes(trail)) {
       setActiveTrail(trail);
     }
   }, [searchParams]);
@@ -597,9 +602,11 @@ export default function DashboardPage() {
       {showForm && (
         <EntityFormModal
           organizationId={activeOrgId}
+          activeSpaceId={activeSpaceId}
           uniqueCode={editingEntityCode}
+          activeTrail={activeTrail}
           initialType={
-            ['family', 'cause'].includes(activeTrail) ? 'person' : (activeTrail || 'person')
+            ['family', 'cause', 'aventura'].includes(activeTrail) ? 'person' : (activeTrail || 'person')
           }
           onClose={() => {
             setShowForm(false);

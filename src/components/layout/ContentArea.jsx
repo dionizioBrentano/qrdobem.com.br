@@ -97,7 +97,7 @@ const categoryContent = {
     paragraphs: [],
     features: [],
     conclusion: "",
-    trailType: 'person',
+    trailType: 'aventura',
     cta: 'Criar identidade de emergência'
   },
 

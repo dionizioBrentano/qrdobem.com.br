@@ -136,6 +136,16 @@ export const entitiesApi = {
   reads: (uniqueCode, page = 1) => request(`/entities/${uniqueCode}/reads?page=${page}`),
 
   destroy: (uniqueCode) => request(`/entities/${uniqueCode}`, { method: 'DELETE' }),
+
+  // Mídia
+  listMedia: (uniqueCode) => request(`/entities/${uniqueCode}/media`),
+  uploadMedia: (uniqueCode, formData) => request(`/entities/${uniqueCode}/media`, {
+    method: 'POST',
+    body: formData,
+  }),
+  removeMedia: (uniqueCode, mediaId) => request(`/entities/${uniqueCode}/media/${mediaId}`, {
+    method: 'DELETE',
+  }),
 };
 
 // --- Perfil (coleta progressiva) ---

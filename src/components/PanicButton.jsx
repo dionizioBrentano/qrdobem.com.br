@@ -125,10 +125,16 @@ export default function PanicButton({ spaceId, entityId = null }) {
 
   const handleFire = async () => {
     setFiring(true);
+    setResult(null);
     setError('');
 
-    // O alarme começa ANTES da rede. Esta ordem é o ponto do desenho.
     startAlarm();
+
+    if (!navigator.onLine) {
+      setFiring(false);
+      setError('Sem conexão — alarme local ativo');
+      return;
+    }
 
     try {
       const position = await getPosition();
@@ -138,8 +144,7 @@ export default function PanicButton({ spaceId, entityId = null }) {
       });
       setResult(res);
     } catch (err) {
-      // A sirene continua tocando. O alerta local não depende do servidor.
-      setError(err.message || 'Não foi possível avisar a família pela internet. O alarme continua tocando.');
+      setError('Não foi possível enviar — tente de novo / ligue 192 ou 190');
     } finally {
       setFiring(false);
     }
@@ -157,11 +162,13 @@ export default function PanicButton({ spaceId, entityId = null }) {
     return (
       <div className="fixed inset-0 z-[100] bg-red-600 text-white flex flex-col items-center justify-center p-6 animate-pulse">
         <AlertTriangle className="w-20 h-20 mb-4" />
-        <h2 className="text-3xl font-black text-center mb-2">ALERTA ACIONADO</h2>
+        <h2 className="text-3xl font-black text-center mb-2">
+          {error === 'Sem conexão — alarme local ativo' ? 'ALARME LOCAL' : 'ALERTA ACIONADO'}
+        </h2>
 
         <p className="text-center text-lg mb-6 max-w-md">
           {firing && 'Enviando alerta para a família...'}
-          {result && `Família avisada: ${result.notified} de ${result.notified + result.failed}.`}
+          {result && 'Alerta enviado'}
           {error && error}
         </p>
 
