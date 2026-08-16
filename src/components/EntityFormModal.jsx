@@ -493,6 +493,9 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                     <ShieldAlert className="w-5 h-5" />
                     Proteção Ativa
                   </h3>
+                  <p className="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    Alertas de trajeto e detecção de queda: em breve. Hoje funcionam identidade de emergência, contatos, pânico e histórico de leituras.
+                  </p>
                   <div className="space-y-6">
                     <PanicButton spaceId={targetSpaceId} entityId={result?.id || form.id} />
                     <EmergencyContactsList spaceId={targetSpaceId} entityId={result?.id || form.id} />
@@ -1038,6 +1041,9 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                         <ShieldAlert className="w-5 h-5" />
                         Proteção Ativa
                       </h3>
+                      <p className="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        Alertas de trajeto e detecção de queda: em breve. Hoje funcionam identidade de emergência, contatos, pânico e histórico de leituras.
+                      </p>
                       <div className="space-y-6">
                         <PanicButton spaceId={targetSpaceId} entityId={form.id} />
                         <EmergencyContactsList spaceId={targetSpaceId} entityId={form.id} />

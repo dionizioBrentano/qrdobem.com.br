@@ -135,6 +135,10 @@ export const entitiesApi = {
 
   reads: (uniqueCode, page = 1) => request(`/entities/${uniqueCode}/reads?page=${page}`),
 
+  alerts: (uniqueCode) => request(`/entities/${uniqueCode}/alerts`),
+  
+  auditLogs: (uniqueCode, page = 1) => request(`/entities/${uniqueCode}/audit-logs?page=${page}`),
+
   destroy: (uniqueCode) => request(`/entities/${uniqueCode}`, { method: 'DELETE' }),
 
   // Mídia
@@ -352,6 +356,8 @@ export const donationsApi = {
 
   // Status público (Fase 0.2)
   status: (token) => request(`/donation-causes/status/${token}`),
+
+  listBySpace: (spaceId) => request(`/spaces/${spaceId}/donations`),
 };
 
 // --- Beneficiários e repasses (T4-R05, T4-R06, T4-R08, T4-R09) ---
@@ -581,6 +587,8 @@ export const waitlistApi = {
 export const contactApi = {
   send: (data) =>
     request('/contact', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 
   // Prova social (T4-R07). Só aceita depois da confirmação.

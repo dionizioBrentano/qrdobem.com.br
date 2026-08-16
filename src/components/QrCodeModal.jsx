@@ -36,6 +36,15 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
   const [readsPage, setReadsPage] = useState(1);
   const [hasMoreReads, setHasMoreReads] = useState(false);
 
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(true);
+
+  const [showAudit, setShowAudit] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditPage, setAuditPage] = useState(1);
+  const [hasMoreAudit, setHasMoreAudit] = useState(false);
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -58,6 +67,46 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
     })();
     return () => { active = false; };
   }, [entity.unique_code, readsPage]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setAlertsLoading(true);
+      try {
+        const res = await entitiesApi.alerts(entity.unique_code);
+        if (active) setAlerts(res.alerts || []);
+      } catch (err) {
+        console.error('Falha ao carregar alertas:', err);
+      } finally {
+        if (active) setAlertsLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [entity.unique_code]);
+
+  useEffect(() => {
+    if (!showAudit) return;
+    let active = true;
+    (async () => {
+      setAuditLoading(true);
+      try {
+        const res = await entitiesApi.auditLogs(entity.unique_code, auditPage);
+        if (active) {
+          if (auditPage === 1) {
+            setAuditLogs(res.data);
+          } else {
+            setAuditLogs(prev => [...prev, ...res.data]);
+          }
+          setHasMoreAudit(res.current_page < res.last_page);
+        }
+      } catch (err) {
+        console.error('Falha ao carregar auditoria:', err);
+      } finally {
+        if (active) setAuditLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [entity.unique_code, showAudit, auditPage]);
 
   useEffect(() => {
     if (hasInitialQr) return;
@@ -348,6 +397,26 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
             </div>
           )}
 
+          {/* Alertas */}
+          {!alertsLoading && alerts.length > 0 && (
+            <div className="pt-4 border-t text-left">
+              <h3 className="text-sm font-medium text-red-600 mb-2">Alertas Recentes</h3>
+              <ul className="space-y-2 text-sm max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                {alerts.map((a) => (
+                  <li key={a.id} className="flex flex-col gap-1 border-b border-red-100 pb-2 last:border-0 last:pb-0">
+                    <span className="text-red-800 font-medium">
+                      {a.type === 'read_spike' ? 'Pico de Leituras Detectado' : 
+                       a.type === 'first_read_today' ? 'Primeira Leitura do Dia' : a.type}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {new Date(a.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* P1-04: Histórico de leituras */}
           <div className="pt-4 border-t text-left">
             <h3 className="text-sm font-medium text-gray-900 mb-2">Histórico de leituras</h3>
@@ -377,6 +446,51 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
               >
                 {readsLoading ? 'Carregando...' : 'Carregar mais'}
               </button>
+            )}
+          </div>
+
+          {/* P6-04: Auditoria */}
+          <div className="pt-4 border-t text-left">
+            <button
+              onClick={() => setShowAudit(!showAudit)}
+              className="flex justify-between items-center w-full text-sm font-medium text-gray-900 mb-2 hover:text-brand-blue transition"
+            >
+              <span>Auditoria</span>
+              <span>{showAudit ? '▲' : '▼'}</span>
+            </button>
+            
+            {showAudit && (
+              <>
+                {auditLoading && auditLogs.length === 0 ? (
+                  <p className="text-sm text-gray-500">Carregando auditoria...</p>
+                ) : auditLogs.length === 0 ? (
+                  <p className="text-sm text-gray-500 bg-gray-50 p-2 rounded border">Nenhum log de auditoria encontrado.</p>
+                ) : (
+                  <ul className="space-y-2 text-sm max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {auditLogs.map((log) => (
+                      <li key={log.id} className="flex flex-col gap-1 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-gray-900 font-medium truncate" title={log.action}>
+                            {log.action}
+                          </span>
+                          <span className="text-gray-500 text-xs shrink-0">
+                            {log.accessed_at ? new Date(log.accessed_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Desconhecido'}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {hasMoreAudit && (
+                  <button 
+                    onClick={() => setAuditPage(p => p + 1)} 
+                    disabled={auditLoading}
+                    className="text-xs text-brand-blue hover:underline mt-2 inline-block font-medium disabled:opacity-50"
+                  >
+                    {auditLoading ? 'Carregando...' : 'Carregar mais'}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

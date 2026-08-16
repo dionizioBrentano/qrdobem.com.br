@@ -18,12 +18,19 @@ export default function TeamPage() {
   const [inviteMsg, setInviteMsg] = useState({ text: '', type: '' });
   const [inviting, setInviting] = useState(false);
 
+  const [spaceName, setSpaceName] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [editSpaceName, setEditSpaceName] = useState('');
+  const [updatingSpace, setUpdatingSpace] = useState(false);
+
   useEffect(() => {
     loadSpaces();
   }, []);
 
   useEffect(() => {
     if (activeSpaceId) {
+      const currentSpace = spaces.find(s => s.id == activeSpaceId);
+      if (currentSpace) setEditSpaceName(currentSpace.name);
       loadMembers(activeSpaceId);
     }
   }, [activeSpaceId]);
@@ -73,6 +80,33 @@ export default function TeamPage() {
       setInviteMsg({ text: err.response?.data?.error || 'Erro ao convidar.', type: 'error' });
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleCreateSpace = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await api.post('/spaces', { type: 'company', name: spaceName });
+      loadSpaces();
+    } catch (err) {
+      alert('Erro ao criar espaço: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleUpdateSpace = async (e) => {
+    e.preventDefault();
+    setUpdatingSpace(true);
+    try {
+      await api.put(`/spaces/${activeSpaceId}`, { name: editSpaceName });
+      alert('Equipe renomeada com sucesso.');
+      loadSpaces();
+    } catch (err) {
+      alert('Erro ao renomear: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setUpdatingSpace(false);
     }
   };
 
@@ -130,8 +164,25 @@ export default function TeamPage() {
       {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>}
 
       {spaces.length === 0 ? (
-        <div className="bg-amber-50 text-amber-800 p-6 rounded-lg text-center">
-          Você ainda não possui um Espaço criado. Crie seu primeiro QR Code para gerar um Espaço.
+        <div className="bg-amber-50 text-amber-800 p-6 rounded-lg text-center space-y-4">
+          <p>Você ainda não possui uma Empresa ou Equipe criada.</p>
+          <form onSubmit={handleCreateSpace} className="flex items-center justify-center gap-2 max-w-sm mx-auto">
+            <input 
+              type="text" 
+              value={spaceName} 
+              onChange={e => setSpaceName(e.target.value)} 
+              placeholder="Nome da sua Equipe" 
+              required
+              className="border-gray-300 rounded-lg text-sm flex-1"
+            />
+            <button 
+              type="submit" 
+              disabled={creating || !spaceName}
+              className="bg-brand-accent hover:bg-brand-accent-strong text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50"
+            >
+              {creating ? 'Criando...' : 'Criar'}
+            </button>
+          </form>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -148,6 +199,27 @@ export default function TeamPage() {
                   {inviteMsg.text}
                 </div>
               )}
+
+              {/* Editar Nome do Espaço */}
+              <div className="mb-6 pb-6 border-b">
+                <h4 className="font-semibold text-gray-900 mb-2 text-sm">Renomear Equipe</h4>
+                <form onSubmit={handleUpdateSpace} className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={editSpaceName} 
+                    onChange={e => setEditSpaceName(e.target.value)} 
+                    required
+                    className="w-full text-sm border-gray-300 rounded-lg focus:ring-brand-blue"
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={updatingSpace || !editSpaceName}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-3 py-2 rounded-lg text-sm transition disabled:opacity-50"
+                  >
+                    Salvar
+                  </button>
+                </form>
+              </div>
 
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>

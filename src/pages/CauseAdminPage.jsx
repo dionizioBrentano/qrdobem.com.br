@@ -20,6 +20,7 @@ export default function CauseAdminPage() {
   const [spaceId, setSpaceId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [media, setMedia] = useState([]);
+  const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -63,13 +64,15 @@ export default function CauseAdminPage() {
   const loadAll = async () => {
     setError('');
     try {
-      const [detailRes, mediaRes] = await Promise.all([
+      const [detailRes, mediaRes, donationsRes] = await Promise.all([
         spacesApi.show(spaceId),
         mediaApi.list(spaceId),
+        import('../services/api').then(m => m.donationsApi.listBySpace(spaceId)),
       ]);
 
       setDetail(detailRes.space);
       setMedia(mediaRes.media || []);
+      setDonations(donationsRes.donations || []);
 
       const cause = detailRes.space?.cause;
       if (cause) {
@@ -530,6 +533,55 @@ export default function CauseAdminPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </section>
+
+      {/* Doações */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5">
+        <h2 className="font-bold text-gray-900 mb-4">Doações recebidas</h2>
+        {donations.length === 0 ? (
+          <p className="text-sm text-gray-500">Ainda não há doações registradas para esta causa.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-500">
+                  <th className="py-2 px-3 font-medium">Data</th>
+                  <th className="py-2 px-3 font-medium">Doador</th>
+                  <th className="py-2 px-3 font-medium">Valor</th>
+                  <th className="py-2 px-3 font-medium">Status</th>
+                  <th className="py-2 px-3 font-medium">Método</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {donations.map((d) => (
+                  <tr key={d.id} className="hover:bg-gray-50">
+                    <td className="py-2 px-3 whitespace-nowrap text-gray-600">
+                      {new Date(d.created_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="py-2 px-3 text-gray-900 font-medium">{d.donor_name}</td>
+                    <td className="py-2 px-3 text-brand-blue font-bold">
+                      {Number(d.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        d.status === 'paid' ? 'bg-emerald-100 text-emerald-800' :
+                        d.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                        d.status === 'cancelled' || d.status === 'refunded' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {d.status === 'paid' ? 'Pago' :
+                         d.status === 'pending' ? 'Pendente' :
+                         d.status === 'cancelled' ? 'Cancelado' :
+                         d.status === 'refunded' ? 'Estornado' : d.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-gray-500 uppercase text-xs">{d.payment_method}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

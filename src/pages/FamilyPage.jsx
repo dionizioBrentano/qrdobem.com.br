@@ -106,6 +106,7 @@ export default function FamilyPage() {
   };
 
   const handleRemove = async (relationshipId) => {
+    if (!window.confirm('Tem certeza que deseja remover este vínculo?')) return;
     setError('');
     try {
       await familyApi.removeRelation(spaceId, relationshipId);
