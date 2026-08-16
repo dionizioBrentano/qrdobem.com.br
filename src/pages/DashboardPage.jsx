@@ -122,6 +122,23 @@ export default function DashboardPage() {
     loadProfile();
   };
 
+  const handleDeleteEntity = async (entity) => {
+    const confirmMessage = `Tem certeza que deseja excluir "${entity.name}"?\n\nO QR Code deixará de funcionar publicamente, mas os dados básicos serão preservados internamente para fins de auditoria.`;
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      await entitiesApi.destroy(entity.unique_code);
+      alert('Entidade excluída com sucesso.');
+      loadEntities(activeOrgId);
+    } catch (err) {
+      if (err.status === 403 || err.status === 404) {
+        alert('Você não tem permissão para excluir este registro ou ele não existe.');
+      } else {
+        alert(err.data?.error || err.message || 'Erro ao excluir.');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -560,6 +577,12 @@ export default function DashboardPage() {
                         >
                           Abrir link
                         </a>
+                        <button
+                          onClick={() => handleDeleteEntity(entity)}
+                          className="text-red-500 hover:text-red-700 hover:underline text-xs"
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </td>
                   </tr>

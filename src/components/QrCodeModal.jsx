@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { entitiesApi } from '../services/api';
+import { entitiesApi, reauthHandler } from '../services/api';
 
 /**
  * Exibe o QR Code de uma entidade já registrada.
@@ -22,6 +22,42 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
   const [vaccine, setVaccine] = useState({ vaccine_name: '', applied_at: '' });
   const [savingVaccine, setSavingVaccine] = useState(false);
   const [vaccineError, setVaccineError] = useState('');
+
+  // Edição da legenda do QR Code (todos os tipos)
+  const [caption, setCaption] = useState(entity.qr_caption || '');
+  const [originalCaption, setOriginalCaption] = useState(entity.qr_caption || '');
+  const [showCaptionForm, setShowCaptionForm] = useState(false);
+  const [savingCaption, setSavingCaption] = useState(false);
+  const [captionError, setCaptionError] = useState('');
+  const [downloadingPrint, setDownloadingPrint] = useState(false);
+
+  const [reads, setReads] = useState([]);
+  const [readsLoading, setReadsLoading] = useState(true);
+  const [readsPage, setReadsPage] = useState(1);
+  const [hasMoreReads, setHasMoreReads] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setReadsLoading(true);
+      try {
+        const res = await entitiesApi.reads(entity.unique_code, readsPage);
+        if (active) {
+          if (readsPage === 1) {
+            setReads(res.data);
+          } else {
+            setReads(prev => [...prev, ...res.data]);
+          }
+          setHasMoreReads(res.current_page < res.last_page);
+        }
+      } catch (err) {
+        console.error('Falha ao carregar leituras:', err);
+      } finally {
+        if (active) setReadsLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [entity.unique_code, readsPage]);
 
   useEffect(() => {
     if (hasInitialQr) return;
@@ -63,6 +99,58 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
     }
   };
 
+  const handleDownloadPrint = async () => {
+    setDownloadingPrint(true);
+    setError('');
+    try {
+      const res = await entitiesApi.qrCode(entity.unique_code, { layout: 'print' });
+      if (res.qr_code_base64) {
+        const link = document.createElement('a');
+        link.href = res.qr_code_base64;
+        link.download = `qrdobem-${entity.unique_code}-impressao.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      setError(err.data?.error || 'Erro ao gerar versão para impressão.');
+    } finally {
+      setDownloadingPrint(false);
+    }
+  };
+
+  const handleEditCaption = async (e) => {
+    e.preventDefault();
+    if (reauthHandler) {
+      const success = await reauthHandler(
+        'Autorização Necessária',
+        'Por segurança, confirme sua senha para salvar a nova legenda.'
+      );
+      if (!success) return;
+    }
+
+    setSavingCaption(true);
+    setCaptionError('');
+
+    try {
+      const fullEntity = await entitiesApi.getForEdit(entity.unique_code);
+      const payload = { ...fullEntity, qr_caption: caption };
+
+      await entitiesApi.update(entity.unique_code, payload);
+      setOriginalCaption(caption);
+      setShowCaptionForm(false);
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      if (err.data?.code === 'CONTACT_DETECTED') {
+        setCaptionError('A legenda não pode conter telefone ou e-mail. Corrija o campo e tente de novo.');
+      } else {
+        setCaptionError(err.data?.error || err.message);
+      }
+    } finally {
+      setSavingCaption(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
@@ -101,13 +189,22 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
                 alt={`QR Code de ${entity.name}`}
                 className="mx-auto w-56 h-56 border rounded-lg p-2 bg-white"
               />
-              <a
-                href={data.qr_code_base64}
-                download={`qrdobem-${entity.unique_code}.svg`}
-                className="inline-block bg-brand-accent hover:bg-brand-accent-strong text-white px-5 py-2 rounded-lg text-sm font-medium transition"
-              >
-                Baixar SVG
-              </a>
+              <div className="flex gap-2 justify-center">
+                <a
+                  href={data.qr_code_base64}
+                  download={`qrdobem-${entity.unique_code}.svg`}
+                  className="inline-block border border-brand-accent text-brand-accent hover:bg-brand-accent/10 px-4 py-2 rounded-lg text-sm font-medium transition"
+                >
+                  Baixar SVG puro
+                </a>
+                <button
+                  onClick={handleDownloadPrint}
+                  disabled={downloadingPrint}
+                  className="inline-block bg-brand-accent hover:bg-brand-accent-strong text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                >
+                  {downloadingPrint ? 'Gerando...' : 'Baixar p/ Impressão'}
+                </button>
+              </div>
               <div className="pt-2 flex flex-col gap-2">
                 <a
                   href={data.url || entity.url}
@@ -126,8 +223,67 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
                 </Link>
               </div>
               <p className="text-xs text-gray-400">
-                O SVG é vetorial: pode ser ampliado para impressão sem perder nitidez.
+                O formato SVG é vetorial e não perde a nitidez.
               </p>
+
+              <div className="pt-4 border-t text-left">
+                <h3 className="text-sm font-medium text-gray-900 mb-1">Legenda do QR Code</h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Esse texto aparece impresso junto ao código na "Versão p/ Impressão".
+                </p>
+                
+                {captionError && (
+                  <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm mb-2">
+                    {captionError}
+                  </div>
+                )}
+
+                {showCaptionForm ? (
+                  <form onSubmit={handleEditCaption} className="space-y-2">
+                    <input
+                      type="text"
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      placeholder="Ex: Em caso de emergência, escaneie."
+                      maxLength={100}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCaption(originalCaption);
+                          setShowCaptionForm(false);
+                          setCaptionError('');
+                        }}
+                        className="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded-lg text-sm font-medium transition"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingCaption}
+                        className="flex-1 bg-brand-accent hover:bg-brand-accent-strong text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                      >
+                        {savingCaption ? 'Salvando...' : 'Salvar'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2 bg-gray-50 p-2 rounded border">
+                      {originalCaption || <span className="text-gray-400 italic">Usando texto padrão</span>}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowCaptionForm(true)}
+                      className="text-sm text-brand-blue hover:underline font-medium"
+                    >
+                      Editar legenda
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
@@ -191,6 +347,38 @@ export default function QrCodeModal({ entity, onClose, onUpdated }) {
               )}
             </div>
           )}
+
+          {/* P1-04: Histórico de leituras */}
+          <div className="pt-4 border-t text-left">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">Histórico de leituras</h3>
+            {readsLoading && reads.length === 0 ? (
+              <p className="text-sm text-gray-500">Carregando...</p>
+            ) : reads.length === 0 ? (
+              <p className="text-sm text-gray-500 bg-gray-50 p-2 rounded border">Nenhuma leitura registrada ainda.</p>
+            ) : (
+              <ul className="space-y-2 text-sm max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                {reads.map((r) => (
+                  <li key={r.id} className="flex justify-between items-center gap-2 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                    <span className="text-gray-900">
+                      {new Date(r.read_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {r.latitude && r.longitude ? 'com localização' : 'sem localização'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {hasMoreReads && (
+              <button 
+                onClick={() => setReadsPage(p => p + 1)} 
+                disabled={readsLoading}
+                className="text-xs text-brand-blue hover:underline mt-2 inline-block font-medium disabled:opacity-50"
+              >
+                {readsLoading ? 'Carregando...' : 'Carregar mais'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

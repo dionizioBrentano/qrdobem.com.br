@@ -116,7 +116,10 @@ export const entitiesApi = {
 
   // A API gera o QR (é whitelabel). Precisa passar pelo request() por causa
   // do Bearer token — usar a URL direto num <img src> daria 401.
-  qrCode: (uniqueCode) => request(`/entities/${uniqueCode}/qrcode`),
+  qrCode: (uniqueCode, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/entities/${uniqueCode}/qrcode${qs ? `?${qs}` : ''}`);
+  },
 
   addVaccination: (uniqueCode, data) =>
     request(`/entities/${uniqueCode}/vaccinations`, {
@@ -129,6 +132,10 @@ export const entitiesApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  reads: (uniqueCode, page = 1) => request(`/entities/${uniqueCode}/reads?page=${page}`),
+
+  destroy: (uniqueCode) => request(`/entities/${uniqueCode}`, { method: 'DELETE' }),
 };
 
 // --- Perfil (coleta progressiva) ---
