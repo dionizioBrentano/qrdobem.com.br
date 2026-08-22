@@ -125,6 +125,14 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
   const [hasEmergencyContact, setHasEmergencyContact] = useState(true);
   const [loadingContacts, setLoadingContacts] = useState(false);
 
+  // Aventura / Rotina (Passo 1 & 2)
+  const [referencePoints, setReferencePoints] = useState([]);
+  const [loadingAdventure, setLoadingAdventure] = useState(false);
+  const [silentPassword, setSilentPassword] = useState('');
+  const [silentPasswordMessage, setSilentPasswordMessage] = useState('');
+  const [silentPasswordError, setSilentPasswordError] = useState('');
+  const [newPoint, setNewPoint] = useState({ name: '', latitude: '', longitude: '', radius_meters: 50 });
+
   const isEditing = Boolean(uniqueCode);
   const isAventuraFlow = activeTrail === 'aventura';
 
@@ -228,6 +236,15 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
            });
         }
 
+        if (res.type === 'person') {
+            try {
+                const points = await entitiesApi.adventure.listPoints(uniqueCode);
+                setReferencePoints(points || []);
+            } catch (err) {
+                console.error("Falha ao carregar pontos da aventura:", err);
+            }
+        }
+
       } catch (err) {
         setError('Erro ao carregar dados da entidade.');
       } finally {
@@ -317,6 +334,56 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
     } finally {
       setLoadingMedia(false);
     }
+  };
+
+  // --- Funções Aventura / Rotina ---
+  const handleStorePoint = async () => {
+      if (!newPoint.name || !newPoint.latitude || !newPoint.longitude) {
+          alert("Nome, Latitude e Longitude são obrigatórios.");
+          return;
+      }
+      try {
+          setLoadingAdventure(true);
+          const p = await entitiesApi.adventure.storePoint(uniqueCode, newPoint);
+          setReferencePoints(prev => [...prev, p]);
+          setNewPoint({ name: '', latitude: '', longitude: '', radius_meters: 50 });
+      } catch (err) {
+          alert('Erro ao salvar ponto de referência.');
+      } finally {
+          setLoadingAdventure(false);
+      }
+  };
+
+  const handleRemovePoint = async (pointId) => {
+      if (!confirm('Remover este ponto de referência?')) return;
+      try {
+          setLoadingAdventure(true);
+          await entitiesApi.adventure.removePoint(uniqueCode, pointId);
+          setReferencePoints(prev => prev.filter(p => p.id !== pointId));
+      } catch (err) {
+          alert('Erro ao remover ponto.');
+      } finally {
+          setLoadingAdventure(false);
+      }
+  };
+
+  const handleSetSilentPassword = async () => {
+      if (silentPassword.length < 6) {
+          setSilentPasswordError("A senha deve ter no mínimo 6 caracteres.");
+          return;
+      }
+      try {
+          setLoadingAdventure(true);
+          setSilentPasswordError('');
+          await entitiesApi.adventure.setSilentPassword(uniqueCode, { password: silentPassword });
+          setSilentPasswordMessage('Senha silenciosa atualizada com sucesso!');
+          setSilentPassword('');
+          setTimeout(() => setSilentPasswordMessage(''), 5000);
+      } catch (err) {
+          setSilentPasswordError('Erro ao salvar a senha silenciosa.');
+      } finally {
+          setLoadingAdventure(false);
+      }
   };
 
   const handleSubmit = async (e) => {
@@ -962,8 +1029,102 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                   </div>
                 ))}
               </div>
+
+              {/* --- Aventura / Rotina --- */}
+              {isEditing && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aventura / Rotina</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Defina seus pontos seguros e sua senha silenciosa.
+                  </p>
+
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <h4 className="font-medium text-gray-800 mb-2">Pontos de Referência</h4>
+                    {referencePoints.length > 0 ? (
+                      <ul className="mb-4 space-y-2">
+                        {referencePoints.map((pt) => (
+                          <li key={pt.id} className="flex justify-between items-center bg-white p-2 border border-gray-200 rounded">
+                            <span className="text-sm">{pt.name} (Lat: {pt.latitude}, Lng: {pt.longitude})</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePoint(pt.id)}
+                              className="text-red-500 hover:text-red-700"
+                              disabled={loadingAdventure}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-500 mb-4">Nenhum ponto cadastrado.</p>
+                    )}
+
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Nome (ex: Casa)"
+                        value={newPoint.name}
+                        onChange={(e) => setNewPoint({ ...newPoint, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Latitude"
+                          value={newPoint.latitude}
+                          onChange={(e) => setNewPoint({ ...newPoint, latitude: e.target.value })}
+                          className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Longitude"
+                          value={newPoint.longitude}
+                          onChange={(e) => setNewPoint({ ...newPoint, longitude: e.target.value })}
+                          className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleStorePoint}
+                        disabled={loadingAdventure}
+                        className="px-3 py-2 bg-brand-blue text-white text-sm rounded w-full hover:bg-brand-blue-strong"
+                      >
+                        {loadingAdventure ? 'Salvando...' : 'Adicionar Ponto'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-brand-accent" />
+                      Senha Silenciosa
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-3 bg-brand-accent/10 border border-brand-accent/20 p-2 rounded">
+                      <strong>Aviso:</strong> A senha silenciosa é usada quando o sistema pergunta se você está fora da rotina. Ela aciona seus contatos de emergência sem mostrar nada na tela.
+                    </p>
+                    <input
+                      type="password"
+                      placeholder="Nova Senha (mínimo 6 caracteres)"
+                      value={silentPassword}
+                      onChange={(e) => setSilentPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue mb-2"
+                    />
+                    {silentPasswordError && <p className="text-xs text-red-600 mb-2">{silentPasswordError}</p>}
+                    {silentPasswordMessage && <p className="text-xs text-green-600 mb-2">{silentPasswordMessage}</p>}
+                    <button
+                      type="button"
+                      onClick={handleSetSilentPassword}
+                      disabled={loadingAdventure}
+                      className="px-3 py-2 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white transition text-sm rounded w-full"
+                    >
+                      {loadingAdventure ? 'Definindo...' : 'Definir Senha Silenciosa'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            )}
+          )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Informações adicionais</label>

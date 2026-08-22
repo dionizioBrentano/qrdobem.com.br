@@ -150,6 +150,22 @@ export const entitiesApi = {
   removeMedia: (uniqueCode, mediaId) => request(`/entities/${uniqueCode}/media/${mediaId}`, {
     method: 'DELETE',
   }),
+
+  // Aventura / Rotina
+  adventure: {
+    listPoints: (uniqueCode) => request(`/entities/${uniqueCode}/adventure/reference-points`),
+    storePoint: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/reference-points`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+    removePoint: (uniqueCode, pointId) => request(`/entities/${uniqueCode}/adventure/reference-points/${pointId}`, {
+      method: 'DELETE',
+    }),
+    setSilentPassword: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/silent-password`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  },
 };
 
 // --- Perfil (coleta progressiva) ---
