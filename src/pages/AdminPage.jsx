@@ -6,6 +6,9 @@ import { Navigate } from 'react-router-dom';
 export default function AdminPage() {
   const { tenant } = useAuth();
   const [data, setData] = useState(null);
+  const [pricing, setPricing] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingMsg, setPricingMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -30,8 +33,12 @@ export default function AdminPage() {
 
   const loadTenants = async () => {
     try {
-      const res = await adminApi.getTenants();
+      const [res, pricingRes] = await Promise.all([
+        adminApi.getTenants(),
+        adminApi.getPricing()
+      ]);
       setData(res);
+      setPricing(pricingRes);
       // Se tiver um tenant selecionado, atualiza ele com os novos dados
       if (selectedTenant) {
         const updated = res.tenants.find(t => t.id === selectedTenant.id);
@@ -83,6 +90,34 @@ export default function AdminPage() {
     }
   };
 
+  const handleSavePricing = async (e) => {
+    e.preventDefault();
+    setPricingLoading(true);
+    setPricingMsg('');
+    try {
+      const payload = {
+        unit_price: Number(pricing.unit_price) || 0,
+        min_quantity: Number(pricing.min_quantity) || 0,
+        max_quantity: Number(pricing.max_quantity) || 0,
+        adventure_yearly_price: Number(pricing.adventure_yearly_price) || 0,
+        family_pack_qty: Number(pricing.family_pack_qty) || 0,
+        family_pack_price: Number(pricing.family_pack_price) || 0,
+        launch_offer_enabled: Boolean(pricing.launch_offer?.enabled),
+        launch_offer_discount_percent: Number(pricing.launch_offer?.discount_percent) || 0,
+        launch_offer_ends_at: pricing.launch_offer?.ends_at || null,
+      };
+      
+      const res = await adminApi.updatePricing(payload);
+      setPricing(res.pricing);
+      setPricingMsg('Preços salvos com sucesso!');
+      setTimeout(() => setPricingMsg(''), 3000);
+    } catch (err) {
+      setPricingMsg(err.data?.error || err.message);
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+
   if (loading && !data) {
     return (
       <div className="flex justify-center py-20">
@@ -120,13 +155,166 @@ export default function AdminPage() {
             <p className="text-3xl font-bold text-gray-900">{data.metrics.total_qrs}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border p-5">
-            <p className="text-sm text-gray-500">Preço Base QR</p>
-            <p className="text-3xl font-bold text-green-600">R$ {parseFloat(unitPrice).toFixed(2)}</p>
+            <p className="text-sm text-gray-500">Preço Base QR (Efetivo)</p>
+            <p className="text-3xl font-bold text-green-600">
+              R$ {parseFloat(pricing?.unit_price_effective || unitPrice).toFixed(2)}
+            </p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border p-5">
             <p className="text-sm text-gray-500">Engajamento</p>
             <p className="text-3xl font-bold text-brand-blue">{data.metrics.engagement}</p>
           </div>
+        </div>
+      )}
+
+      {/* Preços e Configurações */}
+      {pricing && (
+        <div className="bg-white rounded-xl shadow-sm border p-5">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Preços & Ofertas</h2>
+            {pricingMsg && (
+              <span className={`text-sm ${pricingMsg.includes('sucesso') ? 'text-green-600' : 'text-red-600'}`}>
+                {pricingMsg}
+              </span>
+            )}
+          </div>
+          <form onSubmit={handleSavePricing} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Créditos Avulsos */}
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-gray-700">QR Codes Avulsos</h3>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Preço Base (R$)</label>
+                <input
+                  type="number" step="0.01"
+                  value={pricing.unit_price}
+                  onChange={e => setPricing({...pricing, unit_price: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Qtd Mínima</label>
+                  <input
+                    type="number"
+                    value={pricing.min_quantity}
+                    onChange={e => setPricing({...pricing, min_quantity: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Qtd Máxima</label>
+                  <input
+                    type="number"
+                    value={pricing.max_quantity}
+                    onChange={e => setPricing({...pricing, max_quantity: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Aventura e Família */}
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-gray-700">Aventura & Pacotes</h3>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Assinatura Anual Aventura (R$)</label>
+                <input
+                  type="number" step="0.01"
+                  value={pricing.adventure_yearly_price}
+                  onChange={e => setPricing({...pricing, adventure_yearly_price: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Qtd Pacote Família</label>
+                  <input
+                    type="number"
+                    value={pricing.family_pack_qty}
+                    onChange={e => setPricing({...pricing, family_pack_qty: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Preço Pacote (R$)</label>
+                  <input
+                    type="number" step="0.01"
+                    value={pricing.family_pack_price}
+                    onChange={e => setPricing({...pricing, family_pack_price: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Oferta de Lançamento */}
+            <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-100 relative">
+              {pricing.launch_offer?.active && (
+                <span className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  ATIVA
+                </span>
+              )}
+              <h3 className="font-semibold text-blue-900">Oferta de Lançamento</h3>
+              <label className="flex items-center gap-2 text-sm text-blue-900 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pricing.launch_offer?.enabled || false}
+                  onChange={e => setPricing({
+                    ...pricing,
+                    launch_offer: { ...pricing.launch_offer, enabled: e.target.checked }
+                  })}
+                  className="rounded text-blue-600 focus:ring-blue-500"
+                />
+                Habilitar Oferta
+              </label>
+              <div>
+                <label className="block text-xs font-medium text-blue-800 mb-1">Desconto (%)</label>
+                <input
+                  type="number" step="0.01"
+                  value={pricing.launch_offer?.discount_percent || ''}
+                  onChange={e => setPricing({
+                    ...pricing,
+                    launch_offer: { ...pricing.launch_offer, discount_percent: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-blue-800 mb-1">Até (Data Limite)</label>
+                <input
+                  type="date"
+                  value={pricing.launch_offer?.ends_at || ''}
+                  onChange={e => setPricing({
+                    ...pricing,
+                    launch_offer: { ...pricing.launch_offer, ends_at: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
+                />
+              </div>
+              {pricing.launch_offer?.enabled && (
+                <p className="text-xs text-blue-800 font-medium bg-blue-100 p-2 rounded">
+                  Valor com Desconto (Ex): R$ {parseFloat(pricing.unit_price_effective || 0).toFixed(2)} / QR
+                </p>
+              )}
+            </div>
+            
+            <div className="md:col-span-3 flex justify-end">
+              <button
+                type="submit"
+                disabled={pricingLoading}
+                className="bg-brand-blue hover:bg-brand-blue-strong text-white px-6 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+              >
+                {pricingLoading ? 'Salvando...' : 'Salvar Configurações'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

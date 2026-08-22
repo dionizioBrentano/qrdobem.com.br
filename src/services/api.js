@@ -519,6 +519,8 @@ export const heatmapApi = {
 export const adminApi = {
   getTenants: () => request('/admin/tenants'),
 
+  getPricing: () => request('/admin/credits/pricing'),
+  updatePricing: (data) => request('/admin/credits/pricing', { method: 'PUT', body: JSON.stringify(data) }),
 
   createBatch: (data) =>
     request('/admin/batches', {
