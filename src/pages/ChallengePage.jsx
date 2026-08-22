@@ -24,7 +24,11 @@ export default function ChallengePage() {
           
         const res = await entitiesApi.adventure.createChallenge(uniqueCode, payload);
         if (mounted) {
-          setChallengeId(res.challenge_id);
+          if (!res || !res.challenge_id) {
+            setError('Erro ao iniciar a verificação. Tente novamente.');
+          } else {
+            setChallengeId(res.challenge_id);
+          }
           setLoading(false);
         }
       } catch (err) {
@@ -141,7 +145,7 @@ export default function ChallengePage() {
               
               <button
                 type="submit"
-                disabled={submitting || !password}
+                disabled={submitting || !password || !challengeId}
                 className="w-full bg-brand-blue hover:bg-brand-blue-strong text-white font-medium py-3 rounded-lg transition disabled:opacity-50"
               >
                 {submitting ? 'Confirmando...' : 'Confirmar'}
