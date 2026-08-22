@@ -1116,10 +1116,19 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                       type="button"
                       onClick={handleSetSilentPassword}
                       disabled={loadingAdventure}
-                      className="px-3 py-2 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white transition text-sm rounded w-full"
+                      className="px-3 py-2 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white transition text-sm rounded w-full mb-3"
                     >
                       {loadingAdventure ? 'Definindo...' : 'Definir Senha Silenciosa'}
                     </button>
+                    <div className="text-center mt-2">
+                      <Link
+                        to={`/painel/aventura/challenge/${uniqueCode}`}
+                        onClick={onClose}
+                        className="text-xs text-brand-blue hover:underline"
+                      >
+                        Testar challenge de rotina
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}

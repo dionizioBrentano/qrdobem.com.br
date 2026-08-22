@@ -27,6 +27,7 @@ import SubspacesPage from './pages/SubspacesPage';
 import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
 import { PanicContactInvitePage } from './pages/PanicContactInvitePage';
+import ChallengePage from './pages/ChallengePage';
 
 export default function App() {
   return (
@@ -99,6 +100,7 @@ export default function App() {
             <Route path="/repasses" element={<DisbursementsPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/painel/aventura/challenge/:uniqueCode" element={<ChallengePage />} />
           </Route>
 
           {/* Redirect */}

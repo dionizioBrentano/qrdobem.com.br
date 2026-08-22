@@ -165,6 +165,14 @@ export const entitiesApi = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+    createChallenge: (uniqueCode, payload = {}) => request(`/entities/${uniqueCode}/adventure/challenge`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+    silentTrigger: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/silent-trigger`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   },
 };
 
