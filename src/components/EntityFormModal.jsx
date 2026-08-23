@@ -180,7 +180,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
         });
         
         if (res.custom_attributes) {
-           setCustomAttrs(Object.entries(res.custom_attributes).map(([key, value]) => ({ key, value })));
+           setCustomAttrs(Object.entries(res.custom_attributes).map(([key, value]) => ({ key, value, _id: crypto.randomUUID() })));
         }
         
         if (res.health_fields) {
@@ -218,7 +218,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
         }
         
         if (res.vaccinations) {
-           setVaccinations(res.vaccinations.map(v => ({ vaccine_name: v.vaccine_name, applied_at: v.applied_at })));
+           setVaccinations((res.vaccinations || []).map(v => ({ ...v, _id: v._id || crypto.randomUUID() })));
         }
         
         if (res.type === 'object' && res.object_fields) {
@@ -258,7 +258,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
 
   const addCustomAttr = () =>
     setCustomAttrs((prev) =>
-      prev.length >= MAX_CUSTOM_ATTRS ? prev : [...prev, { key: '', value: '' }]
+      prev.length >= MAX_CUSTOM_ATTRS ? prev : [...prev, { _id: crypto.randomUUID(), key: '', value: '' }]
     );
 
   const updateCustomAttr = (index, field, value) =>
@@ -275,7 +275,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
     setObjectFields((prev) => ({ ...prev, [field]: value }));
 
   const addVaccination = () =>
-    setVaccinations((prev) => [...prev, { vaccine_name: '', applied_at: '' }]);
+    setVaccinations((prev) => [...prev, { _id: crypto.randomUUID(), vaccine_name: '', applied_at: '' }]);
 
   const updateVaccination = (index, field, value) =>
     setVaccinations((prev) =>
@@ -827,7 +827,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
                     {vaccinations.length > 0 && (
                       <div className="space-y-2 mb-2">
                         {vaccinations.map((v, index) => (
-                          <div key={index} className="flex gap-2">
+                          <div key={v._id || index} className="flex gap-2">
                             <input
                               type="text"
                               placeholder="Nome da vacina"
@@ -1156,7 +1156,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
               {customAttrs.length > 0 && (
                 <div className="space-y-2 mb-2">
                   {customAttrs.map((attr, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={attr._id || index} className="flex gap-2">
                       <input
                         type="text"
                         placeholder="Nome do campo"

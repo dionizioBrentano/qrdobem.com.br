@@ -2,6 +2,28 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Check, Phone } from 'lucide-react';
 import { panicApi } from '../services/api';
 
+const EmergencyContactsBlock = () => (
+  <div className="mt-4 bg-gray-900 text-white p-4 rounded-xl text-center space-y-2 border border-gray-700 shadow-inner">
+    <p className="font-bold text-xs uppercase tracking-wider text-red-400">Ligue para o Socorro Local</p>
+    <div className="flex justify-center gap-8 pt-2">
+      <a href="tel:192" className="flex flex-col items-center gap-2 active:scale-95 transition transform">
+        <div className="bg-red-600 p-4 rounded-full shadow-lg"><Phone className="w-6 h-6" /></div>
+        <div className="flex flex-col">
+          <span className="font-black text-2xl leading-none">192</span>
+          <span className="text-xs text-gray-300 font-medium">SAMU</span>
+        </div>
+      </a>
+      <a href="tel:190" className="flex flex-col items-center gap-2 active:scale-95 transition transform">
+        <div className="bg-blue-600 p-4 rounded-full shadow-lg"><Phone className="w-6 h-6" /></div>
+        <div className="flex flex-col">
+          <span className="font-black text-2xl leading-none">190</span>
+          <span className="text-xs text-gray-300 font-medium">POLÍCIA</span>
+        </div>
+      </a>
+    </div>
+  </div>
+);
+
 export default function PublicPanicButton({ uniqueCode, entityType = 'person', onSuccess }) {
   const [armed, setArmed] = useState(false);
   const [sending, setSending] = useState(false);
@@ -92,27 +114,7 @@ export default function PublicPanicButton({ uniqueCode, entityType = 'person', o
     }
   };
 
-  const EmergencyContactsBlock = () => (
-    <div className="mt-4 bg-gray-900 text-white p-4 rounded-xl text-center space-y-2 border border-gray-700 shadow-inner">
-      <p className="font-bold text-xs uppercase tracking-wider text-red-400">Ligue para o Socorro Local</p>
-      <div className="flex justify-center gap-8 pt-2">
-        <a href="tel:192" className="flex flex-col items-center gap-2 active:scale-95 transition transform">
-          <div className="bg-red-600 p-4 rounded-full shadow-lg"><Phone className="w-6 h-6" /></div>
-          <div className="flex flex-col">
-            <span className="font-black text-2xl leading-none">192</span>
-            <span className="text-xs text-gray-300 font-medium">SAMU</span>
-          </div>
-        </a>
-        <a href="tel:190" className="flex flex-col items-center gap-2 active:scale-95 transition transform">
-          <div className="bg-blue-600 p-4 rounded-full shadow-lg"><Phone className="w-6 h-6" /></div>
-          <div className="flex flex-col">
-            <span className="font-black text-2xl leading-none">190</span>
-            <span className="text-xs text-gray-300 font-medium">POLÍCIA</span>
-          </div>
-        </a>
-      </div>
-    </div>
-  );
+
 
   if (isOffline) {
     return (
