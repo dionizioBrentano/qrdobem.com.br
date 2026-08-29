@@ -1,59 +1,6 @@
-import { firebaseRefreshToken, firebaseLogout } from './firebase';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
-
-export let reauthHandler = null;
-export const setReauthHandler = (handler) => { reauthHandler = handler; };
-
-async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('firebase_token');
-
-  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-
-  const headers = {
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    'Accept': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
-
-  Object.keys(headers).forEach((key) => {
-    if (headers[key] === undefined) delete headers[key];
-  });
-
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
-
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    if (res.status === 401 && token && !options._isRetry && !options._noReauth) {
-      // Tenta atualizar o token silenciosamente
-      const refreshed = await firebaseRefreshToken();
-      
-      if (refreshed) {
-        // Token atualizado com sucesso, repete a requisição original
-        return request(endpoint, { ...options, _isRetry: true });
-      } else {
-        // Falhou o refresh, força logout e vai para o login
-        firebaseLogout();
-        window.location.href = '/login?expired=true';
-        // Interrompe a promise atual para não estourar erro na tela antes do redirect
-        return new Promise(() => {}); 
-      }
-    }
-
-    const error = new Error(data?.error || `Erro ${res.status}`);
-    error.status = res.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
-}
+import { request } from './http';
+export { reauthHandler, setReauthHandler } from './http';
+import { adventureApi } from './adventureApi';
 
 // --- Auth ---
 export const authApi = {
@@ -151,30 +98,10 @@ export const entitiesApi = {
     method: 'DELETE',
   }),
 
-  // Aventura / Rotina
-  adventure: {
-    listPoints: (uniqueCode) => request(`/entities/${uniqueCode}/adventure/reference-points`),
-    storePoint: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/reference-points`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-    removePoint: (uniqueCode, pointId) => request(`/entities/${uniqueCode}/adventure/reference-points/${pointId}`, {
-      method: 'DELETE',
-    }),
-    setSilentPassword: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/silent-password`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-    createChallenge: (uniqueCode, payload = {}) => request(`/entities/${uniqueCode}/adventure/challenge`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-    silentTrigger: (uniqueCode, payload) => request(`/entities/${uniqueCode}/adventure/silent-trigger`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  },
+  // Aventura / Rotina — implementação em adventureApi.js
+  adventure: adventureApi,
 };
+
 
 // --- Perfil (coleta progressiva) ---
 export const profileApi = {
