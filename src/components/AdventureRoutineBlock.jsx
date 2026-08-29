@@ -1,206 +1,188 @@
-import { useEffect, useState } from 'react';
-import { adventureApi } from '../services/adventureApi';
+import { Link } from 'react-router-dom';
+import { ShieldAlert, Trash2 } from 'lucide-react';
+import { useAdventureRoutine } from '../hooks/useAdventureRoutine';
 
-const EMPTY_POINT = {
-  name: '',
-  address: '',
-  latitude: '',
-  longitude: '',
-  radius_meters: 50,
-  order_index: 0,
-};
+export default function AdventureRoutineBlock({ uniqueCode, onClose }) {
+  const a = useAdventureRoutine(uniqueCode);
+  const orphanPoints = a.referencePoints.filter((pt) => !pt.routine_id);
 
-function apiError(err) {
-  return err?.data?.error || err?.message || 'Erro inesperado.';
-}
+  return (
+    <div className="mt-6 pt-4 border-t border-gray-200">
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Aventura / Rotina</h3>
+      <p className="text-sm text-gray-500 mb-4">
+        Cadastre uma trilha nomeada com pontos georreferenciados. Sem geocodificação nesta etapa: endereço é texto; latitude e longitude vêm da digitação ou da localização atual.
+      </p>
 
-export function useAdventureRoutine(uniqueCode) {
-  const [referencePoints, setReferencePoints] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [silentPassword, setSilentPassword] = useState('');
-  const [silentPasswordMessage, setSilentPasswordMessage] = useState('');
-  const [silentPasswordError, setSilentPasswordError] = useState('');
-  const [routine, setRoutine] = useState(null);
-  const [routineName, setRoutineName] = useState('');
-  const [routinePoints, setRoutinePoints] = useState([]);
-  const [routineError, setRoutineError] = useState('');
-  const [routineMessage, setRoutineMessage] = useState('');
-  const [newPoint, setNewPoint] = useState(EMPTY_POINT);
+      <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-3">
+        <h4 className="font-medium text-gray-800">Nome da trilha</h4>
+        <input
+          type="text"
+          placeholder="Ex.: Plantão enfermeira"
+          value={a.routineName}
+          onChange={(e) => a.setRoutineName(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+        />
+        <button
+          type="button"
+          onClick={a.saveRoutine}
+          disabled={a.loading}
+          className="px-3 py-2 bg-brand-blue text-white text-sm rounded w-full hover:bg-brand-blue-strong"
+        >
+          {a.loading ? 'Salvando...' : (a.routine?.id ? 'Atualizar trilha' : 'Salvar trilha')}
+        </button>
+        {a.routineError && <p className="text-xs text-red-600">{a.routineError}</p>}
+        {a.routineMessage && <p className="text-xs text-green-600">{a.routineMessage}</p>}
+      </div>
 
-  useEffect(() => {
-    if (!uniqueCode) return;
+      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+        <h4 className="font-medium text-gray-800 mb-2">Pontos da trilha</h4>
+        {a.routinePoints.length > 0 ? (
+          <ul className="mb-4 space-y-2">
+            {a.routinePoints.map((pt) => (
+              <li key={pt.id} className="flex justify-between items-center bg-white p-2 border border-gray-200 rounded">
+                <span className="text-sm">
+                  {pt.order_index ?? 0}. {pt.name}
+                  {pt.address ? ` — ${pt.address}` : ''}
+                  {' '}({pt.latitude}, {pt.longitude})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => a.removeRoutinePoint(pt.id)}
+                  className="text-red-500 hover:text-red-700"
+                  disabled={a.loading}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-gray-500 mb-4">Nenhum ponto nesta trilha.</p>
+        )}
 
-    let cancelled = false;
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Nome (ex: Casa)"
+            value={a.newPoint.name}
+            onChange={(e) => a.setNewPoint({ ...a.newPoint, name: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+          />
+          <input
+            type="text"
+            placeholder="Endereço (texto, sem geocodificação)"
+            value={a.newPoint.address}
+            onChange={(e) => a.setNewPoint({ ...a.newPoint, address: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Latitude"
+              value={a.newPoint.latitude}
+              onChange={(e) => a.setNewPoint({ ...a.newPoint, latitude: e.target.value })}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+            />
+            <input
+              type="text"
+              placeholder="Longitude"
+              value={a.newPoint.longitude}
+              onChange={(e) => a.setNewPoint({ ...a.newPoint, longitude: e.target.value })}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+            />
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Raio (m)"
+              value={a.newPoint.radius_meters}
+              onChange={(e) => a.setNewPoint({ ...a.newPoint, radius_meters: e.target.value })}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+            />
+            <input
+              type="number"
+              placeholder="Ordem"
+              value={a.newPoint.order_index}
+              onChange={(e) => a.setNewPoint({ ...a.newPoint, order_index: e.target.value })}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={a.useCurrentLocation}
+            disabled={a.loading}
+            className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded w-full hover:bg-gray-100"
+          >
+            Usar minha localização atual
+          </button>
+          <button
+            type="button"
+            onClick={a.addRoutinePoint}
+            disabled={a.loading}
+            className="px-3 py-2 bg-brand-blue text-white text-sm rounded w-full hover:bg-brand-blue-strong"
+          >
+            {a.loading ? 'Salvando...' : 'Adicionar ponto na trilha'}
+          </button>
+        </div>
+      </div>
 
-    const load = async () => {
-      try {
-        const points = await adventureApi.listPoints(uniqueCode);
-        if (!cancelled) setReferencePoints(Array.isArray(points) ? points : []);
-      } catch (err) {
-        console.error('Falha ao carregar pontos da aventura:', err);
-      }
+      {orphanPoints.length > 0 && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <h4 className="font-medium text-gray-800 mb-2">Pontos sem trilha (não monitorados)</h4>
+          <ul className="mb-2 space-y-2">
+            {orphanPoints.map((pt) => (
+              <li key={pt.id} className="flex justify-between items-center bg-white p-2 border border-gray-200 rounded">
+                <span className="text-sm">{pt.name} (Lat: {pt.latitude}, Lng: {pt.longitude})</span>
+                <button
+                  type="button"
+                  onClick={() => a.removeOrphanPoint(pt.id)}
+                  className="text-red-500 hover:text-red-700"
+                  disabled={a.loading}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-gray-500">Pontos sem trilha não são monitorados. Recrie-os dentro da trilha.</p>
+        </div>
+      )}
 
-      try {
-        const routines = await adventureApi.routines.list(uniqueCode);
-        const list = Array.isArray(routines) ? routines : [];
-        const first = list[0] || null;
-        if (cancelled) return;
-        setRoutine(first);
-        setRoutineName(first?.name || '');
-        if (first?.id) {
-          const rPoints = await adventureApi.routines.listPoints(uniqueCode, first.id);
-          if (!cancelled) setRoutinePoints(Array.isArray(rPoints) ? rPoints : (first.points || []));
-        } else {
-          setRoutinePoints([]);
-        }
-      } catch (err) {
-        console.error('Falha ao carregar trilha:', err);
-      }
-    };
-
-    load();
-    return () => { cancelled = true; };
-  }, [uniqueCode]);
-
-  const saveRoutine = async () => {
-    const name = routineName.trim();
-    if (!name) {
-      setRoutineError('Informe o nome da trilha.');
-      return;
-    }
-    try {
-      setLoading(true);
-      setRoutineError('');
-      setRoutineMessage('');
-      if (routine?.id) {
-        const updated = await adventureApi.routines.update(uniqueCode, routine.id, { name });
-        setRoutine(updated);
-        setRoutineName(updated.name || name);
-        setRoutineMessage('Trilha atualizada.');
-      } else {
-        const created = await adventureApi.routines.create(uniqueCode, { name });
-        setRoutine(created);
-        setRoutineName(created.name || name);
-        setRoutinePoints(created.points || []);
-        setRoutineMessage('Trilha criada.');
-      }
-    } catch (err) {
-      setRoutineError(apiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setNewPoint((prev) => ({
-          ...prev,
-          latitude: String(pos.coords.latitude),
-          longitude: String(pos.coords.longitude),
-        }));
-      },
-      () => {},
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
-  };
-
-  const addRoutinePoint = async () => {
-    if (!routine?.id) {
-      setRoutineError('Salve o nome da trilha antes de adicionar pontos.');
-      return;
-    }
-    if (!newPoint.name || !newPoint.latitude || !newPoint.longitude) {
-      setRoutineError('Nome, latitude e longitude são obrigatórios.');
-      return;
-    }
-    try {
-      setLoading(true);
-      setRoutineError('');
-      const created = await adventureApi.routines.addPoint(uniqueCode, routine.id, {
-        name: newPoint.name,
-        address: newPoint.address || null,
-        latitude: Number(newPoint.latitude),
-        longitude: Number(newPoint.longitude),
-        radius_meters: Number(newPoint.radius_meters) || 50,
-        order_index: Number(newPoint.order_index) || 0,
-      });
-      setRoutinePoints((prev) => [...prev, created]);
-      setNewPoint(EMPTY_POINT);
-    } catch (err) {
-      setRoutineError(apiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeRoutinePoint = async (pointId) => {
-    if (!routine?.id) return;
-    if (!confirm('Remover este ponto da trilha?')) return;
-    try {
-      setLoading(true);
-      await adventureApi.routines.removePoint(uniqueCode, routine.id, pointId);
-      setRoutinePoints((prev) => prev.filter((p) => p.id !== pointId));
-    } catch (err) {
-      setRoutineError(apiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeOrphanPoint = async (pointId) => {
-    if (!confirm('Remover este ponto sem trilha?')) return;
-    try {
-      setLoading(true);
-      await adventureApi.removePoint(uniqueCode, pointId);
-      setReferencePoints((prev) => prev.filter((p) => p.id !== pointId));
-    } catch (err) {
-      setRoutineError(apiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveSilentPassword = async () => {
-    if (silentPassword.length < 6) {
-      setSilentPasswordError('A senha deve ter no mínimo 6 caracteres.');
-      return;
-    }
-    try {
-      setLoading(true);
-      setSilentPasswordError('');
-      await adventureApi.setSilentPassword(uniqueCode, { password: silentPassword });
-      setSilentPasswordMessage('Senha silenciosa atualizada com sucesso!');
-      setSilentPassword('');
-      setTimeout(() => setSilentPasswordMessage(''), 5000);
-    } catch (err) {
-      setSilentPasswordError('Erro ao salvar a senha silenciosa.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    loading,
-    referencePoints,
-    routine,
-    routineName,
-    setRoutineName,
-    routinePoints,
-    routineError,
-    routineMessage,
-    newPoint,
-    setNewPoint,
-    silentPassword,
-    setSilentPassword,
-    silentPasswordMessage,
-    silentPasswordError,
-    saveRoutine,
-    useCurrentLocation,
-    addRoutinePoint,
-    removeRoutinePoint,
-    removeOrphanPoint,
-    saveSilentPassword,
-  };
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-brand-accent" />
+          Senha Silenciosa
+        </h4>
+        <p className="text-xs text-gray-600 mb-3 bg-brand-accent/10 border border-brand-accent/20 p-2 rounded">
+          <strong>Aviso:</strong> A senha silenciosa é usada quando o sistema pergunta se você está fora da rotina. Ela aciona seus contatos de emergência sem mostrar nada na tela.
+        </p>
+        <input
+          type="password"
+          placeholder="Nova Senha (mínimo 6 caracteres)"
+          value={a.silentPassword}
+          onChange={(e) => a.setSilentPassword(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-brand-blue mb-2"
+        />
+        {a.silentPasswordError && <p className="text-xs text-red-600 mb-2">{a.silentPasswordError}</p>}
+        {a.silentPasswordMessage && <p className="text-xs text-green-600 mb-2">{a.silentPasswordMessage}</p>}
+        <button
+          type="button"
+          onClick={a.saveSilentPassword}
+          disabled={a.loading}
+          className="px-3 py-2 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white transition text-sm rounded w-full mb-3"
+        >
+          {a.loading ? 'Definindo...' : 'Definir Senha Silenciosa'}
+        </button>
+        <div className="text-center mt-2">
+          <Link
+            to={`/painel/aventura/challenge/${uniqueCode}`}
+            onClick={onClose}
+            className="text-xs text-brand-blue hover:underline"
+          >
+            Testar challenge de rotina
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
