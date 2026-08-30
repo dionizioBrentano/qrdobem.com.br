@@ -34,3 +34,11 @@ export const ADVENTURE_UI = {
 };
 
 export const GPS_INTERVAL_MS = 60000;
+export const WELLNESS_POLL_MS = 60000;
+
+export const WELLNESS_REASON_TEXT = {
+  off_route: 'Você parece estar fora da sua rotina.',
+  idle: 'Você está parado há um tempo.',
+  companion_far: 'Você se afastou do acompanhante.',
+  manual: 'Confirmação solicitada.',
+};

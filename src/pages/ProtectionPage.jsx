@@ -5,6 +5,8 @@ import PanicButton from '../components/PanicButton';
 import { ADVENTURE_UI } from '../constants/adventure';
 import { useProtectionGps } from '../hooks/useProtectionGps';
 import { useProtectionDevice } from '../hooks/useProtectionDevice';
+import { useWellnessCheck } from '../hooks/useWellnessCheck';
+import WellnessOverlay from '../components/WellnessOverlay';
 
 export default function ProtectionPage() {
   const { uniqueCode } = useParams();
@@ -14,10 +16,10 @@ export default function ProtectionPage() {
   const [error, setError] = useState('');
   
   const [monitoring, setMonitoring] = useState(true);
-  const [imOkSent, setImOkSent] = useState(false);
 
   const { role, error: deviceError, setRole } = useProtectionDevice(uniqueCode);
   const { lastKnown, error: gpsError, sending } = useProtectionGps(uniqueCode, monitoring);
+  const { pendingCheck, error: wellnessError, busy: wellnessBusy, respond, createManualAndRespond } = useWellnessCheck(uniqueCode, monitoring);
 
   useEffect(() => {
     async function loadEntity() {
@@ -132,21 +134,30 @@ export default function ProtectionPage() {
 
       <div className="flex-1 flex flex-col justify-center gap-6">
         <button
-          onClick={() => setImOkSent(true)}
-          disabled={imOkSent}
+          onClick={createManualAndRespond}
+          disabled={wellnessBusy}
           className={`w-[80%] mx-auto h-20 rounded-2xl text-2xl font-black shadow-lg transition-all ${
-            imOkSent
+            wellnessBusy
               ? 'bg-green-100 text-green-700 cursor-not-allowed'
               : 'bg-green-500 hover:bg-green-600 text-white active:scale-95'
           }`}
         >
-          {imOkSent ? ADVENTURE_UI.PROTECTION_IM_OK_SENT : ADVENTURE_UI.PROTECTION_IM_OK}
+          {wellnessBusy ? ADVENTURE_UI.PROTECTION_IM_OK_SENT : ADVENTURE_UI.PROTECTION_IM_OK}
         </button>
 
         <div className="w-full">
           <PanicButton spaceId={entity.space_id} entityId={entity.id} />
         </div>
       </div>
+
+      <WellnessOverlay
+        check={pendingCheck}
+        onRespond={respond}
+        error={wellnessError}
+        busy={wellnessBusy}
+      >
+        <PanicButton spaceId={entity.space_id} entityId={entity.id} />
+      </WellnessOverlay>
     </div>
   );
 }
