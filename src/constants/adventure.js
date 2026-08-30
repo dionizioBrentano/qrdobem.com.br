@@ -25,4 +25,9 @@ export const ADVENTURE_UI = {
   PROTECTION_IM_OK_SENT: 'Enviado',
   PROTECTION_MONITORING_ON: 'Monitoramento ligado',
   PROTECTION_MONITORING_OFF: 'Monitoramento desligado',
+  PROTECTION_GPS_ERROR: 'Erro ao obter localização',
+  PROTECTION_GPS_DENIED: 'Permissão de GPS negada',
+  PROTECTION_SEND_ERROR: 'Falha ao enviar posição',
 };
+
+export const GPS_INTERVAL_MS = 60000;

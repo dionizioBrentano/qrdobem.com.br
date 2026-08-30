@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { entitiesApi } from '../services/api';
 import PanicButton from '../components/PanicButton';
 import { ADVENTURE_UI } from '../constants/adventure';
+import { useProtectionGps } from '../hooks/useProtectionGps';
 
 export default function ProtectionPage() {
   const { uniqueCode } = useParams();
@@ -13,6 +14,8 @@ export default function ProtectionPage() {
   
   const [monitoring, setMonitoring] = useState(true);
   const [imOkSent, setImOkSent] = useState(false);
+
+  const { lastKnown, error: gpsError, sending } = useProtectionGps(uniqueCode, monitoring);
 
   useEffect(() => {
     async function loadEntity() {
@@ -84,8 +87,16 @@ export default function ProtectionPage() {
           Última posição
         </p>
         <p className="text-gray-800 font-medium">
-          {ADVENTURE_UI.PROTECTION_NO_POSITION}
+          {lastKnown ? (
+            <>
+              {new Date(lastKnown.recorded_at).toLocaleTimeString('pt-BR')} - Lat: {Number(lastKnown.latitude).toFixed(4)}, Lng: {Number(lastKnown.longitude).toFixed(4)} ({lastKnown.accuracy_meters}m)
+            </>
+          ) : (
+            ADVENTURE_UI.PROTECTION_NO_POSITION
+          )}
         </p>
+        {gpsError && <p className="text-red-500 text-sm mt-2 font-bold">{gpsError}</p>}
+        {sending && <p className="text-brand-accent text-xs mt-1">Enviando nova posição...</p>}
       </div>
 
       <div className="flex-1 flex flex-col justify-center gap-6">
