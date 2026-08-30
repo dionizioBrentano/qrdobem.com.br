@@ -1,32 +1,61 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { entitiesApi } from '../services/api';
+import { deviceApi } from '../services/deviceApi';
 import PanicButton from '../components/PanicButton';
+import PublicPanicButton from '../components/PublicPanicButton';
 import { ADVENTURE_UI } from '../constants/adventure';
 import { useProtectionGps } from '../hooks/useProtectionGps';
 import { useProtectionDevice } from '../hooks/useProtectionDevice';
 import { useWellnessCheck } from '../hooks/useWellnessCheck';
 import WellnessOverlay from '../components/WellnessOverlay';
+import { getDeviceToken, setDeviceToken } from '../utils/deviceToken';
+import { getDeviceId } from '../utils/deviceId';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProtectionPage() {
   const { uniqueCode } = useParams();
+  const { user } = useAuth();
   
   const [entity, setEntity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
   const [monitoring, setMonitoring] = useState(true);
+  const [generatedLink, setGeneratedLink] = useState('');
 
-  const { role, error: deviceError, setRole } = useProtectionDevice(uniqueCode);
-  const { lastKnown, error: gpsError, sending } = useProtectionGps(uniqueCode, monitoring);
-  const { pendingCheck, error: wellnessError, busy: wellnessBusy, respond, createManualAndRespond } = useWellnessCheck(uniqueCode, monitoring);
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#token=')) {
+      const token = hash.replace('#token=', '');
+      if (token) {
+        setDeviceToken(token);
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+  }, []);
+
+  const hasAccess = !!user || !!getDeviceToken();
+  const isTokenMode = !user && !!getDeviceToken();
+
+  const { role, error: deviceError, setRole } = useProtectionDevice(hasAccess ? uniqueCode : null);
+  const { lastKnown, error: gpsError, sending } = useProtectionGps(hasAccess ? uniqueCode : null, monitoring);
+  const { pendingCheck, error: wellnessError, busy: wellnessBusy, respond, createManualAndRespond } = useWellnessCheck(hasAccess ? uniqueCode : null, monitoring);
 
   useEffect(() => {
     async function loadEntity() {
+      if (!hasAccess) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
-        const res = await entitiesApi.getForEdit(uniqueCode);
-        setEntity(res.data || res);
+        if (isTokenMode) {
+          setEntity({ name: 'Proteção Ativa', id: null, space_id: null });
+        } else {
+          const res = await entitiesApi.getForEdit(uniqueCode);
+          setEntity(res.data || res);
+        }
       } catch (err) {
         setError(err.data?.error || 'Erro ao carregar a entidade.');
       } finally {
@@ -34,7 +63,40 @@ export default function ProtectionPage() {
       }
     }
     loadEntity();
-  }, [uniqueCode]);
+  }, [uniqueCode, hasAccess, isTokenMode]);
+
+  const handleGenerateAccess = async () => {
+    try {
+      const deviceId = getDeviceId();
+      const res = await deviceApi.issueToken(uniqueCode, deviceId);
+      const url = `https://qrdobem.com.br/protecao/${uniqueCode}#token=${res.token}`;
+      setGeneratedLink(url);
+    } catch (err) {
+      alert('Erro ao gerar acesso: ' + (err.data?.error || err.message));
+    }
+  };
+
+  const handleRevokeAccess = async () => {
+    if (!window.confirm('Revogar acesso deste aparelho?')) return;
+    try {
+      const deviceId = getDeviceId();
+      await deviceApi.revokeToken(uniqueCode, deviceId);
+      setGeneratedLink('');
+      alert('Acesso revogado com sucesso.');
+    } catch (err) {
+      alert('Erro ao revogar acesso: ' + (err.data?.error || err.message));
+    }
+  };
+
+  if (!hasAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="p-8 text-center text-gray-500 font-medium">
+          Peça o link de proteção ao responsável.
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -62,6 +124,37 @@ export default function ProtectionPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col p-4">
+      {user && (
+        <div className="mb-4 flex items-center justify-between">
+          <Link to={`/painel/aventura/challenge/${uniqueCode}`} className="text-brand-blue font-bold text-sm hover:underline">
+            ← Voltar
+          </Link>
+        </div>
+      )}
+
+      {user && (
+        <div className="bg-white rounded-xl shadow p-6 mb-6">
+          <h2 className="text-lg font-black text-gray-900 mb-2">Acesso PWA</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Gere um link para a criança/acompanhante abrir no próprio celular sem login.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={handleGenerateAccess} className="bg-brand-blue text-white px-4 py-2 rounded-lg font-bold text-sm">
+              Gerar acesso deste aparelho
+            </button>
+            <button onClick={handleRevokeAccess} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg font-bold text-sm">
+              Revogar
+            </button>
+          </div>
+          {generatedLink && (
+            <div className="mt-4 p-3 bg-gray-100 rounded text-xs break-all border border-gray-200">
+              <p className="font-bold mb-1">Copie o link abaixo e envie:</p>
+              {generatedLink}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow p-6 mb-6">
         <h1 className="text-2xl font-black text-brand-blue mb-2 text-center">
           {entity.name}
@@ -135,10 +228,10 @@ export default function ProtectionPage() {
       <div className="flex-1 flex flex-col justify-center gap-6">
         <button
           onClick={createManualAndRespond}
-          disabled={wellnessBusy}
+          disabled={wellnessBusy || isTokenMode}
           className={`w-[80%] mx-auto h-20 rounded-2xl text-2xl font-black shadow-lg transition-all ${
-            wellnessBusy
-              ? 'bg-green-100 text-green-700 cursor-not-allowed'
+            wellnessBusy || isTokenMode
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
               : 'bg-green-500 hover:bg-green-600 text-white active:scale-95'
           }`}
         >
@@ -146,7 +239,7 @@ export default function ProtectionPage() {
         </button>
 
         <div className="w-full">
-          <PanicButton spaceId={entity.space_id} entityId={entity.id} />
+          {user ? <PanicButton spaceId={entity.space_id} entityId={entity.id} /> : <PublicPanicButton uniqueCode={uniqueCode} />}
         </div>
       </div>
 
@@ -156,7 +249,7 @@ export default function ProtectionPage() {
         error={wellnessError}
         busy={wellnessBusy}
       >
-        <PanicButton spaceId={entity.space_id} entityId={entity.id} />
+        {user ? <PanicButton spaceId={entity.space_id} entityId={entity.id} /> : <PublicPanicButton uniqueCode={uniqueCode} />}
       </WellnessOverlay>
     </div>
   );

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { wellnessApi } from '../services/wellnessApi';
+import { deviceAccessApi } from '../services/deviceAccessApi';
+import { getDeviceToken } from '../utils/deviceToken';
 import { WELLNESS_POLL_MS } from '../constants/adventure';
 
 export function useWellnessCheck(uniqueCode, monitoring) {
@@ -13,7 +15,9 @@ export function useWellnessCheck(uniqueCode, monitoring) {
     async function pollPending() {
       if (!uniqueCode || !monitoring) return;
       try {
-        const res = await wellnessApi.pending(uniqueCode);
+        const res = getDeviceToken() 
+          ? await deviceAccessApi.pendingWellnessCheck()
+          : await wellnessApi.pending(uniqueCode);
         setPendingCheck(res || null);
         setError('');
       } catch (err) {
@@ -37,7 +41,11 @@ export function useWellnessCheck(uniqueCode, monitoring) {
     if (!uniqueCode || !check) return;
     try {
       setBusy(true);
-      await wellnessApi.respond(uniqueCode, check.id);
+      if (getDeviceToken()) {
+        await deviceAccessApi.respondWellnessCheck(check.id);
+      } else {
+        await wellnessApi.respond(uniqueCode, check.id);
+      }
       setPendingCheck(null);
       setError('');
     } catch (err) {
@@ -48,6 +56,10 @@ export function useWellnessCheck(uniqueCode, monitoring) {
   };
 
   const createManualAndRespond = async () => {
+    if (getDeviceToken()) {
+      setError('Criação manual não permitida via token.');
+      return;
+    }
     if (!uniqueCode) return;
     try {
       setBusy(true);

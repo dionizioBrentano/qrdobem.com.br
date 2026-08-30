@@ -63,6 +63,8 @@ export default function App() {
           <Route path="/b/:uniqueCode" element={<BeneficiaryPage />} />
           {/* Aceite de contato de pânico — Pública, sem conta completa. */}
           <Route path="/convite-panico/:token" element={<PanicContactInvitePage />} />
+          {/* Acesso da criança/acompanhante à tela de proteção (login ou token) */}
+          <Route path="/protecao/:uniqueCode" element={<ProtectionPage />} />
           {/*
             Mapa de calor (Fase 6, T2-R07) — DESATIVADO em 06/08/2026 por
             decisão do proprietário.
@@ -104,7 +106,6 @@ export default function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/painel/aventura/challenge/:uniqueCode" element={<ChallengePage />} />
-            <Route path="/protecao/:uniqueCode" element={<ProtectionPage />} />
           </Route>
 
           {/* Redirect */}

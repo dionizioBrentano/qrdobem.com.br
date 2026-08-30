@@ -16,4 +16,12 @@ export const deviceApi = {
   remove: (code, id) => request(`/entities/${code}/devices/${id}`, {
     method: 'DELETE',
   }),
+
+  issueToken: (code, id) => request(`/entities/${code}/devices/${id}/token`, {
+    method: 'POST',
+  }),
+
+  revokeToken: (code, id) => request(`/entities/${code}/devices/${id}/token`, {
+    method: 'DELETE',
+  }),
 };

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { positionApi } from '../services/positionApi';
+import { deviceAccessApi } from '../services/deviceAccessApi';
+import { getDeviceToken } from '../utils/deviceToken';
 import { GPS_INTERVAL_MS, ADVENTURE_UI } from '../constants/adventure';
 import { getDeviceId } from '../utils/deviceId';
 
@@ -18,7 +20,9 @@ export function useProtectionGps(uniqueCode, monitoring) {
     async function fetchLatest() {
       if (!uniqueCode) return;
       try {
-        const res = await positionApi.latest(uniqueCode);
+        const res = getDeviceToken() 
+          ? await deviceAccessApi.latestPosition()
+          : await positionApi.latest(uniqueCode);
         if (res) {
           setLastKnown(res);
         }
@@ -99,7 +103,11 @@ export function useProtectionGps(uniqueCode, monitoring) {
         try {
           setSending(true);
           lastSentTimeRef.current = now; // Atualiza logo para evitar duplo disparo
-          await positionApi.send(uniqueCode, posData);
+          if (getDeviceToken()) {
+            await deviceAccessApi.storePosition(posData);
+          } else {
+            await positionApi.send(uniqueCode, posData);
+          }
           setLastSent(posData);
           setError('');
         } catch (err) {
