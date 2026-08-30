@@ -52,5 +52,17 @@ export const adventureApi = {
     removePoint: (code, routineId, pointId) => request(`/entities/${code}/adventure/routines/${routineId}/points/${pointId}`, {
       method: 'DELETE',
     }),
+    listWindows: (code, routineId) => request(`/entities/${code}/adventure/routines/${routineId}/windows`),
+    addWindow: (code, routineId, payload) => request(`/entities/${code}/adventure/routines/${routineId}/windows`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+    updateWindow: (code, routineId, windowId, payload) => request(`/entities/${code}/adventure/routines/${routineId}/windows/${windowId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+    removeWindow: (code, routineId, windowId) => request(`/entities/${code}/adventure/routines/${routineId}/windows/${windowId}`, {
+      method: 'DELETE',
+    }),
   },
 };

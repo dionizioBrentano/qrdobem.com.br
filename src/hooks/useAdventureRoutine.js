@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { adventureApi } from '../services/adventureApi';
+import { DEFAULT_RADIUS_METERS } from '../constants/adventure';
 
 const EMPTY_POINT = {
   name: '',
   address: '',
   latitude: '',
   longitude: '',
-  radius_meters: 50,
+  radius_meters: DEFAULT_RADIUS_METERS,
   order_index: 0,
 };
 
@@ -25,6 +26,7 @@ export function useAdventureRoutine(uniqueCode) {
   const [routinePoints, setRoutinePoints] = useState([]);
   const [routineError, setRoutineError] = useState('');
   const [routineMessage, setRoutineMessage] = useState('');
+  const [skipAlertInsideTrail, setSkipAlertInsideTrail] = useState(true);
   const [newPoint, setNewPoint] = useState(EMPTY_POINT);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function useAdventureRoutine(uniqueCode) {
         if (cancelled) return;
         setRoutine(first);
         setRoutineName(first?.name || '');
+        setSkipAlertInsideTrail(first ? Boolean(first.skip_alert_inside_trail) : true);
         if (first?.id) {
           const rPoints = await adventureApi.routines.listPoints(uniqueCode, first.id);
           if (!cancelled) setRoutinePoints(Array.isArray(rPoints) ? rPoints : (first.points || []));
@@ -72,15 +75,18 @@ export function useAdventureRoutine(uniqueCode) {
       setLoading(true);
       setRoutineError('');
       setRoutineMessage('');
+      const payload = { name, skip_alert_inside_trail: skipAlertInsideTrail };
       if (routine?.id) {
-        const updated = await adventureApi.routines.update(uniqueCode, routine.id, { name });
+        const updated = await adventureApi.routines.update(uniqueCode, routine.id, payload);
         setRoutine(updated);
         setRoutineName(updated.name || name);
+        setSkipAlertInsideTrail(Boolean(updated.skip_alert_inside_trail));
         setRoutineMessage('Trilha atualizada.');
       } else {
-        const created = await adventureApi.routines.create(uniqueCode, { name });
+        const created = await adventureApi.routines.create(uniqueCode, payload);
         setRoutine(created);
         setRoutineName(created.name || name);
+        setSkipAlertInsideTrail(Boolean(created.skip_alert_inside_trail ?? true));
         setRoutinePoints(created.points || []);
         setRoutineMessage('Trilha criada.');
       }
@@ -123,7 +129,7 @@ export function useAdventureRoutine(uniqueCode) {
         address: newPoint.address || null,
         latitude: Number(newPoint.latitude),
         longitude: Number(newPoint.longitude),
-        radius_meters: Number(newPoint.radius_meters) || 50,
+        radius_meters: Number(newPoint.radius_meters) || DEFAULT_RADIUS_METERS,
         order_index: Number(newPoint.order_index) || 0,
       });
       setRoutinePoints((prev) => [...prev, created]);
@@ -190,6 +196,8 @@ export function useAdventureRoutine(uniqueCode) {
     routinePoints,
     routineError,
     routineMessage,
+    skipAlertInsideTrail,
+    setSkipAlertInsideTrail,
     newPoint,
     setNewPoint,
     silentPassword,

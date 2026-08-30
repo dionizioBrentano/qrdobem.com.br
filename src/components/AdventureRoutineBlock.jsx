@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ShieldAlert, Trash2 } from 'lucide-react';
+import { ADVENTURE_UI } from '../constants/adventure';
 import { useAdventureRoutine } from '../hooks/useAdventureRoutine';
+import AdventureWindowsBlock from './AdventureWindowsBlock';
 
 export default function AdventureRoutineBlock({ uniqueCode, onClose }) {
   const a = useAdventureRoutine(uniqueCode);
@@ -32,6 +34,16 @@ export default function AdventureRoutineBlock({ uniqueCode, onClose }) {
         </button>
         {a.routineError && <p className="text-xs text-red-600">{a.routineError}</p>}
         {a.routineMessage && <p className="text-xs text-green-600">{a.routineMessage}</p>}
+        <label className="flex items-start gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={a.skipAlertInsideTrail}
+            onChange={(e) => a.setSkipAlertInsideTrail(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-brand-blue"
+          />
+          {ADVENTURE_UI.SKIP_ALERT_LABEL}
+        </label>
+        <p className="text-xs text-gray-500">A flag entra no botão de salvar/atualizar a trilha.</p>
       </div>
 
       <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -148,6 +160,14 @@ export default function AdventureRoutineBlock({ uniqueCode, onClose }) {
         </div>
       )}
 
+      {a.routine?.id && (
+        <AdventureWindowsBlock
+          uniqueCode={uniqueCode}
+          routine={a.routine}
+          points={a.routinePoints}
+        />
+      )}
+
       <div className="bg-gray-50 p-4 rounded-lg">
         <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-brand-accent" />
@@ -186,3 +206,5 @@ export default function AdventureRoutineBlock({ uniqueCode, onClose }) {
     </div>
   );
 }
+
+export { AdventureRoutineBlock };
