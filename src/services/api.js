@@ -214,6 +214,11 @@ export const spacesApi = {
       method: 'POST',
       body: JSON.stringify({ child_space_id: childSpaceId }),
     }),
+
+  wellnessChecks: (spaceId, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/spaces/${spaceId}/wellness-checks${qs ? `?${qs}` : ''}`);
+  },
 };
 
 // --- Vitrine das causas (T2-R04, T2-R05) ---

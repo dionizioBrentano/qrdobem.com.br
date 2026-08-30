@@ -97,6 +97,9 @@ export default function Layout() {
             <Link to="/familia" className="hover:text-brand-blue-dark transition-colors">
               Família
             </Link>
+            <Link to="/tutor" className="hover:text-brand-blue-dark transition-colors">
+              Proteção
+            </Link>
             <Link to="/equipe" className="hover:text-brand-blue-dark transition-colors">
               Equipe
             </Link>
@@ -192,6 +195,9 @@ export default function Layout() {
             </Link>
             <Link to="/familia" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Família
+            </Link>
+            <Link to="/tutor" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
+              Proteção
             </Link>
             <Link to="/equipe" onClick={() => setIsOpen(false)} className="hover:text-brand-blue-dark transition-colors block py-1">
               Equipe

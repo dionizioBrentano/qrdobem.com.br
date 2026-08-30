@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountsPage from './pages/AccountsPage';
 import FamilyPage from './pages/FamilyPage';
+import GuardianPage from './pages/GuardianPage';
 import TwoFactorPage from './pages/TwoFactorPage';
 import HealthPage from './pages/HealthPage';
 import CauseAdminPage from './pages/CauseAdminPage';
@@ -87,6 +88,7 @@ export default function App() {
             <Route path="/contas" element={<AccountsPage />} />
             {/* Árvore genealógica — Fase 1, entrega 1.6 (T1-R02) */}
             <Route path="/familia" element={<FamilyPage />} />
+            <Route path="/tutor" element={<GuardianPage />} />
             <Route path="/equipe" element={<TeamPage />} />
             <Route path="/subgrupos" element={<SubspacesPage />} />
             {/* Verificação em duas etapas — Fase 1, entrega 1.5 (T1-R05) */}
