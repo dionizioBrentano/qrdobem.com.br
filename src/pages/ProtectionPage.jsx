@@ -1,0 +1,110 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { entitiesApi } from '../services/api';
+import PanicButton from '../components/PanicButton';
+import { ADVENTURE_UI } from '../constants/adventure';
+
+export default function ProtectionPage() {
+  const { uniqueCode } = useParams();
+  
+  const [entity, setEntity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  const [monitoring, setMonitoring] = useState(true);
+  const [imOkSent, setImOkSent] = useState(false);
+
+  useEffect(() => {
+    async function loadEntity() {
+      try {
+        setLoading(true);
+        const res = await entitiesApi.getForEdit(uniqueCode);
+        setEntity(res.data || res);
+      } catch (err) {
+        setError(err.data?.error || 'Erro ao carregar a entidade.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadEntity();
+  }, [uniqueCode]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center p-8">
+        <span className="text-gray-500">Carregando...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-red-600 font-medium">
+        {error}
+      </div>
+    );
+  }
+
+  if (!entity) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        Nenhuma pessoa encontrada.
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col p-4">
+      <div className="bg-white rounded-xl shadow p-6 mb-6">
+        <h1 className="text-2xl font-black text-brand-blue mb-2 text-center">
+          {entity.name}
+        </h1>
+        
+        <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+          <span className="text-gray-700 font-bold">
+            {monitoring ? ADVENTURE_UI.PROTECTION_MONITORING_ON : ADVENTURE_UI.PROTECTION_MONITORING_OFF}
+          </span>
+          <button
+            onClick={() => setMonitoring(!monitoring)}
+            className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+              monitoring ? 'bg-brand-accent' : 'bg-gray-300'
+            }`}
+          >
+            <div
+              className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
+                monitoring ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-6 mb-6 text-center">
+        <p className="text-sm text-gray-500 uppercase tracking-wide font-bold mb-1">
+          Última posição
+        </p>
+        <p className="text-gray-800 font-medium">
+          {ADVENTURE_UI.PROTECTION_NO_POSITION}
+        </p>
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center gap-6">
+        <button
+          onClick={() => setImOkSent(true)}
+          disabled={imOkSent}
+          className={`w-[80%] mx-auto h-20 rounded-2xl text-2xl font-black shadow-lg transition-all ${
+            imOkSent
+              ? 'bg-green-100 text-green-700 cursor-not-allowed'
+              : 'bg-green-500 hover:bg-green-600 text-white active:scale-95'
+          }`}
+        >
+          {imOkSent ? ADVENTURE_UI.PROTECTION_IM_OK_SENT : ADVENTURE_UI.PROTECTION_IM_OK}
+        </button>
+
+        <div className="w-full">
+          <PanicButton spaceId={entity.space_id} entityId={entity.id} />
+        </div>
+      </div>
+    </div>
+  );
+}

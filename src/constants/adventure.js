@@ -19,4 +19,10 @@ export const ADVENTURE_UI = {
   WINDOW_TITLE: 'Janelas de horário',
   WINDOW_EMPTY: 'Nenhuma janela cadastrada.',
   WINDOW_ADD: 'Adicionar janela',
+  PROTECTION_TITLE: 'Tela de Proteção',
+  PROTECTION_NO_POSITION: 'Sem posição registrada ainda',
+  PROTECTION_IM_OK: 'Estou bem',
+  PROTECTION_IM_OK_SENT: 'Enviado',
+  PROTECTION_MONITORING_ON: 'Monitoramento ligado',
+  PROTECTION_MONITORING_OFF: 'Monitoramento desligado',
 };

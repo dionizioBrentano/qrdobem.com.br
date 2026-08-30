@@ -28,6 +28,7 @@ import PublicEntityPage from './pages/PublicEntityPage';
 import DonationStatusPage from './pages/DonationStatusPage';
 import { PanicContactInvitePage } from './pages/PanicContactInvitePage';
 import ChallengePage from './pages/ChallengePage';
+import ProtectionPage from './pages/ProtectionPage';
 
 export default function App() {
   return (
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/painel/aventura/challenge/:uniqueCode" element={<ChallengePage />} />
+            <Route path="/protecao/:uniqueCode" element={<ProtectionPage />} />
           </Route>
 
           {/* Redirect */}
