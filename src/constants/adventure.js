@@ -28,6 +28,9 @@ export const ADVENTURE_UI = {
   PROTECTION_GPS_ERROR: 'Erro ao obter localização',
   PROTECTION_GPS_DENIED: 'Permissão de GPS negada',
   PROTECTION_SEND_ERROR: 'Falha ao enviar posição',
+  DEVICE_ROLE_LABEL: 'Este aparelho é:',
+  DEVICE_ROLE_PROTECTED: 'da pessoa protegida',
+  DEVICE_ROLE_COMPANION: 'do acompanhante',
 };
 
 export const GPS_INTERVAL_MS = 60000;

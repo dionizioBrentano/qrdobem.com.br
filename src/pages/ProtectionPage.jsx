@@ -4,6 +4,7 @@ import { entitiesApi } from '../services/api';
 import PanicButton from '../components/PanicButton';
 import { ADVENTURE_UI } from '../constants/adventure';
 import { useProtectionGps } from '../hooks/useProtectionGps';
+import { useProtectionDevice } from '../hooks/useProtectionDevice';
 
 export default function ProtectionPage() {
   const { uniqueCode } = useParams();
@@ -15,6 +16,7 @@ export default function ProtectionPage() {
   const [monitoring, setMonitoring] = useState(true);
   const [imOkSent, setImOkSent] = useState(false);
 
+  const { role, error: deviceError, setRole } = useProtectionDevice(uniqueCode);
   const { lastKnown, error: gpsError, sending } = useProtectionGps(uniqueCode, monitoring);
 
   useEffect(() => {
@@ -79,6 +81,35 @@ export default function ProtectionPage() {
               }`}
             />
           </button>
+        </div>
+
+        <div className="border-t border-gray-100 pt-4 mt-4 text-sm text-gray-600">
+          <p className="font-bold mb-2">{ADVENTURE_UI.DEVICE_ROLE_LABEL}</p>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="deviceRole"
+                value="protected"
+                checked={role === 'protected'}
+                onChange={() => setRole('protected')}
+                className="text-brand-accent focus:ring-brand-accent w-4 h-4"
+              />
+              {ADVENTURE_UI.DEVICE_ROLE_PROTECTED}
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="deviceRole"
+                value="companion"
+                checked={role === 'companion'}
+                onChange={() => setRole('companion')}
+                className="text-brand-accent focus:ring-brand-accent w-4 h-4"
+              />
+              {ADVENTURE_UI.DEVICE_ROLE_COMPANION}
+            </label>
+          </div>
+          {deviceError && <p className="text-red-500 text-xs mt-2">{deviceError}</p>}
         </div>
       </div>
 

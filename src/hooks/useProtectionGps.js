@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { positionApi } from '../services/positionApi';
 import { GPS_INTERVAL_MS, ADVENTURE_UI } from '../constants/adventure';
+import { getDeviceId } from '../utils/deviceId';
 
 export function useProtectionGps(uniqueCode, monitoring) {
   const [lastSent, setLastSent] = useState(null);
@@ -88,6 +89,7 @@ export function useProtectionGps(uniqueCode, monitoring) {
         longitude: position.coords.longitude,
         accuracy_meters: Math.round(position.coords.accuracy),
         recorded_at: new Date(position.timestamp).toISOString(),
+        device_id: getDeviceId(),
       };
       
       // Salva apenas visualmente se for muito recente para enviar
