@@ -7,6 +7,9 @@ import CheckoutModal from '../components/CheckoutModal';
 import CompleteRegistrationBlock from '../components/CompleteRegistrationBlock';
 import SpaceSelector from '../components/SpaceSelector';
 import PanicButton from '../components/PanicButton';
+import { useEntityCatalog } from '../hooks/useEntityCatalog';
+import EntityCatalogToolbar from '../components/EntityCatalogToolbar';
+import EntityCard from '../components/EntityCard';
 
 // CTA de conversão por trilha de origem. A trilha chega via ?trail= ou
 // sessionStorage (ver LoginPage/RegisterPage) e define o texto do botão principal.
@@ -60,6 +63,8 @@ export default function DashboardPage() {
   const [familyProfileBlocked, setFamilyProfileBlocked] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const { query, setQuery, sortKey, setSortKey, typeFilter, setTypeFilter, entities: filteredEntities } = useEntityCatalog(data?.entities);
 
   useEffect(() => {
     const queryTrail = searchParams.get('trail');
@@ -507,96 +512,36 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Tabela de entidades */}
-        <div className="bg-white rounded-xl shadow-sm border w-full overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[600px]">
-              <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nome</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Criado em</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">QR Code</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {data?.entities?.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-400">
-                    Nenhum QR Code registrado ainda.
-                  </td>
-                </tr>
-              )}
-              {data?.entities?.map((entity) => {
-                const isActive = entity.status ? entity.status === 'active' : entity.is_active;
-
-                return (
-                  <tr key={entity.unique_code} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      <button 
-                        onClick={() => {
-                          setEditingEntityCode(entity.unique_code);
-                          setShowForm(true);
-                        }}
-                        className="text-brand-blue hover:underline text-left font-semibold"
-                      >
-                        {entity.name}
-                      </button>
-                      {entity.has_active_emergency && (
-                        <span className="inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
-                          EMERGÊNCIA
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 capitalize">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                        entity.type === 'person' ? 'bg-blue-100 text-blue-700' :
-                        entity.type === 'pet' ? 'bg-amber-100 text-amber-700' :
-                        'bg-purple-100 text-purple-700'
-                      }`}>
-                        {entity.type === 'person' ? 'Pessoa' : entity.type === 'pet' ? 'Pet' : 'Objeto'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{entity.created_at}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                        isActive ? 'bg-brand-blue/100' :
-                        entity.status === 'suspended' ? 'bg-red-400' : 'bg-gray-300'
-                      }`} />
-                      {isActive ? 'Ativo' : entity.status === 'suspended' ? 'Suspenso' : 'Pendente'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setQrEntity(entity)}
-                          className="text-brand-blue hover:underline text-xs font-medium"
-                        >
-                          Ver QR
-                        </button>
-                        <a
-                          href={entity.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-500 hover:text-brand-blue text-xs"
-                        >
-                          Abrir link
-                        </a>
-                        <button
-                          onClick={() => handleDeleteEntity(entity)}
-                          className="text-red-500 hover:text-red-700 hover:underline text-xs"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* Catálogo de entidades */}
+        <EntityCatalogToolbar
+          query={query}
+          setQuery={setQuery}
+          sortKey={sortKey}
+          setSortKey={setSortKey}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+        />
+        
+        {filteredEntities.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border w-full p-10 text-center text-gray-400">
+            {query || typeFilter !== 'all' ? 'Nenhum QR Code encontrado para esta busca.' : 'Nenhum QR Code registrado ainda.'}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+            {filteredEntities.map((entity) => (
+              <EntityCard
+                key={entity.unique_code}
+                entity={entity}
+                onEdit={(code) => {
+                  setEditingEntityCode(code);
+                  setShowForm(true);
+                }}
+                onViewQr={(ent) => setQrEntity(ent)}
+                onDelete={(ent) => handleDeleteEntity(ent)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {showForm && (
