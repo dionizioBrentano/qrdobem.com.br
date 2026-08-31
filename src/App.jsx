@@ -30,6 +30,7 @@ import DonationStatusPage from './pages/DonationStatusPage';
 import { PanicContactInvitePage } from './pages/PanicContactInvitePage';
 import ChallengePage from './pages/ChallengePage';
 import ProtectionPage from './pages/ProtectionPage';
+import EntityEditPage from './pages/EntityEditPage';
 
 export default function App() {
   return (
@@ -85,6 +86,7 @@ export default function App() {
             }
           >
             <Route path="/painel" element={<DashboardPage />} />
+            <Route path="/painel/qr/:uniqueCode" element={<EntityEditPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             {/* Minhas contas e vínculos — Fase 0, entrega 0.11 (TX-R02..R04) */}
             <Route path="/contas" element={<AccountsPage />} />

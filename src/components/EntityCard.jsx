@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { User, Dog, Package, RefreshCw, Trash2, Edit, ExternalLink, Eye, AlertCircle } from 'lucide-react';
 import { useEntityMedia } from '../hooks/useEntityCatalog';
+import { useEntityQr } from '../hooks/useEntityQr';
 import { ENTITY_TYPES, DASHBOARD_TEXTS } from '../constants/dashboard';
 
 export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
   const [showQr, setShowQr] = useState(false);
   const { mediaUrl, loading } = useEntityMedia(entity.unique_code);
+  const { qrBase64, loading: qrLoading } = useEntityQr(entity.unique_code);
 
   const isActive = entity.status ? entity.status === 'active' : entity.is_active;
 
@@ -23,12 +25,13 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
       {/* Front/Back Media Area */}
       <div className="relative aspect-square w-full bg-gray-50 border-b flex items-center justify-center">
         {showQr ? (
-          <img 
-            src={entity.qr_code_url} 
-            alt="QR Code" 
-            className="w-full h-full object-contain p-4" 
-            loading="lazy" 
-          />
+          qrLoading ? (
+             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
+          ) : qrBase64 ? (
+             <img src={qrBase64} alt="QR Code" className="w-full h-full object-contain p-4" loading="lazy" />
+          ) : (
+             <span className="text-gray-400 text-sm">Indisponível</span>
+          )
         ) : (
           mediaUrl ? (
             <img 

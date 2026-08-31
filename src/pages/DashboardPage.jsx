@@ -48,8 +48,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingEntityCode, setEditingEntityCode] = useState(null);
-  const [qrEntity, setQrEntity] = useState(null);
+    const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
   // Espaço de trilha ativo (F1). Fica null enquanto a API antiga não
   // devolver `active_space_id` — o painel funciona igual nesse caso.
@@ -211,8 +210,7 @@ export default function DashboardPage() {
       return;
     }
     if (type) setActiveTrail(type);
-    setEditingEntityCode(null);
-    setShowForm(true);
+        setShowForm(true);
   };
 
   // Espaço família não consome crédito nem passa pelo EntityFormModal: é só
@@ -423,8 +421,7 @@ export default function DashboardPage() {
           <div className="w-full md:w-auto text-right">
             <button
               onClick={() => {
-                setEditingEntityCode(null);
-                setShowForm(true);
+                                setShowForm(true);
               }}
               disabled={!allowCreate}
               title={allowCreate ? '' : 'Complete o perfil ou adquira créditos'}
@@ -532,10 +529,7 @@ export default function DashboardPage() {
               <EntityCard
                 key={entity.unique_code}
                 entity={entity}
-                onEdit={(code) => {
-                  setEditingEntityCode(code);
-                  setShowForm(true);
-                }}
+                onEdit={(code) => navigate(`/painel/qr/${code}`)}
                 onViewQr={(ent) => setQrEntity(ent)}
                 onDelete={(ent) => handleDeleteEntity(ent)}
               />
@@ -548,24 +542,17 @@ export default function DashboardPage() {
         <EntityFormModal
           organizationId={activeOrgId}
           activeSpaceId={activeSpaceId}
-          uniqueCode={editingEntityCode}
           activeTrail={activeTrail}
-          initialType={
-            ['family', 'cause', 'aventura'].includes(activeTrail) ? 'person' : (activeTrail || 'person')
-          }
-          onClose={() => {
-            setShowForm(false);
-            setEditingEntityCode(null);
-          }}
+          initialType={activeTrail === 'aventura' ? 'person' : activeTrail}
+          onClose={() => setShowForm(false)}
           onCreated={(newCode) => {
+            setShowForm(false);
             loadEntities(activeOrgId);
             loadProfile();
             if (activeTrail === 'aventura' && newCode && typeof newCode === 'string') {
               clearTrail();
-              setEditingEntityCode(newCode);
+              navigate(`/painel/qr/${newCode}`);
             } else {
-              setShowForm(false);
-              setEditingEntityCode(null);
               clearTrail();
             }
           }}
@@ -595,3 +582,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
