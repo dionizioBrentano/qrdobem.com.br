@@ -6,7 +6,6 @@ import { useEntityQr } from '../hooks/useEntityQr';
 import { ENTITY_EDIT_TEXTS } from '../constants/entityEdit';
 import EntityMediaBlock from '../components/EntityMediaBlock';
 import EntityEditFields from '../components/EntityEditFields';
-import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function EntityEditPage() {
   const { uniqueCode } = useParams();
@@ -69,14 +68,7 @@ export default function EntityEditPage() {
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
-      <div className="mb-6">
-        <Breadcrumbs 
-          items={[
-            { label: 'Painel', to: '/painel' },
-            { label: editLogic.data?.form?.name || 'Editar QR Code' }
-          ]} 
-        />
-      </div>
+      
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left Column: Photo & QR */}
@@ -147,3 +139,4 @@ export default function EntityEditPage() {
     </div>
   );
 }
+

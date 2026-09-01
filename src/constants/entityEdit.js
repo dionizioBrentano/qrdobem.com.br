@@ -11,5 +11,6 @@ export const ENTITY_EDIT_TEXTS = {
   saveSuccess: 'Alterações salvas com sucesso!',
   saveError: 'Falha ao salvar as alterações.',
   deleteSuccess: 'QR Code excluído com sucesso.',
-  deleteError: 'Falha ao excluir QR Code.'
+  deleteError: 'Falha ao excluir QR Code.',
+  invalidMediaFormat: 'Envie JPG, PNG ou WEBP. Foto de iPhone em HEIC não é aceita.'
 };

@@ -26,7 +26,9 @@ export default function Breadcrumbs() {
   
   let currentLabel = routeMap[normalizedPath];
   
-  if (currentLabel === undefined) {
+  if (normalizedPath.startsWith('/painel/qr/')) {
+    currentLabel = 'Editar QR';
+  } else if (currentLabel === undefined) {
     const segments = normalizedPath.split('/').filter(Boolean);
     currentLabel = segments.length > 0 ? segments[0] : '';
     if (currentLabel) {

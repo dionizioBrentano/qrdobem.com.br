@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { User, Dog, Package, RefreshCw, Trash2, Edit, ExternalLink, Eye, AlertCircle } from 'lucide-react';
-import { useEntityMedia } from '../hooks/useEntityCatalog';
+import { useEntityMedia } from '../hooks/useEntityMedia';
 import { useEntityQr } from '../hooks/useEntityQr';
 import { ENTITY_TYPES, DASHBOARD_TEXTS } from '../constants/dashboard';
 
