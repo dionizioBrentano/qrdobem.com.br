@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ENTITY_EDIT_TEXTS } from '../constants/entityEdit';
 import { Upload, Trash2, AlertCircle } from 'lucide-react';
 import { useEntityMedia } from '../hooks/useEntityMedia';
@@ -7,6 +7,7 @@ export default function EntityMediaBlock({ uniqueCode }) {
   const { mediaUrl, loading, uploadMedia, removeMedia } = useEntityMedia(uniqueCode);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const fileInputRef = useRef(null);
 
   const getErrorMessage = (err) => {
     return err.data?.error || 
@@ -24,13 +25,21 @@ export default function EntityMediaBlock({ uniqueCode }) {
     setErrorMsg('');
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setErrorMsg(ENTITY_EDIT_TEXTS.invalidMediaFormat);
+    const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    const isTypeValid = file.type ? validTypes.includes(file.type) : false;
+    const isExtValid = validExts.includes(ext);
+
+    if (!isTypeValid && !isExtValid) {
+      setErrorMsg('Arquivo não enviado. Use JPG, PNG ou WEBP.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (file.size > 20 * 1024 * 1024) {
       setErrorMsg('O arquivo é muito grande (máximo 20MB).');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -41,6 +50,7 @@ export default function EntityMediaBlock({ uniqueCode }) {
       setErrorMsg(getErrorMessage(err));
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -84,17 +94,16 @@ export default function EntityMediaBlock({ uniqueCode }) {
         )}
 
         <div className="absolute inset-x-0 bottom-4 flex justify-center z-10">
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+          />
           <button
             type="button"
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/jpeg,image/png,image/webp';
-              input.onchange = (e) => {
-                 handleFileChange({ target: { files: e.target.files } });
-              };
-              input.click();
-            }}
+            onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="flex items-center gap-2 px-4 py-2 bg-brand-blue text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50"
           >
