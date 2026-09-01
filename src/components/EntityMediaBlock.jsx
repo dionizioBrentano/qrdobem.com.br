@@ -23,7 +23,7 @@ export default function EntityMediaBlock({ uniqueCode }) {
 
     setErrorMsg('');
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       setErrorMsg(ENTITY_EDIT_TEXTS.invalidMediaFormat);
       return;
