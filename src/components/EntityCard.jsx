@@ -21,9 +21,9 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
   const typeLabel = ENTITY_TYPES[entity.type] || entity.type;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col h-full">
       {/* Front/Back Media Area */}
-      <div className="relative aspect-square w-full overflow-hidden bg-gray-50 border-b flex items-center justify-center">
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-gray-50 border-b flex items-center justify-center">
         {showQr ? (
           qrLoading ? (
              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
@@ -57,11 +57,11 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
         <button
           type="button"
           onClick={() => setShowQr(!showQr)}
-          className="absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow hover:bg-white text-gray-700 transition-colors"
+          className="absolute top-2 right-2 bg-white p-2 rounded-full shadow hover:bg-gray-100 z-10 transition"
           aria-label={showQr ? DASHBOARD_TEXTS.flipToPortrait : DASHBOARD_TEXTS.flipToQr}
           title={showQr ? DASHBOARD_TEXTS.flipToPortrait : DASHBOARD_TEXTS.flipToQr}
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4 text-gray-600" />
         </button>
 
         {entity.has_active_emergency && (
@@ -73,7 +73,7 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
       </div>
 
       {/* Info Area */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="shrink-0 p-4 flex-1 flex flex-col">
         <h3 className="font-semibold text-gray-900 text-lg truncate" title={entity.name}>
           {entity.name}
         </h3>

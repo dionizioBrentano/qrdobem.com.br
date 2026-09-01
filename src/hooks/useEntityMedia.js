@@ -40,6 +40,10 @@ export function invalidateEntityMedia(uniqueCode) {
   notifyListeners(uniqueCode, null);
 }
 
+export function clearAllMediaCache() {
+  mediaCache.clear();
+}
+
 export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
   const [media, setMedia] = useState(() => {
     if (initialPhotoUrl) return { url: resolveMediaUrl(initialPhotoUrl) };
@@ -48,6 +52,28 @@ export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
   
   const [loading, setLoading] = useState(!initialPhotoUrl && !mediaCache.has(uniqueCode));
   const [error, setError] = useState(false);
+
+  const fetchMedia = () => {
+    if (initialPhotoUrl) return;
+    setLoading(true);
+    entitiesApi.listMedia(uniqueCode)
+      .then(res => {
+        const obj = res.media && res.media.length > 0 ? res.media[0] : null;
+        if (obj) {
+          obj.url = resolveMediaUrl(obj.url || `/media/${obj.id}`);
+        }
+        mediaCache.set(uniqueCode, obj);
+        setMedia(obj);
+        notifyListeners(uniqueCode, obj);
+      })
+      .catch(() => {
+        mediaCache.delete(uniqueCode);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     const unsubscribe = subscribe(uniqueCode, (newMedia) => {
@@ -62,30 +88,9 @@ export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
       return unsubscribe;
     }
 
-    let isMounted = true;
-    entitiesApi.listMedia(uniqueCode)
-      .then(res => {
-        if (!isMounted) return;
-        const obj = res.media && res.media.length > 0 ? res.media[0] : null;
-        if (obj && obj.url) {
-          obj.url = resolveMediaUrl(obj.url);
-        }
-        mediaCache.set(uniqueCode, obj);
-        setMedia(obj);
-        notifyListeners(uniqueCode, obj);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        // Não gravar null no cache em caso de erro para forçar nova consulta depois
-        mediaCache.delete(uniqueCode);
-        setError(true);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+    fetchMedia();
 
     return () => {
-      isMounted = false;
       unsubscribe();
     };
   }, [uniqueCode, initialPhotoUrl]);
@@ -103,8 +108,8 @@ export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
       await entitiesApi.uploadMedia(uniqueCode, formData);
       const res = await entitiesApi.listMedia(uniqueCode);
       const obj = res.media && res.media.length > 0 ? res.media[0] : null;
-      if (obj && obj.url) {
-        obj.url = resolveMediaUrl(obj.url);
+      if (obj) {
+        obj.url = resolveMediaUrl(obj.url || `/media/${obj.id}`);
       }
       mediaCache.set(uniqueCode, obj);
       setMedia(obj);
@@ -133,5 +138,5 @@ export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
     }
   };
 
-  return { media, mediaUrl: media?.url, loading, error, uploadMedia, removeMedia };
+  return { media, mediaUrl: media?.url, loading, error, uploadMedia, removeMedia, refetch: fetchMedia };
 }

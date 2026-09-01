@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { entitiesApi, profileApi, spacesApi } from '../services/api';
 import EntityFormModal from '../components/EntityFormModal';
 import QrCodeModal from '../components/QrCodeModal';
@@ -10,6 +10,7 @@ import PanicButton from '../components/PanicButton';
 import { useEntityCatalog } from '../hooks/useEntityCatalog';
 import EntityCatalogToolbar from '../components/EntityCatalogToolbar';
 import EntityCard from '../components/EntityCard';
+import { clearAllMediaCache } from '../hooks/useEntityMedia';
 
 // CTA de conversão por trilha de origem. A trilha chega via ?trail= ou
 // sessionStorage (ver LoginPage/RegisterPage) e define o texto do botão principal.
@@ -48,6 +49,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/painel' || location.pathname === '/painel/') {
+      clearAllMediaCache();
+    }
+  }, [location.pathname]);
+
     const [qrEntity, setQrEntity] = useState(null);
   const [activeOrgId, setActiveOrgId] = useState(null);
   // Espaço de trilha ativo (F1). Fica null enquanto a API antiga não
@@ -524,7 +533,7 @@ export default function DashboardPage() {
             {query || typeFilter !== 'all' ? 'Nenhum QR Code encontrado para esta busca.' : 'Nenhum QR Code registrado ainda.'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 items-start">
             {filteredEntities.map((entity) => (
               <EntityCard
                 key={entity.unique_code}
