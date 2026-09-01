@@ -50,12 +50,12 @@ export default function EntityMediaBlock({ uniqueCode }) {
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      <div className="flex flex-col items-center justify-center p-4 border rounded-xl bg-gray-50 aspect-square relative overflow-hidden">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50 border rounded-xl flex items-center justify-center">
         {loading ? (
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue" />
         ) : mediaUrl ? (
           <>
-            <img src={mediaUrl} alt="Foto" className="w-full h-full object-cover absolute inset-0" />
+            <img src={mediaUrl} alt="Foto" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute bottom-2 right-2 flex gap-2">
               <button
                 type="button"
@@ -69,12 +69,12 @@ export default function EntityMediaBlock({ uniqueCode }) {
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-2 text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full w-full absolute inset-0 text-gray-400">
             <span className="text-sm">{ENTITY_EDIT_TEXTS.noPhoto}</span>
           </div>
         )}
 
-        <div className="mt-4 z-10 w-full flex justify-center">
+        <div className="absolute inset-x-0 bottom-4 flex justify-center z-10">
           <button
             type="button"
             onClick={() => {

@@ -23,12 +23,12 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col">
       {/* Front/Back Media Area */}
-      <div className="relative aspect-square w-full bg-gray-50 border-b flex items-center justify-center">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50 border-b flex items-center justify-center">
         {showQr ? (
           qrLoading ? (
              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
           ) : qrBase64 ? (
-             <img src={qrBase64} alt="QR Code" className="w-full h-full object-contain p-4" loading="lazy" />
+             <img src={qrBase64} alt="QR Code" className="absolute inset-0 w-full h-full object-contain p-4 bg-white" loading="lazy" />
           ) : (
              <span className="text-gray-400 text-sm">Indisponível</span>
           )
@@ -37,11 +37,11 @@ export default function EntityCard({ entity, onEdit, onViewQr, onDelete }) {
             <img 
               src={mediaUrl} 
               alt={entity.name} 
-              className="w-full h-full object-cover" 
+              className="absolute inset-0 w-full h-full object-cover" 
               loading="lazy" 
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full">
+            <div className="flex flex-col items-center justify-center h-full w-full absolute inset-0">
               {loading ? (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
               ) : (
