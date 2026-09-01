@@ -12,5 +12,7 @@ export const ENTITY_EDIT_TEXTS = {
   saveError: 'Falha ao salvar as alterações.',
   deleteSuccess: 'QR Code excluído com sucesso.',
   deleteError: 'Falha ao excluir QR Code.',
-  invalidMediaFormat: 'Envie JPG, PNG ou WEBP. Foto de iPhone em HEIC não é aceita.'
+  invalidMediaFormat: 'Envie JPG, PNG ou WEBP. Foto de iPhone em HEIC não é aceita.',
+  mediaHint: 'JPG, PNG ou WEBP. Fotos grandes são reduzidas sozinhas.',
+  mediaUploadFailed: 'Não foi possível enviar. Tente outro JPG.'
 };

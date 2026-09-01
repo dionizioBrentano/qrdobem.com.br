@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { entitiesApi } from '../services/api';
+import { resizeImageFile } from '../utils/resizeImageFile';
 
 const mediaCache = new Map();
 const listeners = new Map();
@@ -96,13 +97,14 @@ export function useEntityMedia(uniqueCode, initialPhotoUrl = null) {
   }, [uniqueCode, initialPhotoUrl]);
 
   const uploadMedia = async (file) => {
-    const objectUrl = URL.createObjectURL(file);
+    const ready = await resizeImageFile(file);
+    const objectUrl = URL.createObjectURL(ready);
     const tempMedia = { url: objectUrl, id: 'temp' };
     setMedia(tempMedia);
     notifyListeners(uniqueCode, tempMedia);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', ready);
 
     try {
       await entitiesApi.uploadMedia(uniqueCode, formData);

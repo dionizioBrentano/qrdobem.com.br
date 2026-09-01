@@ -10,12 +10,18 @@ export default function EntityMediaBlock({ uniqueCode }) {
   const fileInputRef = useRef(null);
 
   const getErrorMessage = (err) => {
-    return err.data?.error || 
-           err.data?.message || 
-           err.data?.errors?.file?.[0] || 
-           err.data?.received || 
-           err.message || 
-           ENTITY_EDIT_TEXTS.mediaError;
+    const msg1 = err.data?.error;
+    const msg2 = err.data?.message;
+    const msg3 = err.data?.errors?.file?.[0];
+    const msg4 = err.data?.received;
+    const msg5 = err.message;
+
+    const allText = [msg1, msg2, msg3, msg4, msg5].filter(Boolean).join(' ').toLowerCase();
+    if (allText.includes('uploaded')) {
+      return ENTITY_EDIT_TEXTS.mediaUploadFailed;
+    }
+
+    return msg1 || msg2 || msg3 || msg4 || msg5 || ENTITY_EDIT_TEXTS.mediaError;
   };
 
   const handleFileChange = async (e) => {
@@ -113,6 +119,8 @@ export default function EntityMediaBlock({ uniqueCode }) {
         </div>
       </div>
       
+      <p className="text-xs text-gray-500 px-1">{ENTITY_EDIT_TEXTS.mediaHint}</p>
+
       {errorMsg && (
         <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg flex items-start gap-1">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />
