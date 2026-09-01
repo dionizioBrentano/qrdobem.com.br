@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import { useEntityEdit } from '../hooks/useEntityEdit';
 import { useEntityQr } from '../hooks/useEntityQr';
+import { useEntityMedia } from '../hooks/useEntityMedia';
 import { ENTITY_EDIT_TEXTS } from '../constants/entityEdit';
 import EntityMediaBlock from '../components/EntityMediaBlock';
 import EntityEditFields from '../components/EntityEditFields';
@@ -14,6 +15,7 @@ export default function EntityEditPage() {
 
   const editLogic = useEntityEdit(uniqueCode);
   const { qrBase64, loading: qrLoading } = useEntityQr(uniqueCode);
+  const { mediaUrl } = useEntityMedia(uniqueCode);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -49,6 +51,20 @@ export default function EntityEditPage() {
       }
     }
   };
+
+  const previewUrl = useMemo(() => {
+    if (editLogic.stagedFile) return URL.createObjectURL(editLogic.stagedFile);
+    if (editLogic.removePhoto) return null;
+    return mediaUrl;
+  }, [editLogic.stagedFile, editLogic.removePhoto, mediaUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (editLogic.stagedFile && previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [editLogic.stagedFile, previewUrl]);
 
   if (editLogic.loading) {
     return (
@@ -92,7 +108,18 @@ export default function EntityEditPage() {
                 <span className="text-gray-400 text-sm">QR Code indisponível</span>
               )
             ) : (
-              <EntityMediaBlock uniqueCode={uniqueCode} />
+              <EntityMediaBlock 
+                previewUrl={previewUrl}
+                onPickFile={(file) => {
+                  editLogic.setStagedFile(file);
+                  editLogic.setRemovePhoto(false);
+                }}
+                onAskRemove={() => {
+                  editLogic.setStagedFile(null);
+                  editLogic.setRemovePhoto(true);
+                }}
+                pending={editLogic.saving}
+              />
             )}
           </div>
         </div>

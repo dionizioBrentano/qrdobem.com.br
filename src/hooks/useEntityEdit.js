@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { entitiesApi } from '../services/api';
+import { resizeImageFile } from '../utils/resizeImageFile';
 
 const EMPTY_PET_FIELDS = {
   species: 'dog', species_other_description: '', size: '', size_is_public: true,
@@ -26,6 +27,8 @@ export function useEntityEdit(uniqueCode) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [stagedFile, setStagedFile] = useState(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -130,10 +133,13 @@ export function useEntityEdit(uniqueCode) {
   const updateVaccination = (idx, k, v) => setData(p => ({ ...p, vaccinations: p.vaccinations.map((a, i) => i === idx ? { ...a, [k]: v } : a) }));
   const removeVaccination = (idx) => setData(p => ({ ...p, vaccinations: p.vaccinations.filter((_, i) => i !== idx) }));
 
-  const dirty = snapshot !== null && data !== null && snapshot !== JSON.stringify(data);
+  const dirtyFields = snapshot !== null && data !== null && snapshot !== JSON.stringify(data);
+  const dirty = dirtyFields || stagedFile !== null || removePhoto;
 
   const discard = () => {
     if (snapshot) setData(JSON.parse(snapshot));
+    setStagedFile(null);
+    setRemovePhoto(false);
   };
 
   const save = async () => {
@@ -142,52 +148,70 @@ export function useEntityEdit(uniqueCode) {
     setError('');
     
     try {
-      const attributes = data.customAttrs.reduce((acc, { key, value }) => {
-        const tk = key.trim();
-        const tv = value.trim();
-        if (tk && tv) acc[tk] = tv;
-        return acc;
-      }, {});
-
-      const health = HEALTH_FIELDS.reduce((acc, key) => {
-        const entry = data.healthFields[key];
-        if (entry?.value?.trim()) {
-          const restricted = ['continuous_medications', 'substance_use_risk'].includes(key);
-          acc.push({
-            field_key: key,
-            field_value: entry.value.trim(),
-            is_public: restricted ? false : Boolean(entry.is_public),
-          });
+      if (stagedFile) {
+        const ready = await resizeImageFile(stagedFile);
+        const formData = new FormData();
+        formData.append('file', ready);
+        await entitiesApi.uploadMedia(uniqueCode, formData);
+      } else if (removePhoto) {
+        const res = await entitiesApi.listMedia(uniqueCode);
+        const obj = res.media && res.media.length > 0 ? res.media[0] : null;
+        if (obj) {
+          await entitiesApi.removeMedia(uniqueCode, obj.id);
         }
-        return acc;
-      }, []);
-
-      const bloodStr = data.bloodType ? `${data.bloodType}${data.bloodRh}` : '';
-      if (bloodStr) {
-        health.push({
-          field_key: 'blood_type',
-          field_value: bloodStr,
-          is_public: Boolean(data.healthFields['blood_type']?.is_public),
-        });
       }
 
-      const payload = {
-        ...data.form,
-        ...(Object.keys(attributes).length > 0 && { custom_attributes: attributes }),
-        ...(health.length > 0 && { health_fields: health }),
-        ...(data.form.type === 'pet' && {
-          pet_fields: {
-            ...data.petFields,
-            species_other_description: data.petFields.species === 'other' ? data.petFields.species_other_description : null,
-            size: data.petFields.size || null,
-            is_neutered: data.petFields.is_neutered || null,
-          },
-          vaccinations: data.vaccinations.filter((v) => v.vaccine_name.trim() && v.applied_at),
-        }),
-        ...(data.form.type === 'object' && { object_fields: data.objectFields }),
-      };
+      if (dirtyFields) {
+        const attributes = data.customAttrs.reduce((acc, { key, value }) => {
+          const tk = key.trim();
+          const tv = value.trim();
+          if (tk && tv) acc[tk] = tv;
+          return acc;
+        }, {});
 
-      await entitiesApi.update(uniqueCode, payload);
+        const health = HEALTH_FIELDS.reduce((acc, key) => {
+          const entry = data.healthFields[key];
+          if (entry?.value?.trim()) {
+            const restricted = ['continuous_medications', 'substance_use_risk'].includes(key);
+            acc.push({
+              field_key: key,
+              field_value: entry.value.trim(),
+              is_public: restricted ? false : Boolean(entry.is_public),
+            });
+          }
+          return acc;
+        }, []);
+
+        const bloodStr = data.bloodType ? `${data.bloodType}${data.bloodRh}` : '';
+        if (bloodStr) {
+          health.push({
+            field_key: 'blood_type',
+            field_value: bloodStr,
+            is_public: Boolean(data.healthFields['blood_type']?.is_public),
+          });
+        }
+
+        const payload = {
+          ...data.form,
+          ...(Object.keys(attributes).length > 0 && { custom_attributes: attributes }),
+          ...(health.length > 0 && { health_fields: health }),
+          ...(data.form.type === 'pet' && {
+            pet_fields: {
+              ...data.petFields,
+              species_other_description: data.petFields.species === 'other' ? data.petFields.species_other_description : null,
+              size: data.petFields.size || null,
+              is_neutered: data.petFields.is_neutered || null,
+            },
+            vaccinations: data.vaccinations.filter((v) => v.vaccine_name.trim() && v.applied_at),
+          }),
+          ...(data.form.type === 'object' && { object_fields: data.objectFields }),
+        };
+
+        await entitiesApi.update(uniqueCode, payload);
+      }
+      
+      setStagedFile(null);
+      setRemovePhoto(false);
       setSnapshot(JSON.stringify(data));
       return true;
     } catch (err) {
@@ -217,6 +241,10 @@ export function useEntityEdit(uniqueCode) {
     saving,
     error,
     dirty,
+    stagedFile,
+    setStagedFile,
+    removePhoto,
+    setRemovePhoto,
     updateForm,
     updatePet,
     updateObject,
