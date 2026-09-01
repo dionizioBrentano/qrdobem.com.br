@@ -34,20 +34,29 @@ export default function EntityEditPage() {
     }
   };
 
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleSave = async () => {
+    setErrorMessage('');
     const success = await editLogic.save();
     if (success) {
-      alert(ENTITY_EDIT_TEXTS.saveSuccess);
-      navigate('/painel');
+      setSuccessMessage(ENTITY_EDIT_TEXTS.saveSuccess);
+      setTimeout(() => navigate('/painel'), 1500);
+    } else {
+      setErrorMessage(editLogic.error || 'Erro ao salvar.');
     }
   };
 
   const handleDelete = async () => {
     if (window.confirm(ENTITY_EDIT_TEXTS.confirmDelete)) {
+      setErrorMessage('');
       const success = await editLogic.remove();
       if (success) {
-        alert(ENTITY_EDIT_TEXTS.deleteSuccess);
-        navigate('/painel');
+        setSuccessMessage(ENTITY_EDIT_TEXTS.deleteSuccess);
+        setTimeout(() => navigate('/painel'), 1500);
+      } else {
+        setErrorMessage(editLogic.error || 'Erro ao excluir.');
       }
     }
   };
@@ -74,16 +83,21 @@ export default function EntityEditPage() {
     );
   }
 
-  if (editLogic.error) {
+  if (editLogic.error || errorMessage) {
     return (
       <div className="p-6 bg-red-50 text-red-700 rounded-lg max-w-4xl mx-auto mt-6">
-        {editLogic.error}
+        {errorMessage || editLogic.error}
       </div>
     );
   }
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
+      {successMessage && (
+        <div className="p-4 bg-green-50 text-green-700 rounded-lg max-w-4xl mx-auto mt-4 mb-4">
+          {successMessage}
+        </div>
+      )}
       
 
       <div className="flex flex-col lg:flex-row gap-8">

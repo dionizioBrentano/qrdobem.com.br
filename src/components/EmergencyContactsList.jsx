@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Send, Plus, Loader2, Copy, Check } from 'lucide-react';
 import { emergencyContactsApi } from '../services/api';
+import { apiError } from '../utils/apiError';
 
 export default function EmergencyContactsList({ spaceId, entityId }) {
   const [contacts, setContacts] = useState([]);
@@ -31,9 +32,13 @@ export default function EmergencyContactsList({ spaceId, entityId }) {
     }
   };
 
+  const [success, setSuccess] = useState('');
+
   const handleAdd = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
+    setSuccess('');
     try {
       await emergencyContactsApi.create({
         space_id: spaceId,
@@ -43,8 +48,10 @@ export default function EmergencyContactsList({ spaceId, entityId }) {
       setFormData({ name: '', phone: '', email: '' });
       setIsAdding(false);
       await fetchContacts();
+      setSuccess('Contato adicionado com sucesso.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert(err.message || 'Erro ao adicionar contato.');
+      setError(apiError(err));
     } finally {
       setSubmitting(false);
     }
@@ -52,21 +59,29 @@ export default function EmergencyContactsList({ spaceId, entityId }) {
 
   const handleRemove = async (id) => {
     if (!confirm('Deseja realmente remover este contato? Ele não receberá mais alertas de pânico.')) return;
+    setError('');
+    setSuccess('');
     try {
       await emergencyContactsApi.remove(id);
       await fetchContacts();
+      setSuccess('Contato removido.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert(err.message || 'Erro ao remover contato.');
+      setError(apiError(err));
     }
   };
 
   const handleResend = async (id) => {
+    setError('');
+    setSuccess('');
     try {
       const data = await emergencyContactsApi.resend(id);
       const link = `${window.location.origin}/convite-panico/${data.token}`;
       handleCopy(link, id);
+      setSuccess('Link regerado e copiado.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert(err.message || 'Erro ao reenviar convite.');
+      setError(apiError(err));
     }
   };
 
@@ -160,7 +175,8 @@ export default function EmergencyContactsList({ spaceId, entityId }) {
           </form>
         )}
 
-        {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
+        {error && <div className="text-red-600 text-sm mb-4 bg-red-50 p-3 rounded-lg">{error}</div>}
+        {success && <div className="text-green-600 text-sm mb-4 bg-green-50 p-3 rounded-lg">{success}</div>}
 
         {contacts.length === 0 && !isAdding ? (
           <div className="text-center py-8">

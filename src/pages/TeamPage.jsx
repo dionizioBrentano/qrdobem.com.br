@@ -4,6 +4,8 @@ import { api } from '../services/api';
 import { Users, UserPlus, Shield, UserX, UserCheck } from 'lucide-react';
 import EmergencyContactsList from '../components/EmergencyContactsList';
 
+import { apiError } from '../utils/apiError';
+
 export default function TeamPage() {
   const { tenant } = useAuth();
   const [spaces, setSpaces] = useState([]);
@@ -12,6 +14,7 @@ export default function TeamPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
@@ -86,11 +89,15 @@ export default function TeamPage() {
   const handleCreateSpace = async (e) => {
     e.preventDefault();
     setCreating(true);
+    setError('');
+    setSuccess('');
     try {
       await api.post('/spaces', { type: 'company', name: spaceName });
       loadSpaces();
+      setSuccess('Espaço criado com sucesso.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert('Erro ao criar espaço: ' + (err.response?.data?.error || err.message));
+      setError('Erro ao criar espaço: ' + apiError(err));
     } finally {
       setCreating(false);
     }
@@ -99,33 +106,44 @@ export default function TeamPage() {
   const handleUpdateSpace = async (e) => {
     e.preventDefault();
     setUpdatingSpace(true);
+    setError('');
+    setSuccess('');
     try {
       await api.put(`/spaces/${activeSpaceId}`, { name: editSpaceName });
-      alert('Equipe renomeada com sucesso.');
+      setSuccess('Equipe renomeada com sucesso.');
+      setTimeout(() => setSuccess(''), 5000);
       loadSpaces();
     } catch (err) {
-      alert('Erro ao renomear: ' + (err.response?.data?.error || err.message));
+      setError('Erro ao renomear: ' + apiError(err));
     } finally {
       setUpdatingSpace(false);
     }
   };
 
   const handleChangeRole = async (memberId, newRole) => {
+    setError('');
+    setSuccess('');
     try {
       await api.put(`/spaces/${activeSpaceId}/members/${memberId}/role`, { role: newRole });
       loadMembers(activeSpaceId);
+      setSuccess('Cargo alterado com sucesso.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao mudar cargo.');
+      setError(apiError(err));
     }
   };
 
   const handleRemove = async (memberId) => {
     if (!window.confirm('Tem certeza que deseja remover este membro da equipe?')) return;
+    setError('');
+    setSuccess('');
     try {
       await api.delete(`/spaces/${activeSpaceId}/members/${memberId}`);
       loadMembers(activeSpaceId);
+      setSuccess('Membro removido com sucesso.');
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao remover membro.');
+      setError(apiError(err));
     }
   };
 
@@ -162,6 +180,7 @@ export default function TeamPage() {
       </div>
 
       {error && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>}
+      {success && <div className="bg-green-50 text-green-700 p-4 rounded-lg">{success}</div>}
 
       {spaces.length === 0 ? (
         <div className="bg-amber-50 text-amber-800 p-6 rounded-lg text-center space-y-4">

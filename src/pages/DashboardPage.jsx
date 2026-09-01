@@ -11,6 +11,7 @@ import { useEntityCatalog } from '../hooks/useEntityCatalog';
 import EntityCatalogToolbar from '../components/EntityCatalogToolbar';
 import EntityCard from '../components/EntityCard';
 import { clearAllMediaCache } from '../hooks/useEntityMedia';
+import { apiError } from '../utils/apiError';
 
 // CTA de conversão por trilha de origem. A trilha chega via ?trail= ou
 // sessionStorage (ver LoginPage/RegisterPage) e define o texto do botão principal.
@@ -48,6 +49,8 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const location = useLocation();
 
@@ -144,15 +147,18 @@ export default function DashboardPage() {
     const confirmMessage = `Tem certeza que deseja excluir "${entity.name}"?\n\nO QR Code deixará de funcionar publicamente, mas os dados básicos serão preservados internamente para fins de auditoria.`;
     if (!window.confirm(confirmMessage)) return;
 
+    setDeleteError('');
+    setDeleteSuccess('');
     try {
       await entitiesApi.destroy(entity.unique_code);
-      alert('Entidade excluída com sucesso.');
+      setDeleteSuccess('Entidade excluída com sucesso.');
       loadEntities(activeOrgId);
+      setTimeout(() => setDeleteSuccess(''), 5000);
     } catch (err) {
       if (err.status === 403 || err.status === 404) {
-        alert('Você não tem permissão para excluir este registro ou ele não existe.');
+        setDeleteError('Você não tem permissão para excluir este registro ou ele não existe.');
       } else {
-        alert(err.data?.error || err.message || 'Erro ao excluir.');
+        setDeleteError(apiError(err));
       }
     }
   };
@@ -440,6 +446,17 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {deleteError && (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm mb-6">
+            {deleteError}
+          </div>
+        )}
+        {deleteSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm mb-6">
+            {deleteSuccess}
+          </div>
+        )}
 
         {creditsStatus === 'success' && (
           <div className="bg-brand-blue/10 border border-brand-blue/30 text-brand-dark px-4 py-3 rounded-lg text-sm font-medium mb-6">

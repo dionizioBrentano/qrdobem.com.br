@@ -242,8 +242,11 @@ export default function CheckoutModal({ intent, onClose }) {
     }
   };
 
+  const [pixMessage, setPixMessage] = useState({ text: '', type: '' });
+
   const handleCheckStatus = async () => {
     if (!orderId) return;
+    setPixMessage({ text: '', type: '' });
     try {
       let statusRes;
       if (isCredits) {
@@ -259,16 +262,17 @@ export default function CheckoutModal({ intent, onClose }) {
           return;
         }
       }
-      alert('Pagamento ainda não confirmado. Aguarde mais alguns instantes.');
+      setPixMessage({ text: 'Pagamento ainda não confirmado. Aguarde mais alguns instantes.', type: 'error' });
     } catch (e) {
-      alert('Erro ao verificar status.');
+      setPixMessage({ text: 'Erro ao verificar status.', type: 'error' });
     }
   };
 
   const copyToClipboard = () => {
     if (pixData?.qr_code) {
       navigator.clipboard.writeText(pixData.qr_code);
-      alert('Código PIX copiado!');
+      setPixMessage({ text: 'Código PIX copiado!', type: 'success' });
+      setTimeout(() => setPixMessage({ text: '', type: '' }), 3000);
     }
   };
 
@@ -337,6 +341,11 @@ export default function CheckoutModal({ intent, onClose }) {
                 alt="QR Code PIX" 
                 className="w-48 h-48 border rounded-lg p-2"
               />
+            )}
+            {pixMessage.text && (
+              <div className={`text-sm px-4 py-2 rounded ${pixMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {pixMessage.text}
+              </div>
             )}
             <div className="w-full mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1 text-left">PIX Copia e Cola</label>

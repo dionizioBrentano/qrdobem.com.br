@@ -8,6 +8,7 @@ import PanicButton from './PanicButton';
 import EmergencyContactsList from './EmergencyContactsList';
 
 import { TYPES, PROFILE_ERROR_CODES, MAX_CUSTOM_ATTRS, CUSTOM_ATTR_KEY_MAX, CUSTOM_ATTR_VALUE_MAX, HEALTH_FIELDS, SPECIES, SIZES, NEUTERED_STATES, HANDLING_FLAGS, PUBLIC_LABEL_MAX, EMPTY_PET_FIELDS, EMPTY_OBJECT_FIELDS } from '../constants/entityFields';
+import { apiError } from '../utils/apiError';
 
 export default function EntityFormModal({ organizationId, activeSpaceId, uniqueCode, activeTrail, initialType = 'person', onClose, onCreated }) {
   const [form, setForm] = useState({
@@ -197,11 +198,12 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
     if (!file) return;
 
     if (file.size > 20 * 1024 * 1024) {
-      alert('O arquivo é muito grande (máximo 20MB).');
+      setError('O arquivo é muito grande (máximo 20MB).');
       return;
     }
 
     setLoadingMedia(true);
+    setError('');
     const formData = new FormData();
     formData.append('file', file);
 
@@ -210,7 +212,7 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
       const mediaRes = await entitiesApi.listMedia(uniqueCode);
       setMedia(mediaRes.media || []);
     } catch (err) {
-      alert(err.data?.error || 'Erro ao enviar o arquivo.');
+      setError(apiError(err));
     } finally {
       setLoadingMedia(false);
       e.target.value = '';
@@ -221,11 +223,12 @@ export default function EntityFormModal({ organizationId, activeSpaceId, uniqueC
     if (!window.confirm('Tem certeza que deseja remover este arquivo?')) return;
     
     setLoadingMedia(true);
+    setError('');
     try {
       await entitiesApi.removeMedia(uniqueCode, mediaId);
       setMedia((prev) => prev.filter((m) => m.id !== mediaId));
     } catch (err) {
-      alert('Erro ao remover arquivo.');
+      setError(apiError(err));
     } finally {
       setLoadingMedia(false);
     }
