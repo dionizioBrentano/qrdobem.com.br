@@ -4,6 +4,7 @@ import { profileApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf, maskCep, maskPhone } from '../utils/masks';
 import CpfInput from '../components/CpfInput';
+import { lookupCep } from '../services/cepApi';
 
 const FIELD_LABELS = {
   email_verified: 'Verificar o e-mail',
@@ -99,9 +100,8 @@ export default function ProfilePage() {
 
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (!data.erro) {
+      const data = await lookupCep(cep);
+      if (data) {
         setForm((prev) => ({
           ...prev,
           address_street: data.logradouro || prev.address_street,
@@ -110,8 +110,6 @@ export default function ProfilePage() {
           address_state: data.uf || prev.address_state,
         }));
       }
-    } catch {
-      // silencioso de propósito
     } finally {
       setCepLoading(false);
     }

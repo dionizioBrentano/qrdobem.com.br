@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { profileApi, authApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { isValidCpf, maskCpf, maskCep, maskPhone } from '../utils/masks';
+import { lookupCep } from '../services/cepApi';
 
 export default function CompleteRegistrationBlock({ profile, onComplete }) {
   const { refreshTenant } = useAuth();
@@ -45,9 +46,8 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
     if (cep.length !== 8) return;
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (!data.erro) {
+      const data = await lookupCep(cep);
+      if (data) {
         setForm((prev) => ({
           ...prev,
           address_street: data.logradouro || prev.address_street,
@@ -56,8 +56,6 @@ export default function CompleteRegistrationBlock({ profile, onComplete }) {
           address_state: data.uf || prev.address_state,
         }));
       }
-    } catch {
-      // ignorar
     } finally {
       setCepLoading(false);
     }

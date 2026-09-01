@@ -5,6 +5,7 @@ import { creditsApi, donationsApi } from '../services/api';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import { useAuth } from '../context/AuthContext';
 import { maskCep } from '../utils/masks';
+import { lookupCep } from '../services/cepApi';
 
 export default function CheckoutModal({ intent, onClose }) {
   const { tenant } = useAuth();
@@ -278,9 +279,8 @@ export default function CheckoutModal({ intent, onClose }) {
     if (cep.length !== 8) return;
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (!data.erro) {
+      const data = await lookupCep(cep);
+      if (data) {
         setAddress((prev) => ({
           ...prev,
           streetName: data.logradouro || prev.streetName,
@@ -289,8 +289,6 @@ export default function CheckoutModal({ intent, onClose }) {
           federalUnit: data.uf || prev.federalUnit,
         }));
       }
-    } catch {
-      // ignore
     } finally {
       setCepLoading(false);
     }
