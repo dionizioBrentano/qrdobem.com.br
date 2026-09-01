@@ -8,6 +8,15 @@ export default function EntityMediaBlock({ uniqueCode }) {
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const getErrorMessage = (err) => {
+    return err.data?.error || 
+           err.data?.message || 
+           err.data?.errors?.file?.[0] || 
+           err.data?.received || 
+           err.message || 
+           ENTITY_EDIT_TEXTS.mediaError;
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -29,7 +38,7 @@ export default function EntityMediaBlock({ uniqueCode }) {
     try {
       await uploadMedia(file);
     } catch (err) {
-      setErrorMsg(err.data?.error || err.data?.code || ENTITY_EDIT_TEXTS.mediaError);
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setUploading(false);
     }
@@ -42,7 +51,7 @@ export default function EntityMediaBlock({ uniqueCode }) {
     try {
       await removeMedia();
     } catch (err) {
-      setErrorMsg(err.data?.error || err.data?.code || ENTITY_EDIT_TEXTS.mediaError);
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setUploading(false);
     }
