@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { emergencyContactsApi } from '../services/api';
+import { API_BASE } from '../services/http';
 import {
   ShieldAlert,
   CheckCircle2,
@@ -69,8 +70,7 @@ export function PanicContactInvitePage() {
     const registration = await navigator.serviceWorker.ready;
     
     // Obter VAPID public key da API
-    const base = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
-    const res = await fetch(`${base}/push/public-key`);
+    const res = await fetch(`${API_BASE}/push/public-key`);
     const { publicKey } = await res.json();
     
     if (!publicKey) {

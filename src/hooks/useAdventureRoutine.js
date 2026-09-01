@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adventureApi } from '../services/adventureApi';
 import { DEFAULT_RADIUS_METERS } from '../constants/adventure';
+import { apiError } from '../utils/apiError';
 
 const EMPTY_POINT = {
   name: '',
@@ -11,9 +12,7 @@ const EMPTY_POINT = {
   order_index: 0,
 };
 
-function apiError(err) {
-  return err?.data?.error || err?.message || 'Erro inesperado.';
-}
+
 
 export function useAdventureRoutine(uniqueCode) {
   const [referencePoints, setReferencePoints] = useState([]);

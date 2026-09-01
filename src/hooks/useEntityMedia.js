@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { entitiesApi } from '../services/api';
 import { resizeImageFile } from '../utils/resizeImageFile';
+import { API_BASE } from '../services/http';
 
 const mediaCache = new Map();
 const listeners = new Map();
@@ -29,8 +30,7 @@ function resolveMediaUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
   
-  const baseUrl = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
-  const cleanBase = baseUrl.replace(/\/+$/, '');
+  const cleanBase = API_BASE.replace(/\/+$/, '');
   const cleanUrl = url.replace(/^\/+/, '');
   
   return `${cleanBase}/${cleanUrl}`;

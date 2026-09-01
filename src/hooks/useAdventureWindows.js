@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { adventureApi } from '../services/adventureApi';
 import { DEFAULT_TOLERANCE_MINUTES } from '../constants/adventure';
+import { apiError } from '../utils/apiError';
 
-function apiError(err) {
-  return err?.data?.error || err?.message || 'Erro inesperado.';
-}
+
 
 function asWindowList(res) {
   if (Array.isArray(res)) return res;

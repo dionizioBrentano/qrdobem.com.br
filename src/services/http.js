@@ -1,6 +1,6 @@
 import { firebaseRefreshToken, firebaseLogout } from './firebase';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://api.qrdobem.com.br/api';
 
 export let reauthHandler = null;
 export const setReauthHandler = (handler) => { reauthHandler = handler; };
