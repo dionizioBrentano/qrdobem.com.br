@@ -1,25 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { entitiesApi } from '../services/api';
 import { resizeImageFile } from '../utils/resizeImageFile';
+import { EMPTY_PET_FIELDS, EMPTY_OBJECT_FIELDS, HEALTH_FIELDS } from '../constants/entityFields';
 
-const EMPTY_PET_FIELDS = {
-  species: 'dog', species_other_description: '', size: '', size_is_public: true,
-  color: '', color_is_public: true, is_neutered: '', is_neutered_is_public: true,
-  physical_description: '', physical_description_is_public: true,
-  clinical_notes: '', clinical_notes_is_public: true,
-  reference_contact: '', reference_contact_is_public: false,
-};
-
-const EMPTY_OBJECT_FIELDS = {
-  description: '', description_is_public: false, public_label: '',
-  handling_fragile: false, handling_light_sensitive: false, handling_keep_refrigerated: false,
-  handling_do_not_invert: false, handling_sentimental_value: false, handling_notes_extra: '',
-};
-
-const HEALTH_FIELDS = [
-  'allergies', 'chronic_conditions', 'continuous_medications', 
-  'relevant_surgeries', 'substance_use_risk', 'caregiver_name', 'caregiver_contact'
-];
 
 export function useEntityEdit(uniqueCode) {
   const [snapshot, setSnapshot] = useState(null);
@@ -169,7 +152,7 @@ export function useEntityEdit(uniqueCode) {
           return acc;
         }, {});
 
-        const health = HEALTH_FIELDS.reduce((acc, key) => {
+        const health = HEALTH_FIELDS.reduce((acc, { key }) => {
           const entry = data.healthFields[key];
           if (entry?.value?.trim()) {
             const restricted = ['continuous_medications', 'substance_use_risk'].includes(key);
