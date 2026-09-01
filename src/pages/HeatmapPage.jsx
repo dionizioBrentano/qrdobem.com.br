@@ -19,17 +19,7 @@ import { heatmapApi } from '../services/api';
  * isso, para ninguém ler o mapa como endereço.
  */
 
-const TYPE_LABELS = {
-  person: 'Pessoas',
-  pet:    'Pets',
-  object: 'Objetos',
-};
-
-const TYPE_COLORS = {
-  person: '#dc2626',
-  pet:    '#ea580c',
-  object: '#2563eb',
-};
+import { TYPE_LABELS, TYPE_COLORS, TYPE_TEXT_CLASSES } from '../constants/heatmap';
 
 export default function HeatmapPage() {
   const [cells, setCells] = useState([]);
@@ -179,7 +169,7 @@ export default function HeatmapPage() {
           {summary.map((s) => (
             <div key={s.type} className="bg-white border border-gray-200 rounded-xl p-4">
               <p className="text-sm text-gray-500">{TYPE_LABELS[s.type] || s.type}</p>
-              <p className="text-2xl font-black" style={{ color: TYPE_COLORS[s.type] }}>
+              <p className={`text-2xl font-black ${TYPE_TEXT_CLASSES[s.type] || 'text-gray-900'}`}>
                 {s.reads.toLocaleString('pt-BR')}
               </p>
               <p className="text-xs text-gray-400">{s.cells} regiões</p>

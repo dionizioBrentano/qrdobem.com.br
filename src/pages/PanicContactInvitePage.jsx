@@ -88,7 +88,7 @@ export function PanicContactInvitePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Loader2 className="w-8 h-8 text-[#0066FF] animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-blue animate-spin" />
       </div>
     );
   }
@@ -126,7 +126,7 @@ export function PanicContactInvitePage() {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="w-full py-3 px-4 bg-[#0066FF] hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-3 px-4 bg-brand-blue hover:bg-brand-blue-dark text-white font-medium rounded-lg transition-colors"
           >
             Ir para a Página Inicial
           </button>

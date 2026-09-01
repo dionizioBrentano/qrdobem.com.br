@@ -12,6 +12,8 @@ import WellnessOverlay from '../components/WellnessOverlay';
 import { getDeviceToken, setDeviceToken } from '../utils/deviceToken';
 import { getDeviceId } from '../utils/deviceId';
 import { useAuth } from '../context/AuthContext';
+import { apiError } from '../utils/apiError';
+import { PUBLIC_ORIGIN } from '../constants/urls';
 
 export default function ProtectionPage() {
   const { uniqueCode } = useParams();
@@ -65,26 +67,34 @@ export default function ProtectionPage() {
     loadEntity();
   }, [uniqueCode, hasAccess, isTokenMode]);
 
+  const [actionError, setActionError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
+
   const handleGenerateAccess = async () => {
+    setActionError('');
+    setActionSuccess('');
     try {
       const deviceId = getDeviceId();
       const res = await deviceApi.issueToken(uniqueCode, deviceId);
-      const url = `https://qrdobem.com.br/protecao/${uniqueCode}#token=${res.token}`;
+      const url = `${PUBLIC_ORIGIN}/protecao/${uniqueCode}#token=${res.token}`;
       setGeneratedLink(url);
     } catch (err) {
-      alert('Erro ao gerar acesso: ' + (err.data?.error || err.message));
+      setActionError('Erro ao gerar acesso: ' + apiError(err));
     }
   };
 
   const handleRevokeAccess = async () => {
     if (!window.confirm('Revogar acesso deste aparelho?')) return;
+    setActionError('');
+    setActionSuccess('');
     try {
       const deviceId = getDeviceId();
       await deviceApi.revokeToken(uniqueCode, deviceId);
       setGeneratedLink('');
-      alert('Acesso revogado com sucesso.');
+      setActionSuccess('Acesso revogado com sucesso.');
+      setTimeout(() => setActionSuccess(''), 5000);
     } catch (err) {
-      alert('Erro ao revogar acesso: ' + (err.data?.error || err.message));
+      setActionError('Erro ao revogar acesso: ' + apiError(err));
     }
   };
 
@@ -138,6 +148,10 @@ export default function ProtectionPage() {
           <p className="text-sm text-gray-600 mb-4">
             Gere um link para a criança/acompanhante abrir no próprio celular sem login.
           </p>
+
+          {actionError && <p className="text-red-600 text-sm mb-2">{actionError}</p>}
+          {actionSuccess && <p className="text-green-600 text-sm mb-2">{actionSuccess}</p>}
+
           <div className="flex gap-2">
             <button onClick={handleGenerateAccess} className="bg-brand-blue text-white px-4 py-2 rounded-lg font-bold text-sm">
               Gerar acesso deste aparelho
