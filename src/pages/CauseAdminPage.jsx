@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HeartHandshake, Upload, Check, X, AlertCircle } from 'lucide-react';
 import { spacesApi, causesApi, mediaApi } from '../services/api';
+import CauseProductsBlock from '../components/CauseProductsBlock';
 
 /**
  * CauseAdminPage — painel da causa: vitrine, mídia e QR em lote.
@@ -536,6 +537,8 @@ export default function CauseAdminPage() {
           </div>
         )}
       </section>
+
+      <CauseProductsBlock spaceId={spaceId} />
 
       {/* Doações */}
       <section className="bg-white border border-gray-200 rounded-xl p-5">

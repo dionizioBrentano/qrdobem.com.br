@@ -1,6 +1,7 @@
 import { request } from './http';
 export { reauthHandler, setReauthHandler } from './http';
 import { adventureApi } from './adventureApi';
+export { causeProductsApi } from './causeProductsApi';
 
 // --- Auth ---
 export const authApi = {
