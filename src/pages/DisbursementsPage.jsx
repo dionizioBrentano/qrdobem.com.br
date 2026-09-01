@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PackageCheck, Plus, UserPlus, Copy, Check, AlertCircle } from 'lucide-react';
-import { spacesApi, beneficiariesApi, disbursementsApi } from '../services/api';
+import { spacesApi, beneficiariesApi, disbursementsApi, causeProductsApi } from '../services/api';
 
 /**
  * DisbursementsPage — gestão de beneficiários e repasses.
@@ -44,6 +44,7 @@ export default function DisbursementsPage() {
   const [spaceId, setSpaceId] = useState(null);
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [disbursements, setDisbursements] = useState([]);
+  const [products, setProducts] = useState([]);
   const [totalConfirmed, setTotalConfirmed] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -56,6 +57,11 @@ export default function DisbursementsPage() {
   const [showDisbursementForm, setShowDisbursementForm] = useState(false);
   const [disbursementForm, setDisbursementForm] = useState({
     beneficiary_id: '', kind: 'product', description: '', amount: '',
+  });
+
+  const [showNeedFormFor, setShowNeedFormFor] = useState(null);
+  const [needForm, setNeedForm] = useState({
+    cause_product_id: '', quantity: '', accepts_substitute: true, period_starts_on: '', period_ends_on: '', title: ''
   });
 
   useEffect(() => {
@@ -77,12 +83,14 @@ export default function DisbursementsPage() {
   const loadAll = async () => {
     setError('');
     try {
-      const [bRes, dRes] = await Promise.all([
+      const [bRes, dRes, pRes] = await Promise.all([
         beneficiariesApi.list(spaceId),
         disbursementsApi.list(spaceId),
+        causeProductsApi.list(spaceId).catch(() => ({ products: [] })),
       ]);
       setBeneficiaries(bRes.beneficiaries || []);
       setDisbursements(dRes.disbursements || []);
+      setProducts(pRes.products || []);
       setTotalConfirmed(dRes.total_confirmed || 0);
     } catch (err) {
       setError(err.message);
@@ -145,6 +153,35 @@ export default function DisbursementsPage() {
       await loadAll();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleCreateNeedFor = async (e, beneficiary) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    
+    try {
+      const payload = {
+        title: needForm.title,
+        cause_product_id: needForm.cause_product_id ? Number(needForm.cause_product_id) : null,
+        quantity: needForm.quantity ? Number(needForm.quantity) : null,
+        accepts_substitute: needForm.accepts_substitute,
+        period_starts_on: needForm.period_starts_on || null,
+        period_ends_on: needForm.period_ends_on || null,
+        kind: 'product'
+      };
+      
+      await beneficiariesApi.createNeed(beneficiary.unique_code, payload);
+      setShowNeedFormFor(null);
+      setNeedForm({
+        cause_product_id: '', quantity: '', accepts_substitute: true, period_starts_on: '', period_ends_on: '', title: ''
+      });
+      await loadAll();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -258,6 +295,13 @@ export default function DisbursementsPage() {
 
                   <div className="flex gap-2">
                     <button
+                      onClick={() => setShowNeedFormFor(showNeedFormFor === b.id ? null : b.id)}
+                      className="text-xs border border-gray-300 px-2 py-1 rounded bg-brand-accent text-white font-bold"
+                    >
+                      + Pedido
+                    </button>
+                    
+                    <button
                       onClick={() => copyUrl(b.id, b.url)}
                       className="text-xs border border-gray-300 px-2 py-1 rounded flex items-center gap-1"
                       title="Copiar a URL única do beneficiário"
@@ -278,6 +322,43 @@ export default function DisbursementsPage() {
                 <p className="text-xs text-gray-400 mt-1">
                   Confirmação por: {b.factors.join(', ')}
                 </p>
+
+                {showNeedFormFor === b.id && (
+                  <form onSubmit={(e) => handleCreateNeedFor(e, b)} className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded grid gap-3 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-gray-700">Título do Pedido (se não houver produto)</label>
+                      <input type="text" value={needForm.title} onChange={e => setNeedForm(p => ({ ...p, title: e.target.value }))} className="w-full border p-2 rounded text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700">Produto do Catálogo</label>
+                      <select value={needForm.cause_product_id} onChange={e => setNeedForm(p => ({ ...p, cause_product_id: e.target.value }))} className="w-full border p-2 rounded text-sm mt-1">
+                        <option value="">-- Nenhum --</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700">Quantidade</label>
+                      <input type="number" step="0.01" value={needForm.quantity} onChange={e => setNeedForm(p => ({ ...p, quantity: e.target.value }))} className="w-full border p-2 rounded text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700">Período de Início</label>
+                      <input type="date" value={needForm.period_starts_on} onChange={e => setNeedForm(p => ({ ...p, period_starts_on: e.target.value }))} className="w-full border p-2 rounded text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700">Período de Fim</label>
+                      <input type="date" value={needForm.period_ends_on} onChange={e => setNeedForm(p => ({ ...p, period_ends_on: e.target.value }))} className="w-full border p-2 rounded text-sm mt-1" />
+                    </div>
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <input type="checkbox" id={`sub-${b.id}`} checked={needForm.accepts_substitute} onChange={e => setNeedForm(p => ({ ...p, accepts_substitute: e.target.checked }))} />
+                      <label htmlFor={`sub-${b.id}`} className="text-sm">Aceita Produto Similar</label>
+                    </div>
+                    <div className="md:col-span-2 text-right">
+                      <button type="submit" disabled={busy} className="bg-emerald-600 text-white font-bold px-4 py-2 rounded text-sm disabled:opacity-50">
+                        Vincular Pedido
+                      </button>
+                    </div>
+                  </form>
+                )}
               </li>
             ))}
           </ul>

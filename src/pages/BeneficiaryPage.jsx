@@ -244,6 +244,16 @@ export default function BeneficiaryPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-3"
               />
 
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Quantidade (opcional)"
+                value={need.quantity || ''}
+                onChange={(e) => setNeed({ ...need, quantity: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-3"
+              />
+
               <textarea
                 rows={3}
                 maxLength={2000}
@@ -278,16 +288,28 @@ export default function BeneficiaryPage() {
           ) : (
             <ul className="space-y-2">
               {needs.map((n) => (
-                <li key={n.id} className="border border-gray-200 rounded-lg p-3">
-                  <p className="font-bold text-gray-900">{n.title}</p>
-                  {n.description && <p className="text-sm text-gray-600">{n.description}</p>}
-                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
-                    n.status === 'in_progress'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {n.status === 'in_progress' ? 'A caminho' : 'Aguardando'}
-                  </span>
+                <li key={n.id} className="border border-gray-200 rounded-lg p-3 flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-gray-900">
+                      {n.quantity && <span className="text-gray-500 font-normal mr-1">{n.quantity}x</span>}
+                      {n.title}
+                    </p>
+                    {n.description && <p className="text-sm text-gray-600">{n.description}</p>}
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                      n.status === 'in_progress'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {n.status === 'in_progress' ? 'A caminho' : 'Aguardando'}
+                    </span>
+                  </div>
+                  {n.product?.quote?.total && (
+                    <div className="text-right">
+                      <span className="text-sm text-brand-blue font-bold">
+                        R$ {Number(n.product.quote.total).toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
